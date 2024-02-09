@@ -1,2 +1,2 @@
-# UEL-NLMech
+# Abaqus UEL Hyperelasticity
  
