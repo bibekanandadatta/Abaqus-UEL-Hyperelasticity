@@ -13,7 +13,7 @@
 !     U4                PLANE STRAIN QUAD8 ELEMENT
 !
 !     U5                THREE-DIMENSIONAL TET4 ELEMENT
-!     U6    	        THREE-DIMENSIONAL TET10 ELEMENT
+!     U6                THREE-DIMENSIONAL TET10 ELEMENT
 !     U7                THREE-DIMENSIONAL HEX8 ELEMENT
 !     U8                THREE-DIMENSIONAL HEX20 ELEMENT
 ************************************************************************
@@ -132,7 +132,7 @@
 
       USE PARAMETERS
 
-      ! INCLUDE 'ABA_PARAM.INC'
+      INCLUDE 'ABA_PARAM.INC'
 
       DIMENSION RHS(MLVARX,*),AMATRX(NDOFEL,NDOFEL),PROPS(*),
      & SVARS(*),ENERGY(8),COORDS(MCRD,NNODE),UAll(NDOFEL),
@@ -140,7 +140,7 @@
      & JDLTYP(MDLOAD,*),ADLMAG(MDLOAD,*),DDLMAG(MDLOAD,*),
      & PREDEF(2,NPREDF,NNODE),LFLAGS(*),JPROPS(*)
 
-!     user coding to define RHS, AMATRX, SVARS, ENERGY, and PNEWDT
+      ! user coding to define RHS, AMATRX, SVARS, ENERGY, and PNEWDT
       real*8 :: RHS, AMATRX, SVARS, ENERGY, PNEWDT,
      &      PROPS, COORDS, DUall, Uall, Vel, Accn, TIME, DTIME,
      &      PARAMS, ADLMAG, PREDEF, DDLMAG, PERIOD
@@ -159,14 +159,12 @@
       logical:: nlgeom
 
 
-
       ! open a debug file for the current job
       call getJobName(jobName,lenJobName)
       call getOutDir(outDir,lenOutDir)
       fileName = outDir(1:lenOutDir)//'\aaMSG_'//
      &     jobName(1:lenJobName)//'.dat'
       open(unit=80,file=fileName,status='unknown')
-
 
 
       ! change the LFLAGS criteria as needed (check abaqus UEL manual)
@@ -178,7 +176,7 @@
         endif
 
 
-   ! check if the procedure is linear or nonlinear
+      ! check if the procedure is linear or nonlinear
       if (lflags(2).eq.0) then
         NLGEOM = .false.
       elseif (lflags(2).eq.1) then
@@ -191,7 +189,6 @@
         write(*,*) 'the load step should be a general step'
         call xit
       endif
-
 
 
       ! assign parameter specific to analysis and element types
@@ -251,8 +248,6 @@
 
       endif
 
-
-
       ! call your UEL subroutine
        call uel_NLMECH(RHS,AMATRX,SVARS,ENERGY,NDOFEL,NRHS,NSVARS,
      & PROPS,NPROPS,COORDS,MCRD,NNODE,Uall,DUall,Vel,Accn,JTYPE,TIME,
@@ -275,15 +270,15 @@
 
       USE PARAMETERS
 
-  !!!!!!!!!!!!!!! VARIABLE DECLARATION AND INITIALTION !!!!!!!!!!!!!!
-
+     !!!!!!!!!!!!! VARIABLE DECLARATION AND INITIALIZATION !!!!!!!!!!!!!
+     
       DIMENSION RHS(MLVARX,*),AMATRX(NDOFEL,NDOFEL),PROPS(*),
      & SVARS(*),ENERGY(8),COORDS(MCRD,NNODE),UAll(NDOFEL),
      & DUAll(MLVARX,*),Vel(NDOFEL),Accn(NDOFEL),TIME(2),PARAMS(*),
      & JDLTYP(MDLOAD,*),ADLMAG(MDLOAD,*),DDLMAG(MDLOAD,*),
      & PREDEF(2,NPREDF,NNODE),LFLAGS(*),JPROPS(*)
 
-!     user coding to define RHS, AMATRX, SVARS, ENERGY, and PNEWDT
+      ! user coding to define RHS, AMATRX, SVARS, ENERGY, and PNEWDT
       real*8 :: RHS, AMATRX, SVARS, ENERGY, PNEWDT,
      &      PROPS, COORDS, DUall, Uall, Vel, Accn, TIME, DTIME,
      &      PARAMS, ADLMAG, PREDEF, DDLMAG, PERIOD
@@ -335,15 +330,16 @@
       matFlag = jprops(2)
       nlocalSdv = NSVARS/NINT
 
-    !!!!!!!!!!!!! END VARIABLE DECLARATION AND INITIALTION !!!!!!!!!!!
+     !!!!!!!!!!! END VARIABLE DECLARATION AND INITIALIZATION !!!!!!!!!!!
 
-    ! reshape the displacement vectors into matrix forms
+      ! reshape the displacement vectors into matrix forms
       uNode  = reshape(UAll,(/nDim,nNode/))
       duNode = reshape(DUAll(:,1),(/nDim,nNode/))
 
-     !!!!!!!!!!!!!!!!! ELEMENT RELATED OPERATIONS !!!!!!!!!!!!!!!!!!!!!
 
-    ! obtain gauss quadrature points and weight
+     !!!!!!!!!!!!!!!!! ELEMENT RELATED OPERATIONS !!!!!!!!!!!!!!!!!!!!!!
+
+      ! obtain gauss quadrature points and weight
       if (nDim.eq.2) then
         ID = ID2
         call gaussQuadrtr2(nNode,nInt,w,xi)
@@ -413,8 +409,8 @@
             Ba(3,1) = dNdx(i,2)
             Ba(3,2) = dNdx(i,1)
 
-        ! form [Ba] matrix: 3D case
-            elseif (analysis.eq.'3D') then
+          ! form [Ba] matrix: 3D case
+          elseif (analysis.eq.'3D') then
             Ba(1,1) = dNdx(i,1)
             Ba(2,2) = dNdx(i,2)
             Ba(3,3) = dNdx(i,3)
@@ -424,6 +420,7 @@
             Ba(5,3) = dNdx(i,1)
             Ba(6,1) = dNdx(i,2)
             Ba(6,2) = dNdx(i,1)
+
           else
             write(*,*)  'wrong analysis type'
             call xit
@@ -435,27 +432,26 @@
           Gmat(1:nDim**2,nDim*(i-1)+1:nDim*i) = Ga(1:nDim**2,1:nDim)
         enddo                             ! end of nodal point loop
 
-       !!!!!!!!!!!!! COMPLETE ELEMENT RELATED OPERATIONS !!!!!!!!!!!!!!
+      !!!!!!!!!!!!!! COMPLETE ELEMENT RELATED OPERATIONS !!!!!!!!!!!!!!!
 
 
+      !!!!!!!!!!!!!!!!!!!!! KINEMATIC CALCULATION !!!!!!!!!!!!!!!!!!!!!!
 
-        !!!!!!!!!!!!!!!!!!!! KINEMATIC CALCULATION !!!!!!!!!!!!!!!!!!!!!
-
-      ! calculate deformation gradient and deformation tensors
+        ! calculate deformation gradient and deformation tensors
         F(1:nDim,1:nDim) = ID + matmul(uNode,dNdX)
 
         if (analysis .eq. 'PE') then
           F(3,3) = one
         endif
-      !!!!!!!!!!!!!!!!!!!! END KINEMATIC CALCULATION !!!!!!!!!!!!!!!!!
+      !!!!!!!!!!!!!!!!!!!! END KINEMATIC CALCULATION !!!!!!!!!!!!!!!!!!!
 
 
 
-      !!!!!!!!!!!!!!!!!!!!!!! CONSTITUTIVE MODEL !!!!!!!!!!!!!!!!!!!!!
+      !!!!!!!!!!!!!!!!!!!!!!! CONSTITUTIVE MODEL !!!!!!!!!!!!!!!!!!!!!!!
 
-      ! call material point subroutine (UMAT) for specific material
+        ! call material point subroutine (UMAT) for specific material
         if (matFlag .eq. 1) then
-        call umatNeoHookean(stressCauchy,stressPK1,stressPK2,
+          call umatNeoHookean(stressCauchy,stressPK1,stressPK2,
      &          Dmat,F,svars,nsvars,stranLagrange,stranEuler,time,
      &          dtime,fieldVar,npredf,nDim,ndi,nshr,ntens,jelem,intpt,
      &          coords,nnode,kstep,kinc,props,nprops,nlocalSdv,
@@ -470,10 +466,10 @@
         endif
         ! can add more constitutive model
 
-      !!!!!!!!!!!!!!!!!!!! END CONSTITUTIVE MODEL !!!!!!!!!!!!!!!!!!!!
+      !!!!!!!!!!!!!!!!!!!! END CONSTITUTIVE MODEL !!!!!!!!!!!!!!!!!!!!!!
 
 
-      !!!!!!!!!!!!! TANGENT MATRIX AND RESIDUAL VECTOR !!!!!!!!!!!!!!!
+      !!!!!!!!!!!!! TANGENT MATRIX AND RESIDUAL VECTOR !!!!!!!!!!!!!!!!!
         call vector2symtensor2(stressPK2,stressTensorPK2)
 
         ! form the [SIGMA_S] matrix for geometric stiffness
@@ -503,13 +499,12 @@
         Ru  = Ru - w(intpt)*detJ*
      &            matmul( transpose(matmul(Bmat,SIGMA_F)), stressPK2 )
 
-      !!!!!!!!!!!!! TANGENT MATRIX AND RESIDUAL VECTOR !!!!!!!!!!!!!!
+      !!!!!!!!!!!!!! TANGENT MATRIX AND RESIDUAL VECTOR !!!!!!!!!!!!!!!!
 
 
       enddo                         ! end of integration point loop
 
-
-    ! body force and surface load can be added using dummy elements
+      ! body force and surface load can be added using dummy elements
 
 
       ! assign the element stiffness matrix to abaqus-defined variable
@@ -556,13 +551,13 @@
      &    Gshear, kappa, lam_L
 
       integer:: nInt, nlocalSdv
+
       ! loop counters
       integer:: i, j, k, l, istat
 
-    ! initialize matrial stiffness tensors
+      ! initialize matrial stiffness tensors
       Cmat   = zero
       Dmat   = zero
-
 
       ! assign material properties to variables
       Gshear= props(1)        ! Shear modulus
@@ -575,18 +570,16 @@
         call xit
       endif
 
-   ! perform all the constitutitve relations in 3D
+     ! perform all the constitutitve relations in 3D
       call detMat3(F,detF)
 
       B = matmul(F,transpose(F))
       C = matmul(transpose(F),F)
 
-
       call inverseMat3(B,Binv,detB,istat)
       call inverseMat3(C,Cinv,detC,istat)
 
-
-   ! calculate Euler-Almansi strain tensor
+      ! calculate Euler-Almansi strain tensor
       strantensorEuler = half*(ID3-Binv)
 
       ! calculate material tangent, C_ijkl
@@ -603,7 +596,7 @@
         enddo
       enddo
 
-   ! calculate stress tensors
+      ! calculate stress tensors
       stressTensorCauchy = (1/detF)*(Gshear*(B-ID3) +
      & 											kappa*dlog(detF)*ID3)
       stressTensorPK2 = Gshear*(ID3-Cinv) + kappa*dlog(detF)*Cinv
@@ -612,15 +605,15 @@
       ! transforms the stiffness tensor 3x3x3x3 to a 6x6 matrix
       call tangent2matrix(Cmat,VoigtMat)
 
-   ! transform the stress tensor (3x3) to Voigt vector form (6x1)
+      ! transform the stress tensor (3x3) to Voigt vector form (6x1)
       call symtensor2vector3(strantensorEuler,stranVoigtEuler)
       call symtensor2vector3(stressTensorCauchy,stressVoigtCauchy)
       call symtensor2vector3(stressTensorCauchy,stressVoigtPK2)
 
-   !!!!!!!!!!!!!! END OF CONSTITUTIVE CALCULATION !!!!!!!!!!!!!!!
+     !!!!!!!!!!!!!!! END OF CONSTITUTIVE CALCULATION !!!!!!!!!!!!!!!!!!!
 
 
-   ! reshape the Voigt matrix and tensor based on analysis
+      ! reshape the Voigt matrix and tensor based on analysis
       if (analysis .eq. 'PE')  then
         Dmat(1:ndi,1:ndi) = VoigtMat(1:ndi,1:ndi)
         Dmat(1:ndi,ntens) = VoigtMat(1:ndi,nSymm)
@@ -644,10 +637,11 @@
       endif
 
 
-          ! save the variables to be post-processed in globalPostVars
+        ! save the variables to be post-processed in globalPostVars
         globalPostVars(jelem,npt,1:ntens) = stressCauchy(1:ntens,1)
         globalPostVars(jelem,npt,ntens+1:2*ntens) =
      &                     stranEuler(1:ntens,1)
+
 
       RETURN
 
@@ -688,7 +682,7 @@
       ! loop counters
       integer:: i, j, k, l, istat
 
-    ! initialize matrial stiffness tensors
+      ! initialize matrial stiffness tensors
       Cmat   = zero
       Dmat   = zero
 
@@ -702,7 +696,7 @@
         call xit
       endif
 
-   ! perform all the constitutitve relations in 3D
+      ! perform all the constitutitve relations in 3D
       call detMat3(F,detF)
 
       B = matmul(F,transpose(F))
@@ -713,7 +707,7 @@
 
       call traceMat(C,trC,size(C,1))
 
-   ! calculate Euler-Almansi strain tensor
+      ! calculate Euler-Almansi strain tensor
       strantensorEuler = half*(ID3-Binv)
 
       lam_c = sqrt(trC/3.)
@@ -751,10 +745,10 @@
       call symtensor2vector3(stressTensorCauchy,stressVoigtCauchy)
       call symtensor2vector3(stressTensorCauchy,stressVoigtPK2)
 
-   !!!!!!!!!!!!!! END OF CONSTITUTIVE CALCULATION !!!!!!!!!!!!!!!
+   !!!!!!!!!!!!!!!!! END OF CONSTITUTIVE CALCULATION !!!!!!!!!!!!!!!!!!!
 
 
-   ! reshape the Voigt matrix and tensor based on analysis
+      ! reshape the Voigt matrix and tensor based on analysis
       if (analysis .eq. 'PE')  then
         Dmat(1:ndi,1:ndi) = VoigtMat(1:ndi,1:ndi)
         Dmat(1:ndi,ntens) = VoigtMat(1:ndi,nSymm)
@@ -777,8 +771,7 @@
         stressCauchy = stressVoigtCauchy
       endif
 
-
-          ! save the variables to be post-processed in globalPostVars
+        ! save the variables to be post-processed in globalPostVars
         globalPostVars(jelem,npt,1:ntens) = stressCauchy(1:ntens,1)
         globalPostVars(jelem,npt,ntens+1:2*ntens) =
      & 																		stranEuler(1:ntens,1)
@@ -787,8 +780,8 @@
 
       contains
 
-   ! Bergstorm (PhD thesis, MIT, 1999) approximation of
-   ! inverse Langevin function
+      ! Bergstorm (PhD thesis, MIT, 1999) approximation of
+      ! inverse Langevin function
       FUNCTION InvLangevin(x)
 
       IMPLICIT NONE
@@ -824,8 +817,8 @@
       elseif ((abs(x) .ge. 0.84136) .and. (abs(x) .lt. 1)) then
       DInvLangevin = 1/((sign(1.d0,x)-x)**2)
       else
-            write(*,*) 'unbound argument for inverse Langevin function'
-            call xit
+        write(*,*) 'unbound argument for inverse Langevin function'
+        call xit
       endif
 
       return
@@ -837,11 +830,11 @@
 ************************************************************************
 
        SUBROUTINE UVARM(UVAR,DIRECT,T,TIME,DTIME,CMNAME,ORNAME,
-     1 NUVARM,NOEL,NPT,LAYER,KSPT,KSTEP,KINC,NDI,NSHR,COORD,
-     2 JMAC,JMATYP,MATLAYO,LACCFLA)
-   !  this subroutine is used to transfer postVars from the UEL
-   !  onto the dummy mesh for viewing. Note that an offset of
-   !  elemOffset is used between the real mesh and the dummy mesh.
+     & NUVARM,NOEL,NPT,LAYER,KSPT,KSTEP,KINC,NDI,NSHR,COORD,
+     & JMAC,JMATYP,MATLAYO,LACCFLA)
+       ! this subroutine is used to transfer postVars from the UEL
+       ! onto the dummy mesh for viewing. Note that an offset of
+       ! elemOffset is used between the real mesh and the dummy mesh.
 
       USE PARAMETERS
 
@@ -852,8 +845,8 @@
 
       integer:: i
 
-!     the dimensions of the variables FLGRAY, ARRAY and JARRAY
-!     must be set equal to or greater than 15.
+      ! the dimensions of the variables FLGRAY, ARRAY and JARRAY
+      ! must be set equal to or greater than 15.
 
       if (NOEL .gt. elemOffset) then
         do i = 1,NUVARM
@@ -883,10 +876,10 @@
 
       SUBROUTINE gaussQuadrtr2(nNode,nInt,w,xi)
 
-!     this subroutines returns the weight and
-!     the gauss pt coordinates 3D Lagrangian elements
-!     currently supports: nInt = 1, 3, 4, 7 (tri elements)
-!                         nInt = 1, 4, 9 (quad elements)
+      ! this subroutines returns the weight and
+      ! the gauss pt coordinates 3D Lagrangian elements
+      ! currently supports: nInt = 1, 3, 4, 7 (tri elements)
+      !                     nInt = 1, 4, 9 (quad elements)
 
       USE PARAMETERS
 
@@ -1042,10 +1035,10 @@
 
       SUBROUTINE gaussQuadrtr3(nNode,nInt,w,xi)
 
-!     this subroutines returns the weights and
-!     gauss point coordinate of 3D Lagrangian elements
-!     currently supports: nInt = 1, 4, 5 (tet elements)
-!                         nInt = 1, 8, 27, 64 (hex8 elements)
+      ! this subroutines returns the weights and
+      ! gauss point coordinate of 3D Lagrangian elements
+      ! currently supports: nInt = 1, 4, 5 (tet elements)
+      !                     nInt = 1, 8, 27, 64 (hex8 elements)
 
       USE PARAMETERS
 
@@ -1063,8 +1056,8 @@
       if((nNode.eq.4).or.(nNode.eq.10)) then
 
         if (nInt.eq.1) then
-            w(1) = sixth
-            xi(1:3,1) = fourth
+          w(1) = sixth
+          xi(1:3,1) = fourth
 
         else if (nInt.eq.4) then
           w(1:4) = one/24.d0
@@ -1176,11 +1169,11 @@
 
       SUBROUTINE interpFunc2(nNode,nInt,intPt,xi_int,Nxi,dNdxi)
 
-!     this subroutine calculates shape function of 2D elements at gauss pts
-!     available 2D elements are: 3 node tri, 6 node tri, 4 node quad, 8 node quad
-!
-!     Nxi(i)          = shape function of node i at the intpt.
-!     dNdxi(i,j)      = derivative wrt j direction of shape fn of node i
+      ! this subroutine calculates shape function of 2D elements at gauss pts
+      ! available 2D elements are: 3 node tri, 6 node tri, 4 node quad, 8 node quad
+        
+      ! Nxi(i)          = shape function of node i at the intpt.
+      ! dNdxi(i,j)      = derivative wrt j direction of shape fn of node i
 
       USE PARAMETERS
 
@@ -1193,48 +1186,50 @@
       xi    = xi_int(intpt,1)
       eta   = xi_int(intpt,2)
 
-            !              A eta (=xi_2)
-            !              |
-            !              3
-            !              |\
-            !              | \
-            !              |  \
-            !              |   \
-            !              |    \
-            !              |     \
-            !              |      \
-            !              |       \
-            !              1--------2--> xi (=xi_1)
+      !              A eta (=xi_2)
+      !              |
+      !              3
+      !              |\
+      !              | \
+      !              |  \
+      !              |   \
+      !              |    \
+      !              |     \
+      !              |      \
+      !              |       \
+      !              1--------2--> xi (=xi_1)
 
       if (nNode.eq.3) then
-            ! linear shape functions for tri element
-            Nxi(1) = xi
-            Nxi(2) = eta
-            Nxi(3) = one - xi - eta
+      ! linear shape functions for tri3 element
 
-            ! the first derivatives of the shape functions dN/dxi (3x2)
-            dNdxi(1, 1) = one
-            dNdxi(1, 2) = zero
-            dNdxi(2, 1) = zero
-            dNdxi(2, 2) = one
-            dNdxi(3, 1) = -one
-            dNdxi(3, 2) = -one
+        Nxi(1) = xi
+        Nxi(2) = eta
+        Nxi(3) = one - xi - eta
 
-            !              A eta (=xi_2)
-            !              |
-            !              3
-            !              |\
-            !              | \
-            !              |  \
-            !              |   5
-            !              6    \
-            !              |     \
-            !              |      \
-            !              |       \
-            !              1---4----2--> xi (=xi_1)
+        ! the first derivatives of the shape functions dN/dxi (3x2)
+        dNdxi(1, 1) = one
+        dNdxi(1, 2) = zero
+        dNdxi(2, 1) = zero
+        dNdxi(2, 2) = one
+        dNdxi(3, 1) = -one
+        dNdxi(3, 2) = -one
+
+      !              A eta (=xi_2)
+      !              |
+      !              3
+      !              |\
+      !              | \
+      !              |  \
+      !              |   5
+      !              6    \
+      !              |     \
+      !              |      \
+      !              |       \
+      !              1---4----2--> xi (=xi_1)
 
       elseif (nNode.eq.6) then
-        ! quadratic shape functions for tri element
+      ! quadratic shape functions for tri6 element
+
         lam = one - xi - eta
         Nxi(1) = lam*(two*lam - one)
         Nxi(2) = xi*(two*xi - one)
@@ -1257,17 +1252,18 @@
         dNdxi(6,1) = -four*eta
         dNdxi(6,2) = four*(lam - eta)
 
-        !                          eta
-        !   4-----------3          |
-        !   |           |          |
-        !   |           |          |
-        !   |           |          O--------- xi
-        !   |           |
-        !   |           |        origin at center
-        !   1-----------2
+      !                          eta
+      !   4-----------3          |
+      !   |           |          |
+      !   |           |          |
+      !   |           |          O--------- xi
+      !   |           |
+      !   |           |        origin at center
+      !   1-----------2
 
       elseif (nNode.eq.4) then
-        ! bilinear shape functions for quad element
+      ! bilinear shape functions for quad4 element
+
         Nxi(1) = fourth*(one - xi)*(one - eta)
         Nxi(2) = fourth*(one + xi)*(one - eta)
         Nxi(3) = fourth*(one + xi)*(one + eta)
@@ -1283,19 +1279,20 @@
         dNdxi(4,1) = -fourth*(one + eta)
         dNdxi(4,2) = fourth*(one - xi)
 
-                    !         A eta
-                    !         |
-                    !         |
-                    !   4-----7-----3
-                    !   |     |     |
-                    !   |     |     |
-                    !   8     ------6---> xi
-                    !   |           |
-                    !   |           |
-                    !   1-----5-----2
+      !         A eta
+      !         |
+      !         |
+      !   4-----7-----3
+      !   |     |     |
+      !   |     |     |
+      !   8     ------6---> xi
+      !   |           |
+      !   |           |
+      !   1-----5-----2
 
       elseif (nNode.eq.8) then
-        ! quadratic shape functions for quad element
+      ! bi-quadratic shape functions for quad8 element
+
         Nxi(1) = -fourth*(one - xi)*(one - eta)*(one + xi + eta)
         Nxi(2) = -fourth*(one + xi)*(one - eta)*(one - xi + eta)
         Nxi(3) = -fourth*(one + xi)*(one + eta)*(one - xi - eta)
@@ -1324,8 +1321,8 @@
         dNdxi(8,2) = -eta*(one - xi)
 
       else
-            write(*,*) 'element is not supported for 2D analysis'
-            call xit
+        write(*,*) 'element is not supported for 2D analysis', nNode
+        call xit
       endif
 
       RETURN
@@ -1335,11 +1332,11 @@
 
       subroutine interpFunc3(nNode,nInt,intPt,xi_int,Nxi,dNdxi)
 
-!     this subroutine calculates shape function of 3D elements at gauss pts
-!     available 3D elements are: 4 node tet, 10 node ter, 8 node hex.
-!
-!     Nxi(i)          = shape function of node i at the intpt.
-!     dNdxi(i,j)      = derivative wrt j direction of shape fn of node i
+      ! this subroutine calculates shape function of 3D elements at gauss pts
+      ! available 3D elements are: 4 node tet, 10 node ter, 8 node hex.
+
+      ! Nxi(i)          = shape function of node i at the intpt.
+      ! dNdxi(i,j)      = derivative wrt j direction of shape fn of node i
 
       USE PARAMETERS
 
@@ -1362,7 +1359,7 @@
       dNdxi = zero
 
       if (nNode.eq.4) then
-      ! linear shape functions for tet element
+      ! linear shape functions for tet4 element
 
         Nxi(1) = xi
         Nxi(2) = eta
@@ -1377,7 +1374,8 @@
         dNdxi(4,3) = -one
 
       elseif (nNode.eq.10) then
-        ! quadratic shape function of tet elements
+      ! quadratic shape function of tet10 element
+
         lam = one-xi-eta-zeta
         Nxi(1) = (two*xi-one)*xi
         Nxi(2) = (two*eta-one)*eta
@@ -1412,19 +1410,20 @@
         dNdxi(10,2) = -four*zeta
         dNdxi(10,3) = four*(lam-zeta)
 
-              !      8-----------7
-              !     /|          /|
-              !    / |         / |      zeta
-              !   5-----------6  |       |   eta
-              !   |  |        |  |       |   /
-              !   |  |        |  |       |  /
-              !   |  4--------|--3       | /
-              !   | /         | /        |/
-              !   |/          |/         O--------- xi
-              !   1-----------2        origin at cube center
+      !      8-----------7
+      !     /|          /|
+      !    / |         / |      zeta
+      !   5-----------6  |       |   eta
+      !   |  |        |  |       |   /
+      !   |  |        |  |       |  /
+      !   |  4--------|--3       | /
+      !   | /         | /        |/
+      !   |/          |/         O--------- xi
+      !   1-----------2        origin at cube center
 
       elseif(nNode.eq.8) then
-        ! trilinear shape functions
+      ! trilinear shape functions hex8 element
+
         Nxi(1) = eighth*(one - xi)*(one - eta)*(one - zeta)
         Nxi(2) = eighth*(one + xi)*(one - eta)*(one - zeta)
         Nxi(3) = eighth*(one + xi)*(one + eta)*(one - zeta)
@@ -1459,22 +1458,26 @@
         dNdxi(8,1) = -eighth*(one + eta)*(one + zeta)
         dNdxi(8,2) = eighth*(one - xi)*(one + zeta)
         dNdxi(8,3) = eighth*(one - xi)*(one + eta)
-              !
-              !       8-----15----- 7
-              !      /|            /|
-              !    16 |          14 |
-              !    /  20        /   |     zeta
-              !   5-----13-----6   19      |     eta
-              !   |   |        |    |      |    /
-              !   |   |        |    |      |   /
-              !   17  4-----11-|----3      |  /
-              !   |  /         18  /       | /
-              !   | 12         | 10        |/
-              !   |/           |/          O--------- xi
-              !   1-----9------2        origin at cube center
-              !
-              ! mid-side nodes are not properly illustrated
+
+      !
+      !       8-----15----- 7
+      !      /|            /|
+      !    16 |          14 |
+      !    /  20        /   |     zeta
+      !   5-----13-----6   19      |     eta
+      !   |   |        |    |      |    /
+      !   |   |        |    |      |   /
+      !   17  4-----11-|----3      |  /
+      !   |  /         18  /       | /
+      !   | 12         | 10        |/
+      !   |/           |/          O--------- xi
+      !   1-----9------2        origin at cube center
+      !
+      ! mid-side nodes are not properly illustrated
+
       elseif (nNode.eq.20) then
+      ! tri-quadratic shape function for hex20 element
+
         Nxi(1) = (one-xi)*(one-eta)*(one-zeta)*(-xi-eta-zeta-two)/eight
         Nxi(2) = (one+xi)*(one-eta)*(one-zeta)*(xi-eta-zeta-two)/eight
         Nxi(3) = (one+xi)*(one+eta)*(one-zeta)*(xi+eta-zeta-two)/eight
@@ -1582,7 +1585,7 @@
         dNdxi(20,2) = (one-xi)*(one-zeta**two)/four
         dNdxi(20,3) = -zeta*(one-xi)*(one+eta)/two
       else
-        write(*,*) 'element is not supported for 3D analysis'
+        write(*,*) 'element is not supported for 3D analysis', nNode
         call xit
       endif
 
@@ -1592,7 +1595,6 @@
 ************************************************************************
 
       SUBROUTINE faceNodes(nDim,nNode,face,list,nFaceNodes)
-
       ! this subroutine RETURNs the list of nodes on an
       ! element face for standard 2D and 3D Lagrangian elements
 
@@ -1685,7 +1687,7 @@
 ************************************************************************
 
       SUBROUTINE crossProduct(a,b,c)
-!     computes the cross product of two 3 dimensional vectors
+      ! this subroutine computes the cross product of two 3 dimensional vectors
 
       IMPLICIT NONE
 
@@ -1700,7 +1702,7 @@
 ************************************************************************
 
       SUBROUTINE traceMat(A,trA,nDim)
-!     this subroutine calculates the trace of a square matrix
+      ! this subroutine calculates the trace of a square matrix
 
       USE PARAMETERS
       IMPLICIT NONE
@@ -1720,7 +1722,7 @@
 ************************************************************************
 
       SUBROUTINE detMat2(A,detA)
-!     this subroutine calculates the determinant of a 2x2 or 3x3 matrix [A]
+      ! this subroutine calculates the determinant of a 2x2 or 3x3 matrix [A]
 
       IMPLICIT NONE
 
@@ -1733,7 +1735,7 @@
 ************************************************************************
 
       SUBROUTINE detMat3(A,detA)
-!     this subroutine calculates the determinant of a 2x2 or 3x3 matrix [A]
+      ! this subroutine calculates the determinant of a 2x2 or 3x3 matrix [A]
 
       IMPLICIT NONE
 
@@ -1752,7 +1754,7 @@
 ************************************************************************
 
       SUBROUTINE inverseMat2(A,Ainv,detA,istat)
-!     this subroutine returns Ainv and detA for a 2D matrix A
+      ! this subroutine returns Ainv and detA for a 2D matrix A
 
       USE PARAMETERS
 
@@ -1785,7 +1787,7 @@
 ************************************************************************
 
       SUBROUTINE inverseMat3(A,Ainv,detA,istat)
-!     this subroutine returns Ainv and detA for a 3D matrix A
+      ! this subroutine returns Ainv and detA for a 3D matrix A
 
       USE PARAMETERS
 
@@ -1799,10 +1801,10 @@
       call detMat3(A,detA)
 
       if (detA .le. zero) then
-          write(*,*) 'WARNING: subroutine inverseMat3:'
-          write(*,*) 'WARNING: det of mat= ', detA
-          istat = 0
-          RETURN
+        write(*,*) 'WARNING: subroutine inverseMat3:'
+        write(*,*) 'WARNING: det of mat= ', detA
+        istat = 0
+        RETURN
       end if
 
       detAinv = one/detA
@@ -2002,7 +2004,7 @@
       !  Decompose A into A=RU=VR  where U,V are symmetric and R is orthogonal
 
       R = matmul(A,transpose(A))                      ! R is just temporary variable here
-      call sqrtMat3(R,V)                               ! V= sqrt(A*A^T)
+      call sqrtMat3(R,V)                              ! V= sqrt(A*A^T)
       call inverseMat3(V,Vinv,detV,istat)
       R = matmul(Vinv,A)                              ! R = V^-1*A
       U = matmul(transpose(R),A)                      ! U = R^T*A
@@ -2020,7 +2022,6 @@
 
       integer:: ntens
       real*8 :: vect2D(ntens,1), vect3D(nSymm,1)
-
 
       vect3D = zero
 
@@ -2091,8 +2092,8 @@
 ************************************************************************
 
       SUBROUTINE symtensor2vector3(ATens,AVect)
-!     this subroutine maps a symmetric tensor to a vector
-!     for unSymmmetric tensor you can use "reshape" function
+      ! this subroutine maps a symmetric tensor to a vector
+      ! for unSymmmetric tensor you can use "reshape" function
 
       USE PARAMETERS
 
@@ -2157,16 +2158,15 @@
       ATens(3,1) = ATens(1,3)
       ATens(3,2) = ATens(2,3)
 
-
       RETURN
       END SUBROUTINE vector2symtensor3
 
 ************************************************************************
       SUBROUTINE tangent2matrix(C,D)
-!
-!     this subroutine maps the fourth order material/spatial tangent
-!     tensor (3x3x3x3) to a 2nd order stiffness tensor (6x6) using
-!     voigt notation: 11> 1, 22> 2, 33> 3, 23/32> 4, 13/31> 5, 12/21> 6
+
+      ! this subroutine maps the fourth order material/spatial tangent
+      ! tensor (3x3x3x3) to a 2nd order stiffness tensor (6x6) using
+      ! voigt notation: 11> 1, 22> 2, 33> 3, 23/32> 4, 13/31> 5, 12/21> 6
 
       USE PARAMETERS
 
