@@ -14,8 +14,8 @@
 !
 !     U5                THREE-DIMENSIONAL TET4 ELEMENT
 !     U6    	        THREE-DIMENSIONAL TET10 ELEMENT
-!     U7  	            THREE-DIMENSIONAL HEX8 ELEMENT
-!     U8 	            THREE-DIMENSIONAL HEX20 ELEMENT
+!     U7                THREE-DIMENSIONAL HEX8 ELEMENT
+!     U8                THREE-DIMENSIONAL HEX20 ELEMENT
 ************************************************************************
 !               VARIABLES TO BE UPDATED WITHIN THE SUBROUTNE
 !
