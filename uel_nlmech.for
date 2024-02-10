@@ -248,7 +248,7 @@
 
       endif
 
-      ! call your UEL subroutine
+       ! call your UEL subroutine
        call uel_NLMECH(RHS,AMATRX,SVARS,ENERGY,NDOFEL,NRHS,NSVARS,
      & PROPS,NPROPS,COORDS,MCRD,NNODE,Uall,DUall,Vel,Accn,JTYPE,TIME,
      & DTIME,KSTEP,KINC,JELEM,PARAMS,NDLOAD,JDLTYP,ADLMAG,PREDEF,
@@ -384,14 +384,12 @@
 
         dNdx    = matmul(dNdxi,dxidx)       ! calculate dNdx
 
-
         ! interpolate the field variable at the integration point
         ! (as shown below - not tested)
     !     fieldVar = dot_product(reshape(Nxi,(/nNode/)),
     !  &                        reshape(fieldNode,(/nNode/)))
     !     dfieldVar = dot_product(reshape(Nxi,(/nNode/)),
     !  &                        reshape(dfieldNode,(/nNode/)))
-
 
         ! loop over all the nodes (internal loop)
         do i=1,nNode
@@ -446,7 +444,6 @@
       !!!!!!!!!!!!!!!!!!!! END KINEMATIC CALCULATION !!!!!!!!!!!!!!!!!!!
 
 
-
       !!!!!!!!!!!!!!!!!!!!!!! CONSTITUTIVE MODEL !!!!!!!!!!!!!!!!!!!!!!!
 
         ! call material point subroutine (UMAT) for specific material
@@ -464,13 +461,17 @@
      &          coords,nnode,kstep,kinc,props,nprops,nlocalSdv,
      &          analysis)
         endif
-        ! can add more constitutive model
+        ! can add more constitutive model using elseif construct
 
       !!!!!!!!!!!!!!!!!!!! END CONSTITUTIVE MODEL !!!!!!!!!!!!!!!!!!!!!!
 
 
       !!!!!!!!!!!!! TANGENT MATRIX AND RESIDUAL VECTOR !!!!!!!!!!!!!!!!!
-        call vector2symtensor2(stressPK2,stressTensorPK2)
+        if (nDim .eq. 2) then
+          call vector2symtensor2(stressPK2,stressTensorPK2)
+        elseif (nDim .eq. 3) then
+          call vector2symtensor3(stressPK2,stressTensorPK2)
+        endif
 
         ! form the [SIGMA_S] matrix for geometric stiffness
         do i = 1, nDim
@@ -766,7 +767,7 @@
 
       elseif (analysis .eq. '3D') then
         Dmat = VoigtMat
-            stranEuler = stranVoigtEuler
+        stranEuler = stranVoigtEuler
         stressPK2 = stressVoigtPK2
         stressCauchy = stressVoigtCauchy
       endif
@@ -787,13 +788,12 @@
       IMPLICIT NONE
       real*8,intent(in) :: x
       real*8 :: InvLangevin
-      real*8 :: one
-      parameter(one=1.d0)
+
 
       if (abs(x) .lt. 0.84136) then
         InvLangevin = 1.31446*tan(1.58986*x) + 0.91209*x
-      elseif ((abs(x) .ge. 0.84136) .and. (abs(x) .lt. 1)) then
-        InvLangevin = 1/(sign(one,x)-x)
+      elseif ((abs(x) .ge. 0.84136) .and. (abs(x) .lt. one)) then
+        InvLangevin = one/(sign(one,x)-x)
       else
         write(*,*) 'unbound argument for inverse Langevin function'
         call xit
@@ -809,13 +809,11 @@
 
       real*8,intent(in) :: x
       real*8 :: DInvLangevin, sec
-      real*8 :: one
-      parameter(one=1.d0)
 
-      if (abs(x) .lt. 0.84136) then
-      DInvLangevin = 2.0898073756*(tan(1.58986*x))**2 + 3.0018973756
-      elseif ((abs(x) .ge. 0.84136) .and. (abs(x) .lt. 1)) then
-      DInvLangevin = 1/((sign(1.d0,x)-x)**2)
+      if (abs(x) .lt. 0.84136d) then
+        DInvLangevin = 2.0898073756*(tan(1.58986*x))**two + 3.0018973756
+      elseif ((abs(x) .ge. 0.84136) .and. (abs(x) .lt. one)) then
+        DInvLangevin = ond/((sign(1.d0,x)-x)**two)
       else
         write(*,*) 'unbound argument for inverse Langevin function'
         call xit
@@ -1017,7 +1015,6 @@
           xi(9,1) = x1D(1)
           xi(9,2) = x1D(1)
 
-        ! we are in trouble
         else
           write(*,*) 'wrong gauss points for quad element', nInt
           call xit
@@ -1604,29 +1601,29 @@
       integer, intent (out):: list(*)
       integer, intent (out):: nFaceNodes
 
-      integer :: list3(3), list4(4)
+      integer :: list2(3), list3(4)
 
       if (nDim.eq.2) then
-        list3(1:3) = [2,3,1]
-        list4(1:4) = [2,3,4,1]
+        list2(1:3) = [2,3,1]
+        list3(1:4) = [2,3,4,1]
 
         if (nNode.eq.3) then
           nFaceNodes = 2
           list(1) = face
-          list(2) = list3(face)
+          list(2) = list2(face)
         else if (nNode.eq.4) then
           nFaceNodes = 2
           list(1) = face
-          list(2) = list4(face)
+          list(2) = list3(face)
         else if (nNode.eq.6) then
           nFaceNodes = 3
           list(1) = face
-          list(2) = list3(face)
+          list(2) = list2(face)
           list(3) = face+3
         else if (nNode.eq.8) then
           nFaceNodes = 3
           list(1) = face
-          list(2) = list4(face)
+          list(2) = list3(face)
           list(3) = face+4
         endif
 
@@ -2116,7 +2113,7 @@
 ************************************************************************
 
       SUBROUTINE vector2symtensor2(Avect,Atens)
-      ! this subroutine transforms a 4x1 Voigt vector to 2x2 symmetric tensor
+      ! this subroutine transforms a 3x1 Voigt vector to 2x2 symmetric tensor
 
       USE PARAMETERS
 
