@@ -28,7 +28,7 @@ As a default, Abaqus prefers the user subroutines to be written in Fortran fixed
 The constitutive law for the material is described by the quasi-incompressible Neo-Hookean model or the quasi-incompressible Arruda-Boyce model. The quasi-incompressibility condition was enforced using a penalty-like approach by prescribing a large bulk modulus compared to the shear modulus.
 
 
-**To-do list for example input files:**
+**To-do list for elements:**
 - [ ] Add the documentation for element formulation and constitutive models.
 - [ ] Add user subroutine for updated Lagrangian approach `uel_nlmech_cauchy.for`.
 
@@ -67,7 +67,7 @@ An additional set of elements with the same element connectivity as the user ele
 
 
 **To-do list for example input files:**
-- [ ] In the README.md file, add the element tags.
+- [ ] In the README.md file, add the available element tags and examples for keywords for user elements.
 - [ ] Add examples showing how to use body force and traction/ pressure boundary conditions.
 - [ ] Add input file parser for pre-processing.
 
