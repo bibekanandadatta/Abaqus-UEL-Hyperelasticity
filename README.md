@@ -1,6 +1,5 @@
 # Abaqus UEL Hyperelasticity
- 
-# Abaqus UEL Elasticity
+
  
 This repository contains user element subroutines (UEL) for Abaqus/ Standard written in Fortran for finite strain elasticity (hyperelasticity). Standard displacement-based element formulation has been used. The purpose of the project is to make users familiar with developing finite strain user element subroutines (UEL) in Abaqus using a simple standard case. This source code contains necessary subroutines related to element operations and matrix algebra. Once comfortable, users can easily repurpose this source code as a template for their element.
 
