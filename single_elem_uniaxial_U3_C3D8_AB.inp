@@ -1,0 +1,91 @@
+*Heading
+** abaqus/ standard input file for uniaxial test of
+** single C3D8 (U3) type element for uel_mech.for
+** material model: Arruda-Boyce
+*Node
+1,           1.,           1.,           1.
+2,           1.,           0.,           1.
+3,           1.,           1.,           0.
+4,           1.,           0.,           0.
+5,           0.,           1.,           1.
+6,           0.,           0.,           1.
+7,           0.,           1.,           0.
+8,           0.,           0.,           0.
+**************************************************
+*User Element,Type=U3,Nodes=8,Coordinates=3,Properties=3,Iproperties=3
+1,2,3
+*Element, type=U3
+1, 5, 6, 8, 7, 1, 2, 4, 3
+**************************************************
+*Nset, nset=All, generate
+ 1,  8,  1
+*Elset, elset=All
+ 1,
+*Nset, nset=Bottom, generate
+ 2,  8,  2
+*Elset, elset=Bottom
+ 1,
+*Nset, nset=Front
+ 1, 2, 5, 6
+*Elset, elset=Front
+ 1,
+*Nset, nset=Left, generate
+ 5,  8,  1
+*Elset, elset=Left
+ 1,
+*Nset, nset=Rear
+ 3, 4, 7, 8
+*Elset, elset=Rear
+ 1,
+*Nset, nset=Right, generate
+ 1,  4,  1
+*Elset, elset=Right
+ 1,
+*Nset, nset=Top, generate
+ 1,  7,  2
+*Elset, elset=Top
+ 1,
+**************************************************
+*uel property,elset=all
+** Gshear, kbulk, lam_L, nInt, matFlag, localPostVars
+100.E3, 10000E3, 5., 8, 2, 12
+**************************************************
+** same element connectivity as the user element
+** uses built-in abaqus element to overlay results
+** negligible young's modulus won't affect the result
+*Element, type=C3D8
+100001, 5, 6, 8, 7, 1, 2, 4, 3
+*Elset, elset=elDummy 
+100001
+*Solid section, elset=elDummy, material=Dummy
+*Material, name=Dummy
+*Elastic
+1.e-20
+** strain vector (6) and stress vector (6) as user output
+*User output variables
+12
+**************************************************
+*Boundary
+Left, 1, 1
+Bottom, 2, 2
+Rear, 3, 3
+**************************************************
+*Amplitude, name=LinearRamp
+0., 0., 100., 1.
+**************************************************
+*Step, name=Stretch, nlgeom=YES, inc=50000
+*Static
+0.1, 100., 1E-9, 5.
+*Controls, Parameters=Time Incrementation
+,,,,,,,20,,10,,,,
+*Boundary, amplitude=LinearRamp
+Right, 1, 1, 1
+*Restart, write, frequency=0 
+*Output, field, frequency=1, time marks=no
+*node output, nset=All
+u
+** specify the output for the dummy element set
+*element output, elset=eldummy
+uvarm
+*End Step
+**************************************************

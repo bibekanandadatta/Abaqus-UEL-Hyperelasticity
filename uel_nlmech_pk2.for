@@ -7,15 +7,15 @@
 ************************************************************************
 !                       JTYPE DEFINITION
 !
-!     U1                PLANE STRAIN TRI3 ELEMENT
-!     U2                PLANE STRAIN TRI6 ELEMENT
-!     U3                PLANE STRAIN QUAD4 ELEMENT
-!     U4                PLANE STRAIN QUAD8 ELEMENT
+!     U1                THREE-DIMENSIONAL TET4 ELEMENT
+!     U2                THREE-DIMENSIONAL TET10 ELEMENT
+!     U3                THREE-DIMENSIONAL HEX8 ELEMENT
+!     U4                THREE-DIMENSIONAL HEX20 ELEMENT
 !
-!     U5                THREE-DIMENSIONAL TET4 ELEMENT
-!     U6                THREE-DIMENSIONAL TET10 ELEMENT
-!     U7                THREE-DIMENSIONAL HEX8 ELEMENT
-!     U8                THREE-DIMENSIONAL HEX20 ELEMENT
+!     U5                PLANE STRAIN TRI3 ELEMENT
+!     U6                PLANE STRAIN TRI6 ELEMEN
+!     U7                PLANE STRAIN QUAD4 ELEMENT
+!     U8                PLANE STRAIN QUAD8 ELEMENT
 ************************************************************************
 !               VARIABLES TO BE UPDATED WITHIN THE SUBROUTNE
 !
@@ -82,7 +82,7 @@
 !
 !     jprops(1)   = nInt            no of integration points in element
 !     jprops(2)   = matFlag         constitutive relation for material
-!     jprops(3)   = localPostVars   no of local (int pt) post-processing variables
+!     jprops(3)   = nPostVars   no of local (int pt) post-processing variables
 ************************************************************************
 !                          PARAMETERS MODULE
 !
@@ -149,7 +149,7 @@
      &      KSTEP, KINC, JELEM, NDLOAD, JDLTYP, NPREDF, LFLAGS,
      &      MLVARX, MDLOAD, JPROPS, NJPROPS
 
-      integer:: nInt, matFlag, localPostVars
+      integer:: nInt, matFlag, nPostVars
       integer:: nDim, ndi, nshr, ntens, uDOF, uDOFEL
 
       integer:: lenJobName,lenOutDir
@@ -173,7 +173,7 @@
       else
         write(*,*) 'ABAQUS does not have the right procedure'
         call xit
-        endif
+      endif
 
 
       ! check if the procedure is linear or nonlinear
@@ -193,17 +193,17 @@
 
       ! assign parameter specific to analysis and element types
       if ((JTYPE.ge.1).and.(JTYPE.le.4)) then
-        analysis = 'PE'         ! plane strain analysis
-        nDim = 2
-        ndi = 2
-        nshr = 1
-        ntens = 3
-      elseif ((JTYPE.ge.5).and.(JTYPE.le.8)) then
         analysis = '3D'         ! three-dimensional analysis
         nDim = 3
         ndi = 3
         nshr = 3
         ntens = 6
+      elseif ((JTYPE.ge.5).and.(JTYPE.le.8)) then
+        analysis = 'PE'         ! plane strain analysis
+        nDim = 2
+        ndi = 2
+        nshr = 1
+        ntens = 3
       else
         write(*,*) 'element type is not supported', JTYPE
         call xit
@@ -217,12 +217,12 @@
 
       nInt = jprops(1)
       matFlag = jprops(2)
-      localPostVars = jprops(3)
+      nPostVars = jprops(3)
 
 
       ! array containing variables for post-processing
       if (.not. allocated(globalPostVars)) then
-        allocate(globalPostVars(numElem,nInt,localPostVars))
+        allocate(globalPostVars(numElem,nInt,nPostVars))
 
         ! print necessary information to the screen
         write(*,*) '---------------------------------------'
@@ -243,7 +243,7 @@
         write(*,*) '---------- POST-PROCESSING ------------'
         write(*,*) '--- NO OF ELEMENTS            = ', numElem
         write(*,*) '--- DUMMY ELEMENT OFFSET      = ', ElemOffset
-        write(*,*) '--- NO OF VARIABLES AT INT PT = ', localPostVars
+        write(*,*) '--- NO OF VARIABLES AT INT PT = ', nPostVars
         write(*,*) '---------------------------------------'
 
       endif
@@ -507,15 +507,10 @@
 
       ! body force and surface load can be added using dummy elements
 
-
       ! assign the element stiffness matrix to abaqus-defined variable
       AMATRX(1:NDOFEL,1:NDOFEL) = kuu(1:uDOFEl,1:uDOFEl)
       RHS(1:MLVARX,1) = Ru(1:uDOFEl,1)
 
-      if (time(1).lt.0.01) then
-        write(80,*), 'AMATRX: '
-        write(80,*), AMATRX
-      endif
 
       RETURN
       END SUBROUTINE uel_NLMECH
@@ -525,7 +520,7 @@
 
       SUBROUTINE umatNeoHookean(stressCauchy,stressPK1,stressPK2,
      &          Dmat,F,svars,nsvars,stranLagrange,stranEuler,time,
-     &          dtime,fieldVar,npredf,nDim,ndi,nshr,ntens,jelem,npt,
+     &          dtime,fieldVar,npredf,nDim,ndi,nshr,ntens,jelem,intpt,
      &          coords,nnode,kstep,kinc,props,nprops,nlocalSdv,
      &          analysis)
 
@@ -534,7 +529,7 @@
       IMPLICIT NONE
 
       integer:: nsvars, npredf, nDim, ndi, nshr, ntens,
-     &    jelem, npt, nNode, kstep, kinc, nprops
+     &    jelem, intpt, nNode, kstep, kinc, nprops
 
       real*8 :: stressCauchy(ntens,1), stressPK1(nDim*nDim,1),
      &    stressPK2(ntens,1), Dmat(ntens,ntens), F(3,3),
@@ -571,7 +566,7 @@
         call xit
       endif
 
-     ! perform all the constitutitve relations in 3D
+      ! perform all the constitutitve relations in 3D
       call detMat3(F,detF)
 
       B = matmul(F,transpose(F))
@@ -637,10 +632,9 @@
         stressCauchy = stressVoigtCauchy
       endif
 
-
         ! save the variables to be post-processed in globalPostVars
-        globalPostVars(jelem,npt,1:ntens) = stressCauchy(1:ntens,1)
-        globalPostVars(jelem,npt,ntens+1:2*ntens) =
+        globalPostVars(jelem,intpt,1:ntens) = stressCauchy(1:ntens,1)
+        globalPostVars(jelem,intpt,ntens+1:2*ntens) =
      &                     stranEuler(1:ntens,1)
 
 
@@ -652,7 +646,7 @@
 ************************************************************************
       SUBROUTINE umatArrudaBoyce(stressCauchy,stressPK1,stressPK2,
      &          Dmat,F,svars,nsvars,stranLagrange,stranEuler,time,
-     &          dtime,fieldVar,npredf,nDim,ndi,nshr,ntens,jelem,npt,
+     &          dtime,fieldVar,npredf,nDim,ndi,nshr,ntens,jelem,intpt,
      &          coords,nnode,kstep,kinc,props,nprops,nlocalSdv,
      &          analysis)
 
@@ -661,7 +655,7 @@
       IMPLICIT NONE
 
       integer:: nsvars, npredf, nDim, ndi, nshr, ntens,
-     &    jelem, npt, nNode, kstep, kinc, nprops
+     &    jelem, intpt, nNode, kstep, kinc, nprops
 
       real*8 :: stressCauchy(ntens,1), stressPK1(nDim*nDim,1),
      &    stressPK2(ntens,1), Dmat(ntens,ntens), F(3,3),
@@ -773,16 +767,16 @@
       endif
 
         ! save the variables to be post-processed in globalPostVars
-        globalPostVars(jelem,npt,1:ntens) = stressCauchy(1:ntens,1)
-        globalPostVars(jelem,npt,ntens+1:2*ntens) =
+        globalPostVars(jelem,intpt,1:ntens) = stressCauchy(1:ntens,1)
+        globalPostVars(jelem,intpt,ntens+1:2*ntens) =
      & 																		stranEuler(1:ntens,1)
 
       RETURN
 
       contains
 
-      ! Bergstorm (PhD thesis, MIT, 1999) approximation of
-      ! inverse Langevin function
+      ! approximation of inverse Langevin function
+      ! reference: Bergstorm (PhD thesis, MIT, 1999)
       FUNCTION InvLangevin(x)
 
       IMPLICIT NONE
@@ -790,10 +784,10 @@
       real*8 :: InvLangevin
 
 
-      if (abs(x) .lt. 0.84136) then
-        InvLangevin = 1.31446*tan(1.58986*x) + 0.91209*x
-      elseif ((abs(x) .ge. 0.84136) .and. (abs(x) .lt. one)) then
-        InvLangevin = one/(sign(one,x)-x)
+      if (dabs(x) .lt. 0.84136d0) then
+        InvLangevin = 1.31446*dtan(1.58986d0*x) + 0.91209d0*x
+      elseif ((dabs(x) .ge. 0.84136d0) .and. (dabs(x) .lt. one)) then
+        InvLangevin = one/(dsign(one,x)-x)
       else
         write(*,*) 'unbound argument for inverse Langevin function'
         call xit
@@ -802,7 +796,8 @@
       return
       END FUNCTION InvLangevin
 
-      ! derivative of inverse Langevin function (Bergstorm approximation)
+
+      ! derivative of inverse Langevin function
       FUNCTION DInvLangevin(x)
 
       IMPLICIT NONE
@@ -810,10 +805,11 @@
       real*8,intent(in) :: x
       real*8 :: DInvLangevin, sec
 
-      if (abs(x) .lt. 0.84136d) then
-        DInvLangevin = 2.0898073756*(tan(1.58986*x))**two + 3.0018973756
-      elseif ((abs(x) .ge. 0.84136) .and. (abs(x) .lt. one)) then
-        DInvLangevin = ond/((sign(1.d0,x)-x)**two)
+      if (dabs(x) .lt. 0.84136d0) then
+        DInvLangevin = 2.0898073756d0*(dtan(1.58986d0*x))**two 
+     &                + 3.0018973756d0
+      elseif ((dabs(x) .ge. 0.84136) .and. (dabs(x) .lt. one)) then
+        DInvLangevin = one/((dsign(one,x)-x)**two)
       else
         write(*,*) 'unbound argument for inverse Langevin function'
         call xit
@@ -841,16 +837,13 @@
       DIMENSION UVAR(NUVARM),DIRECT(3,3),T(3,3),TIME(2)
       DIMENSION ARRAY(15),JARRAY(15),JMAC(*),JMATYP(*),COORD(*)
 
-      integer:: i
-
       ! the dimensions of the variables FLGRAY, ARRAY and JARRAY
-      ! must be set equal to or greater than 15.
+      ! must be set equal to or greater than 15.  
 
-      if (NOEL .gt. elemOffset) then
-        do i = 1,NUVARM
-          uvar(i) = globalPostVars(NOEL-elemOffset,NPT,i)
-        enddo
-      endif
+      ! explicityly define the type for uvar to avoid issues
+      real*8 :: uvar
+
+      uvar(1:nuvarm) = globalPostVars(noel-elemOffset,npt,1:nuvarm)
 
       RETURN
 

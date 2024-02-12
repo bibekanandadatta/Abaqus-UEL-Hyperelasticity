@@ -1,13 +1,16 @@
 *Heading
+** abaqus/ standard input file for uniaxial test of
+** single CPE4 (U7) type element for uel_mech.for
+** material model: Arruda-Boyce
 *Node
 1,           0.,           0.
 2,           1.,           0.
 3,           0.,           1.
 4,           1.,           1.
 **************************************************
-*User Element,Type=U3,Nodes=4,Coordinates=2,Properties=3,Iproperties=3
+*User Element,Type=U7,Nodes=4,Coordinates=2,Properties=3,Iproperties=3
 1,2
-*Element, type=U3
+*Element, type=U7
 1, 1, 2, 4, 3
 **************************************************
 *Nset, nset=All, generate
@@ -32,10 +35,12 @@
  1,
 **************************************************
 *uel property,elset=all
-** Gshear, kbulk, lam_L, nInt, matFlag, localPostVars
-** lam_L = 0. for Neo-Hookean
+** Gshear, kbulk, lam_L, nInt, matFlag, nPostVars
 100.E3, 10000.E3, 5., 4, 2, 6
 **************************************************
+** same element connectivity as the user element
+** uses built-in abaqus element to overlay results
+** negligible young's modulus won't affect the result
 *Element, type=CPE4
 100001, 1, 2, 4, 3
 *Elset, elset=elDummy 
@@ -44,6 +49,9 @@
 *Material, name=Dummy
 *Elastic
 1.e-20
+** strain vector (6) and stress vector (6) as user output
+*User output variables
+6
 **************************************************
 *Boundary
 Left, 1, 1
@@ -63,5 +71,8 @@ Right, 1, 1, 1
 *Output, field, frequency=1, time marks=no
 *node output, nset=All
 u
+** specify the output for the dummy element set
+*element output, elset=eldummy
+uvarm
 *End Step
 **************************************************

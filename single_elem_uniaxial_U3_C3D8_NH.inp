@@ -1,4 +1,7 @@
 *Heading
+** abaqus/ standard input file for uniaxial test of
+** single C3D8 (U3) type element for uel_mech.for
+** material model: Neo-Hookean
 *Node
 1,           1.,           1.,           1.
 2,           1.,           0.,           1.
@@ -9,9 +12,9 @@
 7,           0.,           1.,           0.
 8,           0.,           0.,           0.
 **************************************************
-*User Element,Type=U7,Nodes=8,Coordinates=3,Properties=3,Iproperties=3
+*User Element,Type=U3,Nodes=8,Coordinates=3,Properties=3,Iproperties=3
 1,2,3
-*Element, type=U7
+*Element, type=U3
 1, 5, 6, 8, 7, 1, 2, 4, 3
 **************************************************
 *Nset, nset=All, generate
@@ -44,11 +47,14 @@
  1,
 **************************************************
 *uel property,elset=all
-** Gshear, kbulk, lam_L, nInt, matFlag, localPostVars
+** Gshear, kbulk, lam_L, nInt, matFlag, nPostVars
 ** lam_L = 0. for Neo-Hookean
-100.E3, 10000E3, 5., 8, 2, 12
+100.E3, 10000.E3, 0., 8, 1, 12
 **************************************************
- *Element, type=C3D8
+** same element connectivity as the user element
+** uses built-in abaqus element to overlay results
+** negligible young's modulus won't affect the result
+*Element, type=C3D8
 100001, 5, 6, 8, 7, 1, 2, 4, 3
 *Elset, elset=elDummy 
 100001
@@ -56,6 +62,9 @@
 *Material, name=Dummy
 *Elastic
 1.e-20
+** strain vector (6) and stress vector (6) as user output
+*User output variables
+12
 **************************************************
 *Boundary
 Left, 1, 1
@@ -76,5 +85,8 @@ Right, 1, 1, 1
 *Output, field, frequency=1, time marks=no
 *node output, nset=All
 u
+** specify the output for the dummy element set
+*element output, elset=eldummy
+uvarm
 *End Step
 **************************************************
