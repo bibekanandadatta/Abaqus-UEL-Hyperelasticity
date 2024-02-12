@@ -30,6 +30,7 @@ The constitutive law for the material is described by the quasi-incompressible N
 
 **To-do list for elements:**
 - [ ] Add the documentation for element formulation and constitutive models.
+- [ ] Add the available user element tags and their equivalent elements in Abaqus.
 - [ ] Add user subroutine for updated Lagrangian approach `uel_nlmech_cauchy.for`.
 
 
@@ -44,11 +45,12 @@ The constitutive law for the material is described by the quasi-incompressible N
 > This file contains subroutines to obtain the Gauss quadrature information, interpolation functions for 2D and 3D Lagrangian elements and matrix operations. Users are highly recommended to go through these subroutines and can repurpose them to write their user element (UEL) code.
 
 
+
 ### Example input files
 
 #### Properties
 
-To demonstrate the usage of the user element subroutine capabilities in Abaqus, a few sample input files are provided for different element types. Users can use Abaqus/ CAE to create a standard Abaqus model and export `.inp` files. It is recommended to use the option `Do not use parts and assemblies in input files` from the **model attributes** drop-down menu before generating the input file. This option will generate a cleaner input file. Once the standard input file is exported from Abaqus, the user will need to modify it to use it with the UEL. For Neo-Hookean materials, the user needs to specify the shear modulus and bulk modulus which is 3-5 orders of magnitude larger than the shear modulus. For Arruda-Boyce material, another property, called locking stretch also needs to be specified. Additional integer properties to be specified are the number of integration points, `nInt`, and the number of variables to be post-processed at the integration points `localPostVars`.
+To demonstrate the usage of the user element subroutine capabilities in Abaqus, a few sample input files are provided for different element types. Users can use Abaqus/ CAE to create a standard Abaqus model and export `.inp` files. It is recommended to use the option `Do not use parts and assemblies in input files` from the **model attributes** drop-down menu before generating the input file. This option will generate a cleaner input file. Once the standard input file is exported from Abaqus, the user will need to modify it to use it with the UEL. For Neo-Hookean materials, the user needs to specify the shear modulus and bulk modulus which is 3-5 orders of magnitude larger than the shear modulus. For Arruda-Boyce material, another property, called locking stretch also needs to be specified. Additional integer properties to be specified are the number of integration points, `nInt`, type of constitutive model, `matFlag`, and the number of variables to be post-processed at the integration points `nPostVars`.
 
 
 #### Visualization
@@ -67,7 +69,6 @@ An additional set of elements with the same element connectivity as the user ele
 
 
 **To-do list for example input files:**
-- [ ] In the README.md file, add the available element tags and examples for keywords for user elements.
 - [ ] Add examples showing how to use body force and traction/ pressure boundary conditions.
 - [ ] Add input file parser for pre-processing.
 
