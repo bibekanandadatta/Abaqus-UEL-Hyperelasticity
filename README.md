@@ -97,6 +97,6 @@ For additional information on executing user subroutines, check the Abaqus/ Stan
 
 
 
-## Reference
+## Citation
 
 In case you use this subroutine for educational or research purposes, please cite this source.
