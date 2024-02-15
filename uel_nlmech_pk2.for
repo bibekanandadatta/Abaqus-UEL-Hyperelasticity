@@ -311,6 +311,7 @@
       integer:: i, j, intPt, matFlag, istat
 
       ! initialize the matrices and vectors
+      F  = zero
       Na = zero
       Ba = zero
       Ga = zero
@@ -383,8 +384,7 @@
           write(*,*) 'element jacobian is ill-condiitoned', jElem
         endif
 
-        dNdX    = matmul(dNdxi,dxidx)       ! calculate dNdX
-
+        dNdX    = matmul(dNdxi,dxidX)       ! calculate dNdX
 
         ! loop over all the nodes (internal loop)
         do i=1,nNode
@@ -432,7 +432,7 @@
 
         ! calculate deformation gradient and deformation tensors
         F(1:nDim,1:nDim) = ID + matmul(uNode,dNdX)
-
+        
         if (analysis .eq. 'PE') then
           F(3,3) = one
         endif
@@ -568,6 +568,9 @@
 
       ! perform all the constitutitve relations in 3D
       call detMat3(F,detF)
+      if (detF .lt. zero) then
+        write(*,*) 'Check result: detF.lt.zero', detF
+      endif
 
       B = matmul(F,transpose(F))
       C = matmul(transpose(F),F)
@@ -693,6 +696,9 @@
 
       ! perform all the constitutitve relations in 3D
       call detMat3(F,detF)
+      if (detF .lt. zero) then
+        write(*,*) 'Check result: detF.lt.zero', detF
+      endif
 
       B = matmul(F,transpose(F))
       C = matmul(transpose(F),F)
