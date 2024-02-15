@@ -353,7 +353,7 @@
         ID = ID3
         call gaussQuadrtr3(nNode,nInt,w,xi)
       else
-        write(*,*) 'incorrect model dimension'
+        write(*,*) 'incorrect model dimension, nDim =', nDim
         call xit
       endif
 
@@ -367,7 +367,7 @@
         elseif (nDim.eq.3) then
           call interpFunc3(nNode,nInt,intPt,xi,Nxi,dNdxi)
         else
-          write(*,*) 'incorrect model dimension'
+          write(*,*) 'incorrect model dimension, nDim =', nDim
           call xit
         endif
 
@@ -415,7 +415,7 @@
             Ba(6,2) = dNdx(i,1)
 
           else
-            write(*,*)  'wrong analysis type'
+            write(*,*) 'wrong analysis type: ', analysis
             call xit
           endif
 
@@ -569,7 +569,7 @@
       ! perform all the constitutitve relations in 3D
       call detMat3(F,detF)
       if (detF .lt. zero) then
-        write(*,*) 'Check result: detF.lt.zero', detF
+        write(*,*) 'check result: detF.lt.zero', detF
       endif
 
       B = matmul(F,transpose(F))
