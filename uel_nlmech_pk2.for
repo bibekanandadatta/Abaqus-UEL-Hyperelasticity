@@ -13,7 +13,7 @@
 !     U4                THREE-DIMENSIONAL HEX20 ELEMENT
 !
 !     U5                PLANE STRAIN TRI3 ELEMENT
-!     U6                PLANE STRAIN TRI6 ELEMEN
+!     U6                PLANE STRAIN TRI6 ELEMENT
 !     U7                PLANE STRAIN QUAD4 ELEMENT
 !     U8                PLANE STRAIN QUAD8 ELEMENT
 ************************************************************************
@@ -336,6 +336,11 @@
       uNode  = reshape(UAll,(/nDim,nNode/))
       duNode = reshape(DUAll(:,1),(/nDim,nNode/))
 
+      ! if applicable gather the prescribed field variables in a vector
+      ! such as temperature (as shown below in commented line - not tested)
+      ! fieldNode(1,1:nNode) = predef(1,1,1:nNode)
+      ! dfieldNode(1,1:nNode) = predef(2,1,1:nNode)
+
 
      !!!!!!!!!!!!!!!!! ELEMENT RELATED OPERATIONS !!!!!!!!!!!!!!!!!!!!!!
 
@@ -351,10 +356,6 @@
         call xit
       endif
 
-      ! if applicable gather the prescribed field variables in a vector
-      ! such as temperature (as shown below in commented line - not tested)
-      ! fieldNode(1,1:nNode) = predef(1,1,1:nNode)
-      ! dfieldNode(1,1:nNode) = predef(2,1,1:nNode)
 
       ! loop through all the integration points (main/ external loop)
       do intPt = 1, nInt
@@ -370,26 +371,20 @@
         endif
 
         ! calculate element jacobian and global gradient
-        dxdxi   = matmul(coords,dNdxi)      ! calculate dxdxi
+        dXdxi   = matmul(coords,dNdxi)      ! calculate dXdxi
 
         if (nDim.eq.2) then
-          call inverseMat2(dxdxi,dxidx,detJ,istat)
+          call inverseMat2(dXdxi,dxidX,detJ,istat)
         elseif(nDim.eq.3) then
-          call inverseMat3(dxdxi,dxidx,detJ,istat)
+          call inverseMat3(dXdxi,dxidX,detJ,istat)
         endif
 
         if (istat .eq. 0) then
           write(*,*) 'element jacobian is ill-condiitoned', jElem
         endif
 
-        dNdx    = matmul(dNdxi,dxidx)       ! calculate dNdx
+        dNdX    = matmul(dNdxi,dxidx)       ! calculate dNdX
 
-        ! interpolate the field variable at the integration point
-        ! (as shown below - not tested)
-    !     fieldVar = dot_product(reshape(Nxi,(/nNode/)),
-    !  &                        reshape(fieldNode,(/nNode/)))
-    !     dfieldVar = dot_product(reshape(Nxi,(/nNode/)),
-    !  &                        reshape(dfieldNode,(/nNode/)))
 
         ! loop over all the nodes (internal loop)
         do i=1,nNode
@@ -433,7 +428,7 @@
       !!!!!!!!!!!!!! COMPLETE ELEMENT RELATED OPERATIONS !!!!!!!!!!!!!!!
 
 
-      !!!!!!!!!!!!!!!!!!!!! KINEMATIC CALCULATION !!!!!!!!!!!!!!!!!!!!!!
+      !!!!!!!!!!!!!!!!!!!!!!! CONSTITUTIVE MODEL !!!!!!!!!!!!!!!!!!!!!!!
 
         ! calculate deformation gradient and deformation tensors
         F(1:nDim,1:nDim) = ID + matmul(uNode,dNdX)
@@ -441,10 +436,14 @@
         if (analysis .eq. 'PE') then
           F(3,3) = one
         endif
-      !!!!!!!!!!!!!!!!!!!! END KINEMATIC CALCULATION !!!!!!!!!!!!!!!!!!!
 
+        ! interpolate the field variable at the integration point
+        ! (as shown below - not tested)
+    !     fieldVar = dot_product(reshape(Nxi,(/nNode/)),
+    !  &                        reshape(fieldNode,(/nNode/)))
+    !     dfieldVar = dot_product(reshape(Nxi,(/nNode/)),
+    !  &                        reshape(dfieldNode,(/nNode/)))
 
-      !!!!!!!!!!!!!!!!!!!!!!! CONSTITUTIVE MODEL !!!!!!!!!!!!!!!!!!!!!!!
 
         ! call material point subroutine (UMAT) for specific material
         if (matFlag .eq. 1) then
@@ -461,7 +460,7 @@
      &          coords,nnode,kstep,kinc,props,nprops,nlocalSdv,
      &          analysis)
         endif
-        ! can add more constitutive model using elseif construct
+        ! can add more constitutive models using elseif construct here
 
       !!!!!!!!!!!!!!!!!!!! END CONSTITUTIVE MODEL !!!!!!!!!!!!!!!!!!!!!!
 
@@ -502,10 +501,11 @@
 
       !!!!!!!!!!!!!! TANGENT MATRIX AND RESIDUAL VECTOR !!!!!!!!!!!!!!!!
 
-
       enddo                         ! end of integration point loop
 
+
       ! body force and surface load can be added using dummy elements
+
 
       ! assign the element stiffness matrix to abaqus-defined variable
       AMATRX(1:NDOFEL,1:NDOFEL) = kuu(1:uDOFEl,1:uDOFEl)
@@ -559,10 +559,10 @@
       Gshear= props(1)        ! Shear modulus
       kappa = props(2)        ! Bulk modulus
       lam_L = props(3)        ! locking stretch
-      ! locking stretch should be infinity (0 as input) for NH model
 
+      ! locking stretch should be infinity (0 as input) for NH model
       if (lam_L .ne. zero) then
-        write(*,*) 'Incorrect material parameter for NH model', lam_L
+        write(*,*) 'Incorrect material parameter (lam_L)', lam_L
         call xit
       endif
 
@@ -585,7 +585,7 @@
             do l = 1,3
               Cmat(i,j,k,l) = Cmat(i,j,k,l)
      &            + kappa*Cinv(i,j)*Cinv(k,l)
-     &            + (Gshear-kappa*dlog(detF))*( Cinv(i,k)*Cinv(j,l)
+     &            + (Gshear-kappa*dlog(detF)) *( Cinv(i,k)*Cinv(j,l)
      &            + Cinv(i,l)*Cinv(j,k) )
             enddo
           enddo
@@ -710,13 +710,12 @@
       beta_c = InvLangevin(lam_r)
       dBeta_c = DInvLangevin(lam_r)
 
-
       ! form material tangent, C_ijkl
       do i = 1,3
         do j = 1,3
           do k = 1,3
             do l = 1,3
-              Cmat(i,j,k,l) = Cmat(i,j,k,l) + Gshear/(9.0*lam_c**2)*
+              Cmat(i,j,k,l) = Cmat(i,j,k,l) + Gshear/(nine*lam_c**2)*
      &              (dBeta_c- lam_r*beta_c)*ID3(i,j)*ID3(k,l)
      &            + kappa*Cinv(i,j)*Cinv(k,l)
      &            + ( Gshear/3.0*lam_r*beta_c-kappa*dlog(detF) )*
@@ -726,10 +725,10 @@
         enddo
       enddo
 
-      stressTensorCauchy = (1/detF)*( Gshear/3.0*lam_r*beta_c*B -
-     &      (Gshear*lam_L/3.0 - kappa*dlog(detF))*ID3 )
-      stressTensorPK2 = Gshear/3.0*lam_r*beta_c*ID3 -
-     &      (Gshear*lam_L/3.0 - kappa*dlog(detF))*Cinv
+      stressTensorCauchy = (1/detF)*( (Gshear/three)*lam_r*beta_c*B -
+     &      (Gshear*lam_L/three - kappa*dlog(detF))*ID3 )
+      stressTensorPK2 = Gshear/three*lam_r*beta_c*ID3 -
+     &      (Gshear*lam_L/three - kappa*dlog(detF))*Cinv
 
 
       ! transforms the stiffness tensor 3x3x3x3 to a 6x6 matrix
@@ -988,6 +987,7 @@
           w(9) = w1D(1)
 
           x1D(1) = dsqrt(three/five)
+
           ! Gauss pt locations in master element
           xi(1,1) = -x1D(1)
           xi(1,2) = -x1D(1)
@@ -1588,7 +1588,7 @@
       ! this subroutine RETURNs the list of nodes on an
       ! element face for standard 2D and 3D Lagrangian elements
 
-      implicit none
+      IMPLICIT NONE
 
       integer, intent (in) :: nDim, nNode, face
       integer, intent (out):: list(*)
@@ -1670,9 +1670,9 @@
 ************************************************************************
 !
 !     SUBROUTINE to create identity matrix of any dimention
-!     SUBROTINE to calculate determinant of matrix
+!     SUBROUTINE to calculate determinant of matrix
 !     SUBROUTINE to calculate direct inverse of 2x2 and 3x3 matrix
-!     SUBROTUINE to map symmetric tensor to a vector
+!     SUBROUTINE to map symmetric tensor to a vector
 !     SUBROUTINE to map 4th order tensor to 2D Voigt matrix
 ************************************************************************
 
