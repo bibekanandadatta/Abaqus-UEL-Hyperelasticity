@@ -17,6 +17,18 @@
 !     U7                PLANE STRAIN QUAD4 ELEMENT
 !     U8                PLANE STRAIN QUAD8 ELEMENT
 ************************************************************************
+!                       LIST OF MATERIAL PROPERTIES
+!
+!     G           = props(1)        Shear modulus
+!     kappa       = props(2)        Bulk modulus
+!     lam_L       = props(3)        Locking stretch for AB model (only)
+************************************************************************
+!                        LIST OF ELEMENT PROPERTIES
+!
+!     jprops(1)   = nInt            no of integration points in element
+!     jprops(2)   = matID           constitutive relation for material
+!     jprops(3)   = nPostVars       no of local (int pt) post-processing variables
+************************************************************************
 !               VARIABLES TO BE UPDATED WITHIN THE SUBROUTNE
 !
 !     RHS(i)                        Right hand side vector.
@@ -72,24 +84,13 @@
 !     MLVARX                        Dimension variable
 !     PERIOD                        Time period of the current step
 ************************************************************************
-!                       LIST OF MATERIAL PROPERTIES
-!
-!       G           = props(1)        Shear modulus
-!       kappa       = props(2)        Bulk modulus
-!       lam_L       = props(3)        Locking stretch for AB model (only)
-************************************************************************
-!                        LIST OF ELEMENT PROPERTIES
-!
-!     jprops(1)   = nInt            no of integration points in element
-!     jprops(2)   = matFlag         constitutive relation for material
-!     jprops(3)   = nPostVars   no of local (int pt) post-processing variables
 ************************************************************************
 !                          PARAMETERS MODULE
 !
 !     defines double precision real parameters to be used in various
 !     functions and subroutines within and outside of UEL
 ************************************************************************
-************************************************************************
+
 
       MODULE PARAMETERS
 
@@ -149,7 +150,7 @@
      &      KSTEP, KINC, JELEM, NDLOAD, JDLTYP, NPREDF, LFLAGS,
      &      MLVARX, MDLOAD, JPROPS, NJPROPS
 
-      integer:: nInt, matFlag, nPostVars
+      integer:: nInt, matID, nPostVars
       integer:: nDim, ndi, nshr, ntens, uDOF, uDOFEL
 
       integer:: lenJobName,lenOutDir
@@ -171,7 +172,8 @@
       if((lflags(1).eq.1).or.(lflags(1).eq.2)) then
         ABQ_PROCEDURE = 'STATIC'
       else
-        write(*,*) 'ABAQUS does not have the right procedure'
+        write(80,*) 'Incorrect STEP procedure in Abaqus', lflags(1)
+        write(*,*) 'Incorrect STEP procedure in Abaqus', lflags(1)
         call xit
       endif
 
@@ -186,7 +188,8 @@
 
       ! check to see if it's a general step or a linear purturbation step
       if(lflags(4).eq.1) then
-        write(*,*) 'the load step should be a general step'
+        write(80,*) 'the load step should be a general step', lflags(4)
+        write(*,*) 'the load step should be a general step', lflags(4)
         call xit
       endif
 
@@ -205,6 +208,7 @@
         nshr = 1
         ntens = 3
       else
+        write(80,*) 'element type is not supported', JTYPE
         write(*,*) 'element type is not supported', JTYPE
         call xit
       endif
@@ -216,13 +220,35 @@
 
 
       nInt = jprops(1)
-      matFlag = jprops(2)
+      matID = jprops(2)
       nPostVars = jprops(3)
 
 
       ! array containing variables for post-processing
       if (.not. allocated(globalPostVars)) then
         allocate(globalPostVars(numElem,nInt,nPostVars))
+
+        ! print necessary information to the screen
+       write(80,*) '---------------------------------------'
+       write(80,*) '------- ABAQUS FINITE STRAIN UEL ------'
+       write(80,*) '---------------------------------------'
+       write(80,*) jobName
+       write(80,*) '---------------------------------------'
+       write(80,*) '------- PROCEDURE = ', ABQ_PROCEDURE
+       write(80,*) '------- ANALYSIS TYPE   = ', analysis
+       write(80,*) '---------- NLGEOM = ', NLGEOM
+       write(80,*) '------- MODEL DIMENSION = ', nDim
+       write(80,*) '------- ELEMENT NODES   = ', NNODE
+       write(80,*) '------- MATERIAL ID     = ', matID
+       write(80,*) '---------------------------------------'
+       write(80,*) '-------- INTEGRATION SCHEME -----------'
+       write(80,*) '----------- NINT  = ', nInt
+       write(80,*) '---------------------------------------'
+       write(80,*) '---------- POST-PROCESSING ------------'
+       write(80,*) '--- NO OF ELEMENTS            = ', numElem
+       write(80,*) '--- DUMMY ELEMENT OFFSET      = ', ElemOffset
+       write(80,*) '--- NO OF VARIABLES AT INT PT = ', nPostVars
+       write(80,*) '---------------------------------------'
 
         ! print necessary information to the screen
         write(*,*) '---------------------------------------'
@@ -235,7 +261,7 @@
         write(*,*) '---------- NLGEOM = ', NLGEOM
         write(*,*) '------- MODEL DIMENSION = ', nDim
         write(*,*) '------- ELEMENT NODES   = ', NNODE
-        write(*,*) '------- MATERIAL ID     = ', matFlag
+        write(*,*) '------- MATERIAL ID     = ', matID
         write(*,*) '---------------------------------------'
         write(*,*) '-------- INTEGRATION SCHEME -----------'
         write(*,*) '----------- NINT  = ', nInt
@@ -308,7 +334,7 @@
      &      stressCauchy(ntens,1), stressPK1(nDim*nDim,1),
      &      stressPK2(ntens,1), Dmat(ntens,ntens)
 
-      integer:: i, j, intPt, matFlag, istat
+      integer:: i, j, intPt, matID, istat
 
       ! initialize the matrices and vectors
       F  = zero
@@ -328,7 +354,7 @@
       AMATRX(1:NDOFEL,1:NDOFEL) = zero
       RHS(1:MLVARX,1) = zeros
 
-      matFlag = jprops(2)
+      matID = jprops(2)
       nlocalSdv = NSVARS/NINT
 
      !!!!!!!!!!! END VARIABLE DECLARATION AND INITIALIZATION !!!!!!!!!!!
@@ -353,6 +379,7 @@
         ID = ID3
         call gaussQuadrtr3(nNode,nInt,w,xi)
       else
+        write(80,*) 'incorrect model dimension, nDim =', nDim
         write(*,*) 'incorrect model dimension, nDim =', nDim
         call xit
       endif
@@ -367,6 +394,7 @@
         elseif (nDim.eq.3) then
           call interpFunc3(nNode,nInt,intPt,xi,Nxi,dNdxi)
         else
+          write(80,*) 'incorrect model dimension, nDim =', nDim
           write(*,*) 'incorrect model dimension, nDim =', nDim
           call xit
         endif
@@ -381,7 +409,8 @@
         endif
 
         if (istat .eq. 0) then
-          write(*,*) 'element jacobian is ill-condiitoned', jElem
+          write(80,*) 'ill-condiitoned element jacobian', jElem, intPt
+          write(*,*) 'ill-condiitoned element jacobian', jElem, intPt
         endif
 
         dNdX    = matmul(dNdxi,dxidX)       ! calculate dNdX
@@ -415,6 +444,7 @@
             Ba(6,2) = dNdx(i,1)
 
           else
+            write(80,*) 'wrong analysis type: ', analysis
             write(*,*) 'wrong analysis type: ', analysis
             call xit
           endif
@@ -446,14 +476,14 @@
 
 
         ! call material point subroutine (UMAT) for specific material
-        if (matFlag .eq. 1) then
+        if (matID .eq. 1) then
           call umatNeoHookean(stressCauchy,stressPK1,stressPK2,
      &          Dmat,F,svars,nsvars,stranLagrange,stranEuler,time,
      &          dtime,fieldVar,npredf,nDim,ndi,nshr,ntens,jelem,intpt,
      &          coords,nnode,kstep,kinc,props,nprops,nlocalSdv,
      &          analysis)
 
-        elseif (matFlag .eq. 2) then
+        elseif (matID .eq. 2) then
           call umatArrudaBoyce(stressCauchy,stressPK1,stressPK2,
      &          Dmat,F,svars,nsvars,stranLagrange,stranEuler,time,
      &          dtime,fieldVar,npredf,nDim,ndi,nshr,ntens,jelem,intPt,
@@ -562,6 +592,7 @@
 
       ! locking stretch should be infinity (0 as input) for NH model
       if (lam_L .ne. zero) then
+        write(80,*) 'Incorrect material parameter (lam_L)', lam_L
         write(*,*) 'Incorrect material parameter (lam_L)', lam_L
         call xit
       endif
@@ -569,7 +600,8 @@
       ! perform all the constitutitve relations in 3D
       call detMat3(F,detF)
       if (detF .lt. zero) then
-        write(*,*) 'check result: detF.lt.zero', detF
+        write(80,*) 'check result: detF.lt.zero', jelem, intpt, detF
+        write(*,*) 'check result: detF.lt.zero', jelem, intpt, detF
       endif
 
       B = matmul(F,transpose(F))
@@ -635,9 +667,9 @@
         stressCauchy = stressVoigtCauchy
       endif
 
-        ! save the variables to be post-processed in globalPostVars
-        globalPostVars(jelem,intpt,1:ntens) = stressCauchy(1:ntens,1)
-        globalPostVars(jelem,intpt,ntens+1:2*ntens) =
+      ! save the variables to be post-processed in globalPostVars
+      globalPostVars(jelem,intpt,1:ntens) = stressCauchy(1:ntens,1)
+      globalPostVars(jelem,intpt,ntens+1:2*ntens) =
      &                     stranEuler(1:ntens,1)
 
 
@@ -690,6 +722,7 @@
       lam_L = props(3) 				! Locking stretch
 
       if (lam_L .eq. zero) then
+        write(80,*) 'Incorrect material parameter for AB model', lam_L
         write(*,*) 'Incorrect material parameter for AB model', lam_L
         call xit
       endif
@@ -697,7 +730,8 @@
       ! perform all the constitutitve relations in 3D
       call detMat3(F,detF)
       if (detF .lt. zero) then
-        write(*,*) 'Check result: detF.lt.zero', detF
+        write(*,*) 'Check result: detF.lt.zero', jelem, intPt, detF
+        write(*,*) 'Check result: detF.lt.zero', jelem, intPt, detF
       endif
 
       B = matmul(F,transpose(F))
@@ -794,7 +828,8 @@
       elseif ((dabs(x) .ge. 0.84136d0) .and. (dabs(x) .lt. one)) then
         InvLangevin = one/(dsign(one,x)-x)
       else
-        write(*,*) 'unbound argument for inverse Langevin function'
+        write(80,*) 'unbound argument for inverse Langevin function', x
+        write(*,*) 'unbound argument for inverse Langevin function', x
         call xit
       endif
 
@@ -816,7 +851,8 @@
       elseif ((dabs(x) .ge. 0.84136) .and. (dabs(x) .lt. one)) then
         DInvLangevin = one/((dsign(one,x)-x)**two)
       else
-        write(*,*) 'unbound argument for inverse Langevin function'
+        write(80,*) 'unbound argument for inverse Langevin function', x
+        write(*,*) 'unbound argument for inverse Langevin function', x
         call xit
       endif
 
@@ -887,15 +923,21 @@
       w  = zero
       xi = zero
 
-      ! plane triangular elements
-      if((nNode.eq.3).or.(nNode.eq.6)) then
-
+      ! plane tri3 elements
+      if (nNode.eq.3) then
         if (nInt.eq.1) then
           w(1) = half
           xi(1,1) = third
           xi(2,1) = third
+        else
+          write(80,*) 'wrong gauss points for tri3 element', nInt
+          write(*,*) 'wrong gauss points for tri3 element', nInt
+          call xit
+        endif
 
-        elseif(nInt.eq.3) then
+      ! plane tri6 elements
+      elseif (nNode.eq.6) then
+        if (nInt.eq.3) then
           w(1:3) = sixth
 
           xi(1,1) = half
@@ -904,53 +946,14 @@
           xi(2,2) = half
           xi(3,1) = half
           xi(3,2) = zero
-
-        elseif (nInt.eq.4) then
-          w(1) = -27.d0/96.d0
-          w(2) = 25.d0/96.d0
-          w(3) = w(2)
-          w(4) = w(2)
-
-          xi(1,1) = third
-          xi(1,2) = xi(1,1)
-          xi(2,1) = 0.6d0
-          xi(2,2) = 0.2d0
-          xi(3,1) = 0.2d0
-          xi(3,2) = 0.6d0
-          xi(4,1) = 0.2d0
-          xi(4,2) = 0.2d0
-
-        elseif (nInt.eq.7) then
-          w(1) = 0.1125d0
-          w(2) = 0.0661970763d0
-          w(3) = w(2)
-          w(4) = w(2)
-          w(5) = 0.0629695902d0
-          w(6) = w(5)
-          w(7) = w(5)
-
-          xi(1,1) = third
-          xi(1,2) = xi(1,1)
-          xi(2,1) = 0.0597158717d0
-          xi(2,2) = 0.4701420641d0
-          xi(3,1) = xi(2,2)
-          xi(3,2) = xi(2,1)
-          xi(4,1) = xi(2,2)
-          xi(4,2) = xi(2,2)
-          xi(5,1) = 0.7974269853d0
-          xi(5,2) = 0.1012865073d0
-          xi(6,1) = xi(5,2)
-          xi(6,2) = xi(5,1)
-          xi(7,1) = xi(5,2)
-          xi(7,2) = xi(5,2)
-
         else
-          write(*,*) 'wrong gauss points for tri element', nInt
+          write(80,*) 'wrong gauss points for tri6 element', nInt
+          write(*,*) 'wrong gauss points for tri6 element', nInt
           call xit
         endif
-
-      ! plane quad elements
-      elseif((nNode.eq.4).or.(nNode.eq.8)) then
+        
+      ! plane quad4 element
+      elseif((nNode.eq.4)) then
 
         ! reduced integration for quad4 element
         if (nInt.eq.1) then
@@ -961,12 +964,28 @@
 
         ! full integration for quad4
         elseif (nInt.eq.4) then
-          ! gauss weights
+
           w(1:4) = one
 
           x1D(1) = dsqrt(third)
+          xi(1,1) = -x1D(1)
+          xi(1,2) = -x1D(1)
+          xi(2,1) = x1D(1)
+          xi(2,2) = -x1D(1)
+          xi(3,1) = -x1D(1)
+          xi(3,2) = x1D(1)
+          xi(4,1) = x1D(1)
+          xi(4,2) = x1D(1)
+        endif
 
-          ! gauss pt locations in master element
+      ! plane quad8 element
+      elseif (nNode.eq.8) then
+        ! reduced integration for quad8
+        if (nInt.eq.4) then
+
+          w(1:4) = one
+
+          x1D(1) = dsqrt(third)
           xi(1,1) = -x1D(1)
           xi(1,2) = -x1D(1)
           xi(2,1) = x1D(1)
@@ -993,8 +1012,6 @@
           w(9) = w1D(1)
 
           x1D(1) = dsqrt(three/five)
-
-          ! Gauss pt locations in master element
           xi(1,1) = -x1D(1)
           xi(1,2) = -x1D(1)
           xi(2,1) = zero
@@ -1015,14 +1032,17 @@
           xi(9,2) = x1D(1)
 
         else
-          write(*,*) 'wrong gauss points for quad element', nInt
+          write(80,*) 'wrong gauss points for quad8 element', nInt
+          write(*,*) 'wrong gauss points for quad8 element', nInt
           call xit
         endif
 
       else
-        write(*,*) 'element is not supported for 2D analysis', nNode
+        write(80,*) 'elements not supported for 2D analysis', nNode
+        write(*,*) 'elements not supported for 2D analysis', nNode
         call xit
       endif
+
 
       RETURN
       END SUBROUTINE gaussQuadrtr2
@@ -1048,14 +1068,20 @@
       w  = zero
       xi = zero
 
-      ! 4 node or 10 node tetrahedral elements
-      if((nNode.eq.4).or.(nNode.eq.10)) then
-
-        if (nInt.eq.1) then
+      if(nNode.eq.4) then
+        if(nInt.eq.1) then
           w(1) = sixth
           xi(1:3,1) = fourth
 
-        else if (nInt.eq.4) then
+        else
+          write(80,*) 'wrong gauss points for tet4 element', nInt
+          write(*,*) 'wrong gauss points for tet4 element', nInt
+          call xit
+        endif
+
+      elseif(nNode.eq.10) then
+
+        if (nInt.eq.4) then
           w(1:4) = one/24.d0
 
           xi(1,1) = 0.58541020d0
@@ -1071,51 +1097,52 @@
           xi(4,2) = xi(2,1)
           xi(4,3) = xi(2,1)
 
-        else if (nInt.eq.5) then
-          w(1) = -four/30.d0
-          w(2:5) = three/40.d0
-          xi(1,1) = fourth
-          xi(1,2) = fourth
-          xi(1,3) = fourth
-          xi(2,1) = half
-          xi(2,2) = sixth
-          xi(2,3) = sixth
-          xi(3,1) = sixth
-          xi(3,2) = half
-          xi(3,3) = sixth
-          xi(4,1) = sixth
-          xi(4,2) = sixth
-          xi(4,3) = half
-          xi(5,1) = sixth
-          xi(5,2) = sixth
-          xi(5,3) = sixth
-
         else
-          write(*,*) 'wrong gauss points for tet element', nInt
+          write(80,*) 'wrong gauss points for tet10 element', nInt
+          write(*,*) 'wrong gauss points for tet10 element', nInt
           call xit
         endif
 
+      elseif(nNode.eq.8) then
 
-      ! 8 node or 20 node hexahedral elements
-      elseif ((nNode.eq.8).or.(nNode.eq.20)) then
-
-        ! reduced integration scheme for hex8
-        if (nInt.eq.1) then
-
-          ! gauss weights
+        ! reduced integration for hex8
+        if(nInt.eq.1) then
           w(1) = eight
-          ! Gauss pt locations in master element
           xi(1,1:3) = zero
 
-        ! full integration scheme for hex8
+        ! full-integration for hex8
         elseif(nInt.eq.8) then
-
-          ! weights
           w(1:8) = one
 
           x1D(1) = -dsqrt(third)
           x1D(2) = dsqrt(third)
-          ! Gauss pt locations in master element
+         
+          do k = 1,2
+            do j = 1,2
+              do i = 1,2
+                n = 4*(k-1) + 2*(j-1) + i
+                xi(n,1) = x1D(i)
+                xi(n,2) = x1D(j)
+                xi(n,3) = x1D(k)
+              end do
+            end do
+          end do
+
+        else
+          write(80,*) 'wrong gauss points for hex8 element', nInt
+          write(*,*) 'wrong gauss points for hex8 element', nInt
+          call xit
+        endif
+
+
+      elseif(nNode.eq.20) then
+
+        if (nInt.eq.8) then
+          w(1:8) = one
+
+          x1D(1) = -dsqrt(third)
+          x1D(2) = dsqrt(third)
+         
           do k = 1,2
             do j = 1,2
               do i = 1,2
@@ -1128,7 +1155,6 @@
           end do
 
         elseif(nInt.eq.27) then
-
           w1D(1) = five/nine
           w1D(2) = eight/nine
           w1D(3) = w1D(1)
@@ -1149,18 +1175,19 @@
           end do
 
         else
-          write(*,*) 'wrong gauss points for hex element', nInt
+          write(80,*) 'wrong gauss points for hex20 element', nInt
+          write(*,*) 'wrong gauss points for hex20 element', nInt
           call xit
         endif
 
       else
+        write(80,*) 'element is not supported for 3D analysis', nNode
         write(*,*) 'element is not supported for 3D analysis', nNode
         call xit
       endif
 
       RETURN
       END SUBROUTINE gaussQuadrtr3
-
 ************************************************************************
 
       SUBROUTINE interpFunc2(nNode,nInt,intPt,xi_int,Nxi,dNdxi)
@@ -1317,6 +1344,7 @@
         dNdxi(8,2) = -eta*(one - xi)
 
       else
+        write(80,*) 'element is not supported for 2D analysis', nNode
         write(*,*) 'element is not supported for 2D analysis', nNode
         call xit
       endif
@@ -1581,6 +1609,7 @@
         dNdxi(20,2) = (one-xi)*(one-zeta**two)/four
         dNdxi(20,3) = -zeta*(one-xi)*(one+eta)/two
       else
+        write(80,*) 'element is not supported for 3D analysis', nNode
         write(*,*) 'element is not supported for 3D analysis', nNode
         call xit
       endif
@@ -1764,10 +1793,12 @@
       call detMat2(A,detA)
 
       if (detA .le. zero) then
-          write(*,*) 'WARNING: subroutine inverseMat2:'
-          write(*,*) 'WARNING: det of mat= ', detA
-          istat = 0
-          RETURN
+        write(80,*) 'WARNING: subroutine inverseMat2:'
+        write(80,*) 'WARNING: det of mat= ', detA
+        write(*,*) 'WARNING: subroutine inverseMat2:'
+        write(*,*) 'WARNING: det of mat= ', detA
+        istat = 0
+        RETURN
       end if
 
       detAinv = one/detA
@@ -1797,6 +1828,8 @@
       call detMat3(A,detA)
 
       if (detA .le. zero) then
+        write(80,*) 'WARNING: subroutine inverseMat3:'
+        write(80,*) 'WARNING: det of mat= ', detA
         write(*,*) 'WARNING: subroutine inverseMat3:'
         write(*,*) 'WARNING: det of mat= ', detA
         istat = 0
