@@ -168,32 +168,6 @@
       open(unit=80,file=fileName,status='unknown')
 
 
-      ! change the LFLAGS criteria as needed (check abaqus UEL manual)
-      if((lflags(1).eq.1).or.(lflags(1).eq.2)) then
-        ABQ_PROCEDURE = 'STATIC'
-      else
-        write(80,*) 'Incorrect STEP procedure in Abaqus', lflags(1)
-        write(*,*) 'Incorrect STEP procedure in Abaqus', lflags(1)
-        call xit
-      endif
-
-
-      ! check if the procedure is linear or nonlinear
-      if (lflags(2).eq.0) then
-        NLGEOM = .false.
-      elseif (lflags(2).eq.1) then
-        NLGEOM = .true.
-      endif
-
-
-      ! check to see if it's a general step or a linear purturbation step
-      if(lflags(4).eq.1) then
-        write(80,*) 'the load step should be a general step', lflags(4)
-        write(*,*) 'the load step should be a general step', lflags(4)
-        call xit
-      endif
-
-
       ! assign parameter specific to analysis and element types
       if ((JTYPE.ge.1).and.(JTYPE.le.4)) then
         analysis = '3D'         ! three-dimensional analysis
@@ -213,11 +187,34 @@
         call xit
       endif
 
+
+      ! change the LFLAGS criteria as needed (check abaqus UEL manual)
+      if((lflags(1).eq.1).or.(lflags(1).eq.2)) then
+        ABQ_PROCEDURE = 'STATIC'
+      else
+        write(80,*) 'Incorrect STEP procedure in Abaqus', lflags(1)
+        write(*,*) 'Incorrect STEP procedure in Abaqus', lflags(1)
+        call xit
+      endif
+
+      ! check if the procedure is linear or nonlinear
+      if (lflags(2).eq.0) then
+        NLGEOM = .false.
+      elseif (lflags(2).eq.1) then
+        NLGEOM = .true.
+      endif
+
+      ! check to see if it's a general step or a linear purturbation step
+      if(lflags(4).eq.1) then
+        write(80,*) 'The load step should be a GENERAL step'
+        write(*,*) 'The load step should be a GENERAL step'
+        call xit
+      endif
+
+
       ! for mixed or coupled problem, add other DOF counts as needed
       uDOF = nDim             ! displacement degrees of freedom of a node
       uDOFEL = nDim*nNode     ! total displacement degrees of freedom in element
-
-
 
       nInt = jprops(1)
       matID = jprops(2)
@@ -229,26 +226,26 @@
         allocate(globalPostVars(numElem,nInt,nPostVars))
 
         ! print necessary information to the screen
-       write(80,*) '---------------------------------------'
-       write(80,*) '------- ABAQUS FINITE STRAIN UEL ------'
-       write(80,*) '---------------------------------------'
-       write(80,*) jobName
-       write(80,*) '---------------------------------------'
-       write(80,*) '------- PROCEDURE = ', ABQ_PROCEDURE
-       write(80,*) '------- ANALYSIS TYPE   = ', analysis
-       write(80,*) '---------- NLGEOM = ', NLGEOM
-       write(80,*) '------- MODEL DIMENSION = ', nDim
-       write(80,*) '------- ELEMENT NODES   = ', NNODE
-       write(80,*) '------- MATERIAL ID     = ', matID
-       write(80,*) '---------------------------------------'
-       write(80,*) '-------- INTEGRATION SCHEME -----------'
-       write(80,*) '----------- NINT  = ', nInt
-       write(80,*) '---------------------------------------'
-       write(80,*) '---------- POST-PROCESSING ------------'
-       write(80,*) '--- NO OF ELEMENTS            = ', numElem
-       write(80,*) '--- DUMMY ELEMENT OFFSET      = ', ElemOffset
-       write(80,*) '--- NO OF VARIABLES AT INT PT = ', nPostVars
-       write(80,*) '---------------------------------------'
+        write(80,*) '---------------------------------------'
+        write(80,*) '------- ABAQUS FINITE STRAIN UEL ------'
+        write(80,*) '---------------------------------------'
+        write(80,*) jobName
+        write(80,*) '---------------------------------------'
+        write(80,*) '------- PROCEDURE = ', ABQ_PROCEDURE
+        write(80,*) '------- ANALYSIS TYPE   = ', analysis
+        write(80,*) '---------- NLGEOM = ', NLGEOM
+        write(80,*) '------- MODEL DIMENSION = ', nDim
+        write(80,*) '------- ELEMENT NODES   = ', NNODE
+        write(80,*) '------- MATERIAL ID     = ', matID
+        write(80,*) '---------------------------------------'
+        write(80,*) '-------- INTEGRATION SCHEME -----------'
+        write(80,*) '----------- NINT  = ', nInt
+        write(80,*) '---------------------------------------'
+        write(80,*) '---------- POST-PROCESSING ------------'
+        write(80,*) '--- NO OF ELEMENTS            = ', numElem
+        write(80,*) '--- DUMMY ELEMENT OFFSET      = ', ElemOffset
+        write(80,*) '--- NO OF VARIABLES AT INT PT = ', nPostVars
+        write(80,*) '---------------------------------------'
 
         ! print necessary information to the screen
         write(*,*) '---------------------------------------'
@@ -895,299 +892,16 @@
 
 
 
+
 ************************************************************************
 !                      ELEMENT UTILITY SECTION
 !
-!     SUBROUTINE to calculate Gauss Pts in 2D and 3D elements
 !     SUBROUTINE to evaluate shape functions at the gauss pts
-!     ----- currently supports:    (a) tri elements (3 and 6 nodes)
-!                                  (b) quad elements (4 and 8 nodes)
-!                                  (c) tet elements (4 and 10 nodes)
-!                                  (d) hex elements (8 and 20 nodes)
-************************************************************************
-
-      SUBROUTINE gaussQuadrtr2(nNode,nInt,w,xi)
-
-      ! this subroutines returns the weight and
-      ! the gauss pt coordinates 3D Lagrangian elements
-      ! currently supports: nInt = 1, 3, 4, 7 (tri elements)
-      !                     nInt = 1, 4, 9 (quad elements)
-
-      USE PARAMETERS
-
-      IMPLICIT NONE
-      integer:: nNode, nInt
-      real*8 :: x1D(4), w1D(4)
-      real*8 :: w(nInt), xi(nInt,2)
-
-      w  = zero
-      xi = zero
-
-      ! plane tri3 elements
-      if (nNode.eq.3) then
-        if (nInt.eq.1) then
-          w(1) = half
-          xi(1,1) = third
-          xi(2,1) = third
-        else
-          write(80,*) 'wrong gauss points for tri3 element', nInt
-          write(*,*) 'wrong gauss points for tri3 element', nInt
-          call xit
-        endif
-
-      ! plane tri6 elements
-      elseif (nNode.eq.6) then
-        if (nInt.eq.3) then
-          w(1:3) = sixth
-
-          xi(1,1) = half
-          xi(1,2) = half
-          xi(2,1) = zero
-          xi(2,2) = half
-          xi(3,1) = half
-          xi(3,2) = zero
-        else
-          write(80,*) 'wrong gauss points for tri6 element', nInt
-          write(*,*) 'wrong gauss points for tri6 element', nInt
-          call xit
-        endif
-        
-      ! plane quad4 element
-      elseif((nNode.eq.4)) then
-
-        ! reduced integration for quad4 element
-        if (nInt.eq.1) then
-          w = four
-
-          xi(1,1) = zero
-          xi(1,2) = zero
-
-        ! full integration for quad4
-        elseif (nInt.eq.4) then
-
-          w(1:4) = one
-
-          x1D(1) = dsqrt(third)
-          xi(1,1) = -x1D(1)
-          xi(1,2) = -x1D(1)
-          xi(2,1) = x1D(1)
-          xi(2,2) = -x1D(1)
-          xi(3,1) = -x1D(1)
-          xi(3,2) = x1D(1)
-          xi(4,1) = x1D(1)
-          xi(4,2) = x1D(1)
-        endif
-
-      ! plane quad8 element
-      elseif (nNode.eq.8) then
-        ! reduced integration for quad8
-        if (nInt.eq.4) then
-
-          w(1:4) = one
-
-          x1D(1) = dsqrt(third)
-          xi(1,1) = -x1D(1)
-          xi(1,2) = -x1D(1)
-          xi(2,1) = x1D(1)
-          xi(2,2) = -x1D(1)
-          xi(3,1) = -x1D(1)
-          xi(3,2) = x1D(1)
-          xi(4,1) = x1D(1)
-          xi(4,2) = x1D(1)
-
-        ! full integration for quad8
-        elseif(nInt.eq.9) then
-          w1D(1) = (five/nine)*(five/nine)
-          w1D(2) = (five/nine)*(eight/nine)
-          w1D(3) = (eight/nine)*(eight/nine)
-
-          w(1) = w1D(1)
-          w(2) = w1D(2)
-          w(3) = w1D(1)
-          w(4) = w1D(2)
-          w(5) = w1D(3)
-          w(6) = w1D(2)
-          w(7) = w1D(1)
-          w(8) = w1D(2)
-          w(9) = w1D(1)
-
-          x1D(1) = dsqrt(three/five)
-          xi(1,1) = -x1D(1)
-          xi(1,2) = -x1D(1)
-          xi(2,1) = zero
-          xi(2,2) = -x1D(1)
-          xi(3,1) = x1D(1)
-          xi(3,2) = -x1D(1)
-          xi(4,1) = -x1D(1)
-          xi(4,2) = zero
-          xi(5,1) = zero
-          xi(5,2) = zero
-          xi(6,1) = x1D(1)
-          xi(6,2) = zero
-          xi(7,1) = -x1D(1)
-          xi(7,2) = x1D(1)
-          xi(8,1) = zero
-          xi(8,2) = x1D(1)
-          xi(9,1) = x1D(1)
-          xi(9,2) = x1D(1)
-
-        else
-          write(80,*) 'wrong gauss points for quad8 element', nInt
-          write(*,*) 'wrong gauss points for quad8 element', nInt
-          call xit
-        endif
-
-      else
-        write(80,*) 'elements not supported for 2D analysis', nNode
-        write(*,*) 'elements not supported for 2D analysis', nNode
-        call xit
-      endif
-
-
-      RETURN
-      END SUBROUTINE gaussQuadrtr2
-
-************************************************************************
-
-      SUBROUTINE gaussQuadrtr3(nNode,nInt,w,xi)
-
-      ! this subroutines returns the weights and
-      ! gauss point coordinate of 3D Lagrangian elements
-      ! currently supports: nInt = 1, 4, 5 (tet elements)
-      !                     nInt = 1, 8, 27, 64 (hex8 elements)
-
-      USE PARAMETERS
-
-      IMPLICIT NONE
-
-      integer:: nNode, nInt
-      integer:: i, j, k, n
-      real*8 :: x1D(4), w1D(4)
-      real*8 :: w(nInt), xi(nInt,3)
-
-      w  = zero
-      xi = zero
-
-      if(nNode.eq.4) then
-        if(nInt.eq.1) then
-          w(1) = sixth
-          xi(1:3,1) = fourth
-
-        else
-          write(80,*) 'wrong gauss points for tet4 element', nInt
-          write(*,*) 'wrong gauss points for tet4 element', nInt
-          call xit
-        endif
-
-      elseif(nNode.eq.10) then
-
-        if (nInt.eq.4) then
-          w(1:4) = one/24.d0
-
-          xi(1,1) = 0.58541020d0
-          xi(2,1) = 0.13819660d0
-          xi(3,1) = xi(2,1)
-          xi(1,2) = xi(2,1)
-          xi(2,2) = xi(1,1)
-          xi(3,2) = xi(2,1)
-          xi(1,3) = xi(2,1)
-          xi(2,3) = xi(2,1)
-          xi(3,3) = xi(1,1)
-          xi(4,1) = xi(2,1)
-          xi(4,2) = xi(2,1)
-          xi(4,3) = xi(2,1)
-
-        else
-          write(80,*) 'wrong gauss points for tet10 element', nInt
-          write(*,*) 'wrong gauss points for tet10 element', nInt
-          call xit
-        endif
-
-      elseif(nNode.eq.8) then
-
-        ! reduced integration for hex8
-        if(nInt.eq.1) then
-          w(1) = eight
-          xi(1,1:3) = zero
-
-        ! full-integration for hex8
-        elseif(nInt.eq.8) then
-          w(1:8) = one
-
-          x1D(1) = -dsqrt(third)
-          x1D(2) = dsqrt(third)
-         
-          do k = 1,2
-            do j = 1,2
-              do i = 1,2
-                n = 4*(k-1) + 2*(j-1) + i
-                xi(n,1) = x1D(i)
-                xi(n,2) = x1D(j)
-                xi(n,3) = x1D(k)
-              end do
-            end do
-          end do
-
-        else
-          write(80,*) 'wrong gauss points for hex8 element', nInt
-          write(*,*) 'wrong gauss points for hex8 element', nInt
-          call xit
-        endif
-
-
-      elseif(nNode.eq.20) then
-
-        if (nInt.eq.8) then
-          w(1:8) = one
-
-          x1D(1) = -dsqrt(third)
-          x1D(2) = dsqrt(third)
-         
-          do k = 1,2
-            do j = 1,2
-              do i = 1,2
-                n = 4*(k-1) + 2*(j-1) + i
-                xi(n,1) = x1D(i)
-                xi(n,2) = x1D(j)
-                xi(n,3) = x1D(k)
-              end do
-            end do
-          end do
-
-        elseif(nInt.eq.27) then
-          w1D(1) = five/nine
-          w1D(2) = eight/nine
-          w1D(3) = w1D(1)
-
-          x1D(1) = -dsqrt(0.6d0)
-          x1D(2) = zero
-          x1D(3) = dsqrt(0.6d0)
-          do k = 1,3
-            do j = 1,3
-              do i = 1,3
-                n = 9*(k-1) + 3*(j-1) + i
-                xi(n,1) = x1D(i)
-                xi(n,2) = x1D(j)
-                xi(n,3) = x1D(k)
-                w(n) = w1D(i)*w1D(j)*w1D(k)
-              end do
-            end do
-          end do
-
-        else
-          write(80,*) 'wrong gauss points for hex20 element', nInt
-          write(*,*) 'wrong gauss points for hex20 element', nInt
-          call xit
-        endif
-
-      else
-        write(80,*) 'element is not supported for 3D analysis', nNode
-        write(*,*) 'element is not supported for 3D analysis', nNode
-        call xit
-      endif
-
-      RETURN
-      END SUBROUTINE gaussQuadrtr3
+!     SUBROUTINE to calculate Gauss Pts in 2D and 3D elements
+!     ----- currently supports:    (a) tri elements   (3 and 6 nodes) : full integration
+!                                  (b) quad elements  (4 and 8 nodes) : reduced and full integration
+!                                  (c) tet elements   (4 and 10 nodes): full integration
+!                                  (d) hex elements   (8 and 20 nodes): reduced and full integration
 ************************************************************************
 
       SUBROUTINE interpFunc2(nNode,nInt,intPt,xi_int,Nxi,dNdxi)
@@ -1222,9 +936,8 @@
       !              |       \
       !              1--------2--> xi (=xi_1)
 
-      if (nNode.eq.3) then
-      ! linear shape functions for tri3 element
-
+      if (nNode.eq.3) then        ! 3-noded tri3 linear element
+        ! shape functions
         Nxi(1) = xi
         Nxi(2) = eta
         Nxi(3) = one - xi - eta
@@ -1250,9 +963,8 @@
       !              |       \
       !              1---4----2--> xi (=xi_1)
 
-      elseif (nNode.eq.6) then
-      ! quadratic shape functions for tri6 element
-
+      elseif (nNode.eq.6) then    ! 6-noded quadratic tri6 element
+        ! shape functions
         lam = one - xi - eta
         Nxi(1) = lam*(two*lam - one)
         Nxi(2) = xi*(two*xi - one)
@@ -1284,9 +996,8 @@
       !   |           |        origin at center
       !   1-----------2
 
-      elseif (nNode.eq.4) then
-      ! bilinear shape functions for quad4 element
-
+      elseif (nNode.eq.4) then    ! 4-noded bilinear quad4 element
+        ! shape functions
         Nxi(1) = fourth*(one - xi)*(one - eta)
         Nxi(2) = fourth*(one + xi)*(one - eta)
         Nxi(3) = fourth*(one + xi)*(one + eta)
@@ -1313,9 +1024,8 @@
       !   |           |
       !   1-----5-----2
 
-      elseif (nNode.eq.8) then
-      ! bi-quadratic shape functions for quad8 element
-
+      elseif (nNode.eq.8) then    ! 8-noded serendipity quad8 element
+        ! shape functions
         Nxi(1) = -fourth*(one - xi)*(one - eta)*(one + xi + eta)
         Nxi(2) = -fourth*(one + xi)*(one - eta)*(one - xi + eta)
         Nxi(3) = -fourth*(one + xi)*(one + eta)*(one - xi - eta)
@@ -1382,14 +1092,13 @@
       Nxi = zero
       dNdxi = zero
 
-      if (nNode.eq.4) then
-      ! linear shape functions for tet4 element
-
+      if (nNode.eq.4) then      ! 4-noded linear tet4 element
+        ! shape functions
         Nxi(1) = xi
         Nxi(2) = eta
         Nxi(3) = zeta
         Nxi(4) = one-xi-eta-zeta
-
+        ! the first derivatives of the shape functions dN/dxi (4x3)
         dNdxi(1,1) = one
         dNdxi(2,2) = one
         dNdxi(3,3) = one
@@ -1397,9 +1106,9 @@
         dNdxi(4,2) = -one
         dNdxi(4,3) = -one
 
-      elseif (nNode.eq.10) then
-      ! quadratic shape function of tet10 element
-
+      elseif (nNode.eq.10) then  ! 10-noded quadratic tet10 element
+    
+        ! shape functions
         lam = one-xi-eta-zeta
         Nxi(1) = (two*xi-one)*xi
         Nxi(2) = (two*eta-one)*eta
@@ -1445,9 +1154,9 @@
       !   |/          |/         O--------- xi
       !   1-----------2        origin at cube center
 
-      elseif(nNode.eq.8) then
-      ! trilinear shape functions hex8 element
+      elseif(nNode.eq.8) then   ! 8-noded trilinear hex8 element
 
+        ! shape functions
         Nxi(1) = eighth*(one - xi)*(one - eta)*(one - zeta)
         Nxi(2) = eighth*(one + xi)*(one - eta)*(one - zeta)
         Nxi(3) = eighth*(one + xi)*(one + eta)*(one - zeta)
@@ -1499,9 +1208,8 @@
       !
       ! mid-side nodes are not properly illustrated
 
-      elseif (nNode.eq.20) then
-      ! tri-quadratic shape function for hex20 element
-
+      elseif (nNode.eq.20) then   ! 20-noded serendipity hex20 element
+        ! shape functions
         Nxi(1) = (one-xi)*(one-eta)*(one-zeta)*(-xi-eta-zeta-two)/eight
         Nxi(2) = (one+xi)*(one-eta)*(one-zeta)*(xi-eta-zeta-two)/eight
         Nxi(3) = (one+xi)*(one+eta)*(one-zeta)*(xi+eta-zeta-two)/eight
@@ -1523,7 +1231,7 @@
         Nxi(19) = (one+xi)*(one+eta)*(one-zeta**two)/four
         Nxi(20) = (one-xi)*(one+eta)*(one-zeta**two)/four
 
-
+        ! the first derivatives: dN/dxi (8x3)
         dNdxi(1,1) = (-(one-eta)*(one-zeta)*(-xi-eta-zeta-two)-
      &                (one-xi)*(one-eta)*(one-zeta))/eight
         dNdxi(1,2) = (-(one-xi)*(one-zeta)*(-xi-eta-zeta-two)-
@@ -1616,6 +1324,286 @@
 
       RETURN
       END SUBROUTINE interpFunc3
+
+************************************************************************
+
+      SUBROUTINE gaussQuadrtr2(nNode,nInt,w,xi)
+
+      ! this subroutines returns the weights and
+      ! gauss point coordinate of 2D Lagrangian elements
+      ! currently supports: nInt = 1 (tri3) and 3 (tri6)
+      !                     nInt = 1, 4 (quad4) and 4, 9 (quad8)
+
+      USE PARAMETERS
+
+      IMPLICIT NONE
+      integer:: nNode, nInt
+      real*8 :: x1D(4), w1D(4)
+      real*8 :: w(nInt), xi(nInt,2)
+
+      w  = zero
+      xi = zero
+
+      if (nNode.eq.3) then      ! plane tri3 elements (full integration)
+        if (nInt.eq.1) then
+          w(1) = half
+          xi(1,1) = third
+          xi(2,1) = third
+        else
+          write(80,*) 'wrong gauss points for tri3 element', nInt
+          write(*,*) 'wrong gauss points for tri3 element', nInt
+          call xit
+        endif
+
+      elseif (nNode.eq.6) then  ! plane tri6 elements (full integration)
+        if (nInt.eq.3) then
+          w(1:3) = sixth
+
+          xi(1,1) = half
+          xi(1,2) = half
+          xi(2,1) = zero
+          xi(2,2) = half
+          xi(3,1) = half
+          xi(3,2) = zero
+        else
+          write(80,*) 'wrong gauss points for tri6 element', nInt
+          write(*,*) 'wrong gauss points for tri6 element', nInt
+          call xit
+        endif
+        
+      elseif((nNode.eq.4)) then ! plane quad4 element
+
+        if (nInt.eq.1) then     ! reduced integration for quad4
+          w = four
+
+          xi(1,1) = zero
+          xi(1,2) = zero
+
+        elseif (nInt.eq.4) then ! full integration for quad4
+
+          w(1:4) = one
+
+          x1D(1) = dsqrt(third)
+          xi(1,1) = -x1D(1)
+          xi(1,2) = -x1D(1)
+          xi(2,1) = x1D(1)
+          xi(2,2) = -x1D(1)
+          xi(3,1) = -x1D(1)
+          xi(3,2) = x1D(1)
+          xi(4,1) = x1D(1)
+          xi(4,2) = x1D(1)
+        else
+          write(80,*) 'wrong gauss points for quad4 element', nInt
+          write(*,*) 'wrong gauss points for quad4 element', nInt
+          call xit
+        endif
+
+      elseif (nNode.eq.8) then  ! plane quad8 element
+        
+        if (nInt.eq.4) then     ! reduced integration for quad8
+
+          w(1:4) = one
+
+          x1D(1) = dsqrt(third)
+          xi(1,1) = -x1D(1)
+          xi(1,2) = -x1D(1)
+          xi(2,1) = x1D(1)
+          xi(2,2) = -x1D(1)
+          xi(3,1) = -x1D(1)
+          xi(3,2) = x1D(1)
+          xi(4,1) = x1D(1)
+          xi(4,2) = x1D(1)
+
+        elseif(nInt.eq.9) then  ! full integration for quad8
+          w1D(1) = (five/nine)*(five/nine)
+          w1D(2) = (five/nine)*(eight/nine)
+          w1D(3) = (eight/nine)*(eight/nine)
+
+          w(1) = w1D(1)
+          w(2) = w1D(2)
+          w(3) = w1D(1)
+          w(4) = w1D(2)
+          w(5) = w1D(3)
+          w(6) = w1D(2)
+          w(7) = w1D(1)
+          w(8) = w1D(2)
+          w(9) = w1D(1)
+
+          x1D(1) = dsqrt(three/five)
+          xi(1,1) = -x1D(1)
+          xi(1,2) = -x1D(1)
+          xi(2,1) = zero
+          xi(2,2) = -x1D(1)
+          xi(3,1) = x1D(1)
+          xi(3,2) = -x1D(1)
+          xi(4,1) = -x1D(1)
+          xi(4,2) = zero
+          xi(5,1) = zero
+          xi(5,2) = zero
+          xi(6,1) = x1D(1)
+          xi(6,2) = zero
+          xi(7,1) = -x1D(1)
+          xi(7,2) = x1D(1)
+          xi(8,1) = zero
+          xi(8,2) = x1D(1)
+          xi(9,1) = x1D(1)
+          xi(9,2) = x1D(1)
+
+        else
+          write(80,*) 'wrong gauss points for quad8 element', nInt
+          write(*,*) 'wrong gauss points for quad8 element', nInt
+          call xit
+        endif
+
+      else
+        write(80,*) 'elements not supported for 2D analysis', nNode
+        write(*,*) 'elements not supported for 2D analysis', nNode
+        call xit
+      endif
+
+
+      RETURN
+      END SUBROUTINE gaussQuadrtr2
+
+************************************************************************
+
+      SUBROUTINE gaussQuadrtr3(nNode,nInt,w,xi)
+
+      ! this subroutines returns the weights and
+      ! gauss point coordinate of 3D Lagrangian elements
+      ! currently supports: nInt = 1 (tet4) and 4 (tet10)
+      !                     nInt = 1, 8 (hex8) and 8, 27 (hex20)
+
+      USE PARAMETERS
+
+      IMPLICIT NONE
+
+      integer:: nNode, nInt
+      integer:: i, j, k, n
+      real*8 :: x1D(4), w1D(4)
+      real*8 :: w(nInt), xi(nInt,3)
+
+      w  = zero
+      xi = zero
+      
+      if(nNode.eq.4) then       ! 3D tet4 element (full integration)
+        if(nInt.eq.1) then
+          w(1) = sixth
+          xi(1:3,1) = fourth
+
+        else
+          write(80,*) 'wrong gauss points for tet4 element', nInt
+          write(*,*) 'wrong gauss points for tet4 element', nInt
+          call xit
+        endif
+
+      elseif(nNode.eq.10) then  ! 3D tet10 element (full integration)
+
+        if (nInt.eq.4) then
+          w(1:4) = one/24.d0
+
+          xi(1,1) = 0.58541020d0
+          xi(2,1) = 0.13819660d0
+          xi(3,1) = xi(2,1)
+          xi(1,2) = xi(2,1)
+          xi(2,2) = xi(1,1)
+          xi(3,2) = xi(2,1)
+          xi(1,3) = xi(2,1)
+          xi(2,3) = xi(2,1)
+          xi(3,3) = xi(1,1)
+          xi(4,1) = xi(2,1)
+          xi(4,2) = xi(2,1)
+          xi(4,3) = xi(2,1)
+
+        else
+          write(80,*) 'wrong gauss points for tet10 element', nInt
+          write(*,*) 'wrong gauss points for tet10 element', nInt
+          call xit
+        endif
+
+      elseif(nNode.eq.8) then   ! 3D hex8 element
+
+        if(nInt.eq.1) then      ! reduced integration for hex8
+          w(1) = eight
+          xi(1,1:3) = zero
+
+        elseif(nInt.eq.8) then  ! full-integration for hex8
+          w(1:8) = one
+
+          x1D(1) = -dsqrt(third)
+          x1D(2) = dsqrt(third)
+         
+          do k = 1,2
+            do j = 1,2
+              do i = 1,2
+                n = 4*(k-1) + 2*(j-1) + i
+                xi(n,1) = x1D(i)
+                xi(n,2) = x1D(j)
+                xi(n,3) = x1D(k)
+              end do
+            end do
+          end do
+
+        else
+          write(80,*) 'wrong gauss points for hex8 element', nInt
+          write(*,*) 'wrong gauss points for hex8 element', nInt
+          call xit
+        endif
+
+      elseif(nNode.eq.20) then  ! 3D hex20 element
+        
+        if (nInt.eq.8) then     ! reduced integration for hex20
+          w(1:8) = one
+
+          x1D(1) = -dsqrt(third)
+          x1D(2) = dsqrt(third)
+         
+          do k = 1,2
+            do j = 1,2
+              do i = 1,2
+                n = 4*(k-1) + 2*(j-1) + i
+                xi(n,1) = x1D(i)
+                xi(n,2) = x1D(j)
+                xi(n,3) = x1D(k)
+              end do
+            end do
+          end do
+        
+        elseif(nInt.eq.27) then ! full integration for hex20
+          w1D(1) = five/nine
+          w1D(2) = eight/nine
+          w1D(3) = w1D(1)
+
+          x1D(1) = -dsqrt(0.6d0)
+          x1D(2) = zero
+          x1D(3) = dsqrt(0.6d0)
+          do k = 1,3
+            do j = 1,3
+              do i = 1,3
+                n = 9*(k-1) + 3*(j-1) + i
+                xi(n,1) = x1D(i)
+                xi(n,2) = x1D(j)
+                xi(n,3) = x1D(k)
+                w(n) = w1D(i)*w1D(j)*w1D(k)
+              end do
+            end do
+          end do
+
+        else
+          write(80,*) 'wrong gauss points for hex20 element', nInt
+          write(*,*) 'wrong gauss points for hex20 element', nInt
+          call xit
+        endif
+
+      else
+        write(80,*) 'element is not supported for 3D analysis', nNode
+        write(*,*) 'element is not supported for 3D analysis', nNode
+        call xit
+      endif
+
+      RETURN
+      END SUBROUTINE gaussQuadrtr3
+
 
 ************************************************************************
 
