@@ -22,14 +22,12 @@ To receive updates in this repository, you can also `fork` the repository and sy
 
 ### `uel_nlmech_pk2.for` subroutine
 
-As a default, Abaqus prefers the user subroutines to be written in Fortran fixed form (F77 standard) while common features of modern Fortran can be included if the compiler allows. The element formulation is standard and uses a total Lagrangian approach based on the second Piola-Kirchhoff stress and so-called material tangent. The user element includes 4 types of 2D continuum solid elements (Tri3, Tri6, Quad4, and Quad8) in plane-strain and 4 types of 3D continuum solid elements (Tet4, Tet10, Hex8, Hex10). These elements can be used in both reduced and full integration schemes. It is up to the user to specify the correct number of integration points for each element. Body force and traction boundary conditions have not been implemented in this user subroutine, however, these can be used anyway using a dummy element technique (to be discussed in the next section). Since Abaqus/ Viewer does not provide native support for the visualization of user elements, an additional layer of elements with the same element connectivity has been created and results at the integration points of the elements are stored using the `UVARM` subroutine.
+As a default, Abaqus prefers the user subroutines to be written in Fortran fixed form (F77 standard) while common features of modern Fortran can be included if the compiler allows. The element formulation is standard and uses a total Lagrangian approach based on the second Piola-Kirchhoff stress and so-called material tangent. The user element includes 4 types of 2D continuum solid elements (Tri3, Tri6, Quad4, and Quad8) in plane-strain and 4 types of 3D continuum solid elements (Tet4, Tet10, Hex8, Hex10). These elements can be used in both reduced and full integration schemes. It is up to the user to specify the correct number of integration points for each element. Body force and traction boundary conditions have not been implemented in this user subroutine, however, they can be applied by overlaying standard Abaqus elements on the user elements (to be discussed in the **Visualization** section). Since Abaqus/ Viewer does not provide native support for visualizing user elements, an additional layer of elements with the same element connectivity has been created and results at the integration points of the elements are stored using the `UVARM` subroutine.
 
 The constitutive law for the material is described by the quasi-incompressible Neo-Hookean model or the quasi-incompressible Arruda-Boyce model. The quasi-incompressibility condition was enforced using a penalty-like approach by prescribing a large bulk modulus compared to the shear modulus.
 
 
 **To-do list for elements:**
-- [ ] Add the documentation for element formulation and constitutive models.
-- [ ] Add the available user element tags and their equivalent elements in Abaqus.
 - [ ] Add user subroutine for updated Lagrangian approach `uel_nlmech_cauchy.for`.
 
 
@@ -38,7 +36,7 @@ The constitutive law for the material is described by the quasi-incompressible N
 > The constitutive behavior of the material can be extended to include finite viscoelasticity, finite plasticity, and uncoupled finite thermoelasticity.
 
 > [!WARNING]
-> If the elements are used for materials near-incompressibility limit or under bending case scenarios, the user may want to opt for higher-order elements. Please remember that, these are standard displacement-based element formulations, and no special treatment for shear locking, hourglass modes, or volumetric locking is available.
+> If the elements are used for materials near-incompressibility limit or under bending case scenarios, the user may want to opt for higher-order elements. Please remember that these are standard displacement-based element formulations, and no special treatment for shear locking, hourglass modes, or volumetric locking is available.
 
 > [!TIP]
 > This file contains subroutines to obtain the Gauss quadrature information, interpolation functions for 2D and 3D Lagrangian elements and matrix operations. Users are highly recommended to go through these subroutines and can repurpose them to write their user element (UEL) code.
@@ -49,12 +47,12 @@ The constitutive law for the material is described by the quasi-incompressible N
 
 #### Properties
 
-To demonstrate the usage of the user element subroutine capabilities in Abaqus, a few sample input files are provided for different element types. Users can use Abaqus/ CAE to create a standard Abaqus model and export `.inp` files. It is recommended to use the option `Do not use parts and assemblies in input files` from the **model attributes** drop-down menu before generating the input file. This option will generate a cleaner input file. Once the standard input file is exported from Abaqus, the user will need to modify it to use it with the UEL. For Neo-Hookean materials, the user needs to specify the shear modulus and bulk modulus which is 3-5 orders of magnitude larger than the shear modulus. For Arruda-Boyce material, another property, called locking stretch also needs to be specified. Additional integer properties to be specified are the number of integration points, `nInt`, type of constitutive model, `matFlag`, and the number of variables to be post-processed at the integration points `nPostVars`.
+A few sample input files are provided for different element types to demonstrate the usage of the user element subroutine capabilities in Abaqus. Users can use Abaqus/ CAE to create a standard Abaqus model and export `.inp` files. It is recommended to use the option `Do not use parts and assemblies in input files` from the **model attributes** drop-down menu before generating the input file. This option will generate a cleaner input file. Once the standard input file is exported from Abaqus, the user will need to modify it to use it with the UEL. For Neo-Hookean materials, the user needs to specify the shear modulus and bulk modulus which is 3-5 orders of magnitude larger than the shear modulus. For Arruda-Boyce material, another property, called locking stretch also needs to be specified. Additional integer properties to be specified are the number of integration points, `nInt`, type of constitutive model, `matID`, and the number of variables to be post-processed at the integration points `nPostVars`.
 
 
 #### Visualization
 
-An additional set of elements with the same element connectivity as the user element has been created in the input file to visualize the results. This technique was used since the programmed elements have the same interpolation functions and integration points as built-in continuum elements in Abaqus. These additional elements (so-called dummy elements) have negligible elastic properties and thus will not affect the results. If you are using a reduced integration element from the user subroutine, then use the same type of element from Abaqus as dummy elements.
+An additional set of elements with the same element connectivity as the user element has been created in the input file to visualize the results. This technique was used since the programmed elements have the same interpolation functions and integration points as built-in continuum elements in Abaqus. These additional elements (so-called dummy elements) have negligible elastic properties and thus will not affect the results. If you are using a reduced integration element from the user subroutine, then use the same type of element from Abaqus as dummy elements. You can find an example Python file in [linear elasticity subroutine repository](https://github.com/bibekananda-datta/Abaqus-UEL-Elasticity) for parsing simple input files to create overlaying standard elements.
 
 
 > [!NOTE]
@@ -66,10 +64,6 @@ An additional set of elements with the same element connectivity as the user ele
 > [!TIP]
 > For larger models, the user can write Python or MATLAB script which will parse the ABAQUS-generated input file and add additional dummy elements. This will ease the pre-processing procedure.
 
-
-**To-do list for example input files:**
-- [ ] Add examples showing how to use body force and traction/ pressure boundary conditions.
-- [ ] Add input file parser for pre-processing.
 
 
 
