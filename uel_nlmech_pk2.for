@@ -309,6 +309,7 @@
      & ANALYSIS,NDIM,NDI,NSHR,NTENS,NINT,UDOF,UDOFEL)
 
       USE PARAMETERS
+      IMPLICIT NONE
 
      !!!!!!!!!!!!! VARIABLE DECLARATION AND INITIALIZATION !!!!!!!!!!!!!
      
@@ -325,10 +326,10 @@
 
       integer:: NDOFEL, NRHS, NSVARS, NPROPS, MCRD, NNODE, JTYPE,
      &      KSTEP, KINC, JELEM, NDLOAD, JDLTYP, NPREDF, LFLAGS,
-     &      MLVARX, MDLOAD, JPROPS, NJPROP
+     &      MLVARX, MDLOAD, JPROPS, NJPROPS
 
       character*8:: analysis
-      integer:: nDim, ndi, nshr, ntens, nInt, uDOF, uDOFEL
+      integer:: nDim, ndi, nshr, ntens, nInt, uDOF, uDOFEL, nlocalSdv
       logical:: nlgeom
 
       real*8 :: uNode(nDim,nNode), duNode(nDim,nNode), F(3,3),
@@ -366,10 +367,9 @@
 
       ENERGY = zero
       AMATRX(1:NDOFEL,1:NDOFEL) = zero
-      RHS(1:MLVARX,1) = zeros
+      RHS(1:MLVARX,1) = zero
 
       matID = jprops(2)
-      nlocalSdv = NSVARS/NINT
 
      !!!!!!!!!!! END VARIABLE DECLARATION AND INITIALIZATION !!!!!!!!!!!
 
@@ -494,15 +494,15 @@
           call umatNeoHookean(stressCauchy,stressPK1,stressPK2,
      &          Dmat,F,svars,nsvars,stranLagrange,stranEuler,time,
      &          dtime,fieldVar,npredf,nDim,ndi,nshr,ntens,jelem,intpt,
-     &          coords,nnode,kstep,kinc,props,nprops,nlocalSdv,
-     &          analysis)
+     &          coords,nnode,kstep,kinc,props,nprops,jprops,njprops,
+     &          analysis,nlocalSdv)
 
         elseif (matID .eq. 2) then
           call umatArrudaBoyce(stressCauchy,stressPK1,stressPK2,
      &          Dmat,F,svars,nsvars,stranLagrange,stranEuler,time,
      &          dtime,fieldVar,npredf,nDim,ndi,nshr,ntens,jelem,intPt,
-     &          coords,nnode,kstep,kinc,props,nprops,nlocalSdv,
-     &          analysis)
+     &          coords,nnode,kstep,kinc,props,nprops,jprops,njprops,
+     &          analysis,nlocalSdv)
         endif
         ! can add more constitutive models using elseif construct here
 
@@ -547,9 +547,7 @@
 
       enddo                         ! end of integration point loop
 
-
       ! body force and surface load can be added using dummy elements
-
 
       ! assign the element stiffness matrix to abaqus-defined variable
       AMATRX(1:NDOFEL,1:NDOFEL) = kuu(1:uDOFEl,1:uDOFEl)
@@ -565,15 +563,14 @@
       SUBROUTINE umatNeoHookean(stressCauchy,stressPK1,stressPK2,
      &          Dmat,F,svars,nsvars,stranLagrange,stranEuler,time,
      &          dtime,fieldVar,npredf,nDim,ndi,nshr,ntens,jelem,intpt,
-     &          coords,nnode,kstep,kinc,props,nprops,nlocalSdv,
-     &          analysis)
+     &          coords,nnode,kstep,kinc,props,nprops,jprops,njprops,
+     &          analysis,nlocalSdv)
 
       USE PARAMETERS
-
       IMPLICIT NONE
 
       integer:: nsvars, npredf, nDim, ndi, nshr, ntens,
-     &    jelem, intpt, nNode, kstep, kinc, nprops
+     &    jelem, intpt, nNode, kstep, kinc, nprops, njprops
 
       real*8 :: stressCauchy(ntens,1), stressPK1(nDim*nDim,1),
      &    stressPK2(ntens,1), Dmat(ntens,ntens), F(3,3),
@@ -581,6 +578,7 @@
      &    svars(1:nsvars), coords(nDim,nNode), time(2), dtime,
      &    fieldVar(npredf)
 
+      integer:: jprops(1:njprops)
       character*8:: analysis
 
       real*8 :: detF, C(3,3), Cinv(3,3), detC, B(3,3), Binv(3,3), detB,
@@ -603,6 +601,9 @@
       Gshear= props(1)        ! Shear modulus
       kappa = props(2)        ! Bulk modulus
       lam_L = props(3)        ! locking stretch
+
+      nInt   = jprops(1)
+      nlocalSdv = NSVARS/nInt
 
       ! locking stretch should be infinity (0 as input) for NH model
       if (lam_L .ne. zero) then
@@ -696,15 +697,14 @@
       SUBROUTINE umatArrudaBoyce(stressCauchy,stressPK1,stressPK2,
      &          Dmat,F,svars,nsvars,stranLagrange,stranEuler,time,
      &          dtime,fieldVar,npredf,nDim,ndi,nshr,ntens,jelem,intpt,
-     &          coords,nnode,kstep,kinc,props,nprops,nlocalSdv,
-     &          analysis)
+     &          coords,nnode,kstep,kinc,props,nprops,jprops,njprops,
+     &          analysis,nlocalSdv)
 
       USE PARAMETERS
-
       IMPLICIT NONE
 
       integer:: nsvars, npredf, nDim, ndi, nshr, ntens,
-     &    jelem, intpt, nNode, kstep, kinc, nprops
+     &    jelem, intpt, nNode, kstep, kinc, nprops, njprops
 
       real*8 :: stressCauchy(ntens,1), stressPK1(nDim*nDim,1),
      &    stressPK2(ntens,1), Dmat(ntens,ntens), F(3,3),
@@ -712,6 +712,7 @@
      &    svars(1:nsvars), coords(nDim,nNode), time(2), dtime,
      &    fieldVar(npredf)
 
+      integer:: jprops(1:njprops)
       character*8:: analysis
 
       real*8 :: detF, C(3,3), Cinv(3,3), detC, B(3,3), Binv(3,3), detB,
@@ -734,6 +735,9 @@
       Gshear= props(1)        ! Shear modulus
       kappa = props(2)        ! Bulk modulus
       lam_L = props(3) 				! Locking stretch
+
+      nInt   = jprops(1)
+      nlocalSdv = NSVARS/nInt
 
       if (lam_L .eq. zero) then
         write(15,*) 'Incorrect material parameter for AB model', lam_L
@@ -930,6 +934,7 @@
       ! dNdxi(i,j)      = derivative wrt j direction of shape fn of node i
 
       USE PARAMETERS
+      IMPLICIT NONE
 
       integer:: nNode, nInt, intpt
 
@@ -1090,7 +1095,6 @@
       ! dNdxi(i,j)      = derivative wrt j direction of shape fn of node i
 
       USE PARAMETERS
-
       IMPLICIT NONE
 
       integer:: nNode, nInt, intpt
@@ -1352,8 +1356,8 @@
       !                     nInt = 1, 4 (quad4) and 4, 9 (quad8)
 
       USE PARAMETERS
-
       IMPLICIT NONE
+
       integer:: nNode, nInt
       real*8 :: x1D(4), w1D(4)
       real*8 :: w(nInt), xi(nInt,2)
@@ -1492,7 +1496,6 @@
       !                     nInt = 1, 8 (hex8) and 8, 27 (hex20)
 
       USE PARAMETERS
-
       IMPLICIT NONE
 
       integer:: nNode, nInt
@@ -1787,7 +1790,6 @@
       ! this subroutine returns Ainv and detA for a 2D matrix A
 
       USE PARAMETERS
-
       IMPLICIT NONE
 
       integer:: istat
@@ -1822,7 +1824,6 @@
       ! this subroutine returns Ainv and detA for a 3D matrix A
 
       USE PARAMETERS
-
       IMPLICIT NONE
 
       integer:: istat
@@ -1862,7 +1863,6 @@
       ! square matrix (nxn) by LU decomposition approach
 
       USE PARAMETERS
-
       IMPLICIT NONE
 
       integer,intent(in)   :: n
@@ -1915,7 +1915,6 @@
       ! this subroutine computes eigenvals and eigenvectors of symmetric 3x3 matrix
 
       USE PARAMETERS
-
       IMPLICIT NONE
 
       real*8, intent(in)  :: A(3,3)                   ! input matrix
@@ -2000,7 +1999,6 @@
       ! this subroutines computes square root of a symmetric 3x3 matrix
 
       USE PARAMETERS
-
       IMPLICIT NONE
 
       real*8, intent(in) :: A(3,3)
@@ -2027,7 +2025,6 @@
       ! of a 3x3 matrix A (used for deformation gradient)
 
       USE PARAMETERS
-
       IMPLICIT NONE
 
       real*8, intent (in)   :: A(3,3)
@@ -2051,7 +2048,6 @@
       ! array to a 6x1 Voigt array of 3D dimensional case
 
       USE PARAMETERS
-
       IMPLICIT NONE
 
       integer:: ntens
@@ -2081,7 +2077,6 @@
       ! to a 3x1 (plane) or 4x1 (axisymmetry) Voigt array
 
       USE PARAMETERS
-
       IMPLICIT NONE
 
       integer:: ntens
@@ -2109,7 +2104,6 @@
       ! for unSymmmetric tensor you can use "reshape" function
 
       USE PARAMETERS
-
       IMPLICIT NONE
 
       integer:: i
@@ -2130,7 +2124,6 @@
       ! for unSymmmetric tensor you can use "reshape" function
 
       USE PARAMETERS
-
       IMPLICIT NONE
 
       integer:: i
@@ -2153,7 +2146,6 @@
       ! this subroutine transforms a 3x1 Voigt vector to 2x2 symmetric tensor
 
       USE PARAMETERS
-
       IMPLICIT NONE
 
       integer:: i
@@ -2175,7 +2167,6 @@
       ! this subroutine transforms a 6x1 Voigt vector to 3x3 symmetric tensor
 
       USE PARAMETERS
-
       IMPLICIT NONE
 
       integer:: i
@@ -2203,7 +2194,6 @@
       ! voigt notation: 11> 1, 22> 2, 33> 3, 23/32> 4, 13/31> 5, 12/21> 6
 
       USE PARAMETERS
-
       IMPLICIT NONE
 
       integer:: i, j, k, l, rw, cl
@@ -2227,17 +2217,6 @@
 
       RETURN
       END SUBROUTINE tangent2matrix
-
-************************************************************************
-************************************************************************
-
-!     ADDITIONAL SUBROUTINES AVAILABEL THROUGH ABAQUS
-!     CONSULT ABAQUS MANUAL FOR THE DETAILS
-
-!     CALL SINV(STRESS,SINV1,SINV2,NDI,NSHR)
-!     CALL SPRINC(S,PS,LSTR,NDI,NSHR)
-!     CALL SPRIND(S,PS,AN,LSTR,NDI,NSHR)
-!     CALL ROTSIG(S,R,SPRIME,LSTR,NDI,NSHR)
 
 ************************************************************************
 ************************************************************************
