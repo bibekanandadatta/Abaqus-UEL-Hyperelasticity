@@ -113,11 +113,10 @@
 !     functions and subroutines within and outside of UEL
 ************************************************************************
 
-
       MODULE PARAMETERS
 
-      real*8 :: zero, one, two, three, four, five, six, eight, nine,
-     &      half, third, fourth, fifth, sixth, eighth, eps, pi
+      double precision:: zero, one, two, three, four, five, six, eight,
+     &       nine, half, third, fourth, fifth, sixth, eighth, eps, pi
 
       parameter( zero = 0.d0, one =  1.d0, two = 2.d0, three = 3.d0,
      &      four = 4.d0, five = 5.d0, six = 6.d0, eight = 8.d0,
@@ -135,9 +134,9 @@
       ! number of elements in the DUMMY element set
       ! elemOffset should match with the number used in input file
 
-      real*8, allocatable:: globalPostVars(:,:,:)
+      double precision, allocatable:: globalPostVars(:,:,:)
 
-      real*8 :: ID2(2,2), ID3(3,3)
+      double precision:: ID2(2,2), ID3(3,3)
       parameter(ID2 = reshape((/1.d0,0.d0,0.d0,1.d0/),(/2,2/)),
      &          ID3 = reshape((/1.d0,0.d0,0.d0,0.d0,1.d0,0.d0,
      &                        0.d0,0.d0,1.d0/),(/3,3/)))
@@ -164,7 +163,7 @@
      & PREDEF(2,NPREDF,NNODE),LFLAGS(*),JPROPS(*)
 
       ! user coding to define RHS, AMATRX, SVARS, ENERGY, and PNEWDT
-      real*8 :: RHS, AMATRX, SVARS, ENERGY, PNEWDT,
+      double precision:: RHS, AMATRX, SVARS, ENERGY, PNEWDT,
      &      PROPS, COORDS, DUall, Uall, Vel, Accn, TIME, DTIME,
      &      PARAMS, ADLMAG, PREDEF, DDLMAG, PERIOD
 
@@ -260,7 +259,7 @@
         write(15,*) '---------------------------------------'
         write(15,*) '---------- POST-PROCESSING ------------'
         write(15,*) '--- NO OF ELEMENTS            = ', numElem
-        write(15,*) '--- DUMMY ELEMENT OFFSET      = ', ElemOffset
+        write(*,*) '--- OVERLAY ELEMENT OFFSET    = ', ElemOffset
         write(15,*) '--- NO OF VARIABLES AT INT PT = ', nPostVars
         write(15,*) '---------------------------------------'
 
@@ -282,14 +281,14 @@
         write(*,*) '---------------------------------------'
         write(*,*) '---------- POST-PROCESSING ------------'
         write(*,*) '--- NO OF ELEMENTS            = ', numElem
-        write(*,*) '--- DUMMY ELEMENT OFFSET      = ', ElemOffset
+        write(*,*) '--- OVERLAY ELEMENT OFFSET    = ', ElemOffset
         write(*,*) '--- NO OF VARIABLES AT INT PT = ', nPostVars
         write(*,*) '---------------------------------------'
 
       endif
 
        ! call your UEL subroutine
-       call uel_NLMECH(RHS,AMATRX,SVARS,ENERGY,NDOFEL,NRHS,NSVARS,
+       call uelNLMECH(RHS,AMATRX,SVARS,ENERGY,NDOFEL,NRHS,NSVARS,
      & PROPS,NPROPS,COORDS,MCRD,NNODE,Uall,DUall,Vel,Accn,JTYPE,TIME,
      & DTIME,KSTEP,KINC,JELEM,PARAMS,NDLOAD,JDLTYP,ADLMAG,PREDEF,
      & NPREDF,LFLAGS,MLVARX,DDLMAG,MDLOAD,PNEWDT,JPROPS,NJPROPS,PERIOD,
@@ -302,7 +301,7 @@
 ************************************************************************
 ************************************************************************
 
-      SUBROUTINE uel_NLMECH(RHS,AMATRX,SVARS,ENERGY,NDOFEL,NRHS,NSVARS,
+      SUBROUTINE uelNLMECH(RHS,AMATRX,SVARS,ENERGY,NDOFEL,NRHS,NSVARS,
      & PROPS,NPROPS,COORDS,MCRD,NNODE,Uall,DUall,Vel,Accn,JTYPE,TIME,
      & DTIME,KSTEP,KINC,JELEM,PARAMS,NDLOAD,JDLTYP,ADLMAG,PREDEF,
      & NPREDF,LFLAGS,MLVARX,DDLMAG,MDLOAD,PNEWDT,JPROPS,NJPROPS,PERIOD,
@@ -320,7 +319,7 @@
      & PREDEF(2,NPREDF,NNODE),LFLAGS(*),JPROPS(*)
 
       ! user coding to define RHS, AMATRX, SVARS, ENERGY, and PNEWDT
-      real*8 :: RHS, AMATRX, SVARS, ENERGY, PNEWDT,
+      double precision:: RHS, AMATRX, SVARS, ENERGY, PNEWDT,
      &      PROPS, COORDS, DUall, Uall, Vel, Accn, TIME, DTIME,
      &      PARAMS, ADLMAG, PREDEF, DDLMAG, PERIOD
 
@@ -332,7 +331,7 @@
       integer:: nDim, ndi, nshr, ntens, nInt, uDOF, uDOFEL, nlocalSdv
       logical:: nlgeom
 
-      real*8 :: uNode(nDim,nNode), duNode(nDim,nNode), F(3,3),
+      double precision:: uNode(nDim,nNode), duNode(nDim,nNode), F(3,3),
      &      ID(nDim,nDim), w(nInt), xi(nInt,nDim),
      &      Nxi(nNode,1), dNdxi(nNode,nDim), dxdxi(nDim,nDim),
      &      dxidx(nDim,nDim), dNdx(nNode,nDim), detJ,
@@ -345,7 +344,7 @@
      &      SIGMA_F(nDim*nNode,nDim*nNode),
      &      kuu(uDOFEl,uDOFEl), Ru(uDOFEl,1)
 
-      real*8 :: stranLagrange(ntens,1), stranEuler(ntens,1),
+      double precision:: stranLagrange(ntens,1), stranEuler(ntens,1),
      &      stressCauchy(ntens,1), stressPK1(nDim*nDim,1),
      &      stressPK2(ntens,1), Dmat(ntens,ntens)
 
@@ -555,16 +554,16 @@
 
 
       RETURN
-      END SUBROUTINE uel_NLMECH
+      END SUBROUTINE uelNLMECH
 
 ************************************************************************
 ************************************************************************
 
       SUBROUTINE umatNeoHookean(stressCauchy,stressPK1,stressPK2,
-     &          Dmat,F,svars,nsvars,stranLagrange,stranEuler,time,
-     &          dtime,fieldVar,npredf,nDim,ndi,nshr,ntens,jelem,intpt,
-     &          coords,nnode,kstep,kinc,props,nprops,jprops,njprops,
-     &          analysis,nlocalSdv)
+     &      Dmat,F,svars,nsvars,stranLagrange,stranEuler,time,
+     &      dtime,fieldVar,npredf,nDim,ndi,nshr,ntens,jelem,intpt,
+     &      coords,nnode,kstep,kinc,props,nprops,jprops,njprops,
+     &      analysis,nlocalSdv)
 
       USE PARAMETERS
       IMPLICIT NONE
@@ -572,7 +571,7 @@
       integer:: nsvars, npredf, nDim, ndi, nshr, ntens,
      &    jelem, intpt, nNode, kstep, kinc, nprops, njprops
 
-      real*8 :: stressCauchy(ntens,1), stressPK1(nDim*nDim,1),
+      double precision:: stressCauchy(ntens,1), stressPK1(nDim*nDim,1),
      &    stressPK2(ntens,1), Dmat(ntens,ntens), F(3,3),
      &    stranLagrange(ntens,1), stranEuler(ntens,1), props(1:nprops),
      &    svars(1:nsvars), coords(nDim,nNode), time(2), dtime,
@@ -581,8 +580,8 @@
       integer:: jprops(1:njprops)
       character*8:: analysis
 
-      real*8 :: detF, C(3,3), Cinv(3,3), detC, B(3,3), Binv(3,3), detB,
-     &    strantensorEuler(3,3), stressTensorPK2(3,3),
+      double precision:: detF, C(3,3), Cinv(3,3), detC, B(3,3), 
+     &    Binv(3,3), detB, strantensorEuler(3,3), stressTensorPK2(3,3),
      &    stressTensorCauchy(3,3), Cmat(3,3,3,3), VoigtMat(nSymm,nSymm),
      &    stranVoigtEuler(nSymm,1), stressVoigtPK1(nUnsymmm,1),
      &    stressVoigtPK2(nSymm,1), stressVoigtCauchy(nSymm,1),
@@ -649,7 +648,7 @@
 
 
       ! transforms the stiffness tensor 3x3x3x3 to a 6x6 matrix
-      call tangent2matrix(Cmat,VoigtMat)
+      call symtangent2matrix(Cmat,VoigtMat)
 
       ! transform the stress tensor (3x3) to Voigt vector form (6x1)
       call symtensor2vector3(strantensorEuler,stranVoigtEuler)
@@ -695,10 +694,10 @@
 ************************************************************************
 ************************************************************************
       SUBROUTINE umatArrudaBoyce(stressCauchy,stressPK1,stressPK2,
-     &          Dmat,F,svars,nsvars,stranLagrange,stranEuler,time,
-     &          dtime,fieldVar,npredf,nDim,ndi,nshr,ntens,jelem,intpt,
-     &          coords,nnode,kstep,kinc,props,nprops,jprops,njprops,
-     &          analysis,nlocalSdv)
+     &      Dmat,F,svars,nsvars,stranLagrange,stranEuler,time,
+     &      dtime,fieldVar,npredf,nDim,ndi,nshr,ntens,jelem,intpt,
+     &      coords,nnode,kstep,kinc,props,nprops,jprops,njprops,
+     &      analysis,nlocalSdv)
 
       USE PARAMETERS
       IMPLICIT NONE
@@ -706,7 +705,7 @@
       integer:: nsvars, npredf, nDim, ndi, nshr, ntens,
      &    jelem, intpt, nNode, kstep, kinc, nprops, njprops
 
-      real*8 :: stressCauchy(ntens,1), stressPK1(nDim*nDim,1),
+      double precision:: stressCauchy(ntens,1), stressPK1(nDim*nDim,1),
      &    stressPK2(ntens,1), Dmat(ntens,ntens), F(3,3),
      &    stranLagrange(ntens,1), stranEuler(ntens,1), props(1:nprops),
      &    svars(1:nsvars), coords(nDim,nNode), time(2), dtime,
@@ -715,7 +714,7 @@
       integer:: jprops(1:njprops)
       character*8:: analysis
 
-      real*8 :: detF, C(3,3), Cinv(3,3), detC, B(3,3), Binv(3,3), detB,
+      double precision:: detF, C(3,3), Cinv(3,3), detC, B(3,3), Binv(3,3), detB,
      & 		trC, lam_c, lam_r, beta_c, dBeta_c,
      &    strantensorEuler(3,3), stressTensorPK2(3,3),
      &    stressTensorCauchy(3,3), Cmat(3,3,3,3), VoigtMat(nSymm,nSymm),
@@ -790,7 +789,7 @@
 
 
       ! transforms the stiffness tensor 3x3x3x3 to a 6x6 matrix
-      call tangent2matrix(Cmat,VoigtMat)
+      call symtangent2matrix(Cmat,VoigtMat)
 
       ! transform the stress tensor (3x3) to Voigt form (6x1)
       call symtensor2vector3(strantensorEuler,stranVoigtEuler)
@@ -837,8 +836,9 @@
       FUNCTION InvLangevin(x)
 
       IMPLICIT NONE
-      real*8,intent(in) :: x
-      real*8 :: InvLangevin
+      
+      double precision,intent(in) :: x
+      double precision:: InvLangevin
 
 
       if (dabs(x) .lt. 0.84136d0) then
@@ -860,8 +860,8 @@
 
       IMPLICIT NONE
 
-      real*8,intent(in) :: x
-      real*8 :: DInvLangevin, sec
+      double precision,intent(in) :: x
+      double precision:: DInvLangevin, sec
 
       if (dabs(x) .lt. 0.84136d0) then
         DInvLangevin = 2.0898073756d0*(dtan(1.58986d0*x))**two 
@@ -900,7 +900,7 @@
       ! must be set equal to or greater than 15.  
 
       ! explicityly define the type for uvar to avoid issues
-      real*8 :: uvar
+      double precision:: uvar
 
       uvar(1:nuvarm) = globalPostVars(noel-elemOffset,npt,1:nuvarm)
 
@@ -910,7 +910,6 @@
 
 ************************************************************************
 ************************************************************************
-
 
 
 
@@ -938,8 +937,8 @@
 
       integer:: nNode, nInt, intpt
 
-      real*8 :: xi_int(nInt,2), Nxi(nNode), dNdxi(nNode,2)
-      real*8 :: xi, eta, lam
+      double precision:: xi_int(nInt,2), Nxi(nNode), dNdxi(nNode,2)
+      double precision:: xi, eta, lam
 
       ! location in the master element
       xi    = xi_int(intpt,1)
@@ -1099,8 +1098,8 @@
 
       integer:: nNode, nInt, intpt
 
-      real*8 :: xi_int(nInt,3), Nxi(nNode), dNdxi(nNode,3)
-      real*8 :: xi, eta, zeta, lam
+      double precision:: xi_int(nInt,3), Nxi(nNode), dNdxi(nNode,3)
+      double precision:: xi, eta, zeta, lam
 
       ! Nxi(i)          = shape function of node i at the intpt.
       ! dNdxi(i,j)      = derivative wrt j direction of shape fn of node i
@@ -1115,54 +1114,56 @@
 
       if (nNode.eq.4) then      ! 4-noded linear tet4 element
         ! shape functions
-        Nxi(1) = xi
-        Nxi(2) = eta
-        Nxi(3) = zeta
-        Nxi(4) = one-xi-eta-zeta
+        Nxi(1) = one-xi-eta-zeta
+        Nxi(2) = xi
+        Nxi(3) = eta
+        Nxi(4) = zeta
         ! the first derivatives of the shape functions dN/dxi (4x3)
-        dNdxi(1,1) = one
-        dNdxi(2,2) = one
-        dNdxi(3,3) = one
-        dNdxi(4,1) = -one
-        dNdxi(4,2) = -one
-        dNdxi(4,3) = -one
+        dNdxi(1,1) = -one
+        dNdxi(1,2) = -one
+        dNdxi(1,3) = -one
+        dNdxi(2,1) = one
+        dNdxi(3,2) = one
+        dNdxi(4,3) = one
 
       elseif (nNode.eq.10) then  ! 10-noded quadratic tet10 element
     
         ! shape functions
         lam = one-xi-eta-zeta
-        Nxi(1) = (two*xi-one)*xi
-        Nxi(2) = (two*eta-one)*eta
-        Nxi(3) = (two*zeta-one)*zeta
-        Nxi(4) = (two*lam-one)*lam
-        Nxi(5) = four*xi*eta
-        Nxi(6) = four*eta*zeta
-        Nxi(7) = four*zeta*xi
-        Nxi(8) = four*xi*lam
-        Nxi(9) = four*eta*lam
-        Nxi(10) = four*zeta*lam
 
-        dNdxi(1,1) = (four*xi-one)
-        dNdxi(2,2) = (four*eta-one)
-        dNdxi(3,3) = (four*zeta-one)
-        dNdxi(4,1) = -(four*lam-one)
-        dNdxi(4,2) = -(four*lam-one)
-        dNdxi(4,3) = -(four*lam-one)
-        dNdxi(5,1) = four*eta
-        dNdxi(5,2) = four*xi
-        dNdxi(6,2) = four*zeta
-        dNdxi(6,3) = four*eta
-        dNdxi(7,1) = four*zeta
-        dNdxi(7,3) = four*xi
-        dNdxi(8,1) = four*(lam-xi)
-        dNdxi(8,2) = -four*xi
-        dNdxi(8,3) = -four*xi
-        dNdxi(9,1) = -four*eta
-        dNdxi(9,2) = four*(lam-eta)
-        dNdxi(9,3) = -four*eta
-        dNdxi(10,1) = -four*zeta*lam
-        dNdxi(10,2) = -four*zeta
-        dNdxi(10,3) = four*(lam-zeta)
+        Nxi(1) = (two*lam-one)*lam
+        Nxi(2) = (two*xi-one)*xi
+        Nxi(3) = (two*eta-one)*eta
+        Nxi(4) = (two*zeta-one)*zeta
+        Nxi(5) = four*xi*lam
+        Nxi(6) = four*xi*eta
+        Nxi(7) = four*eta*lam
+        Nxi(8) = four*zeta*lam
+        Nxi(9) = four*zeta*xi
+        Nxi(10) = four*eta*zeta
+        
+        ! first derivative of shape functions dN/dxi (10x3)
+        dNdxi(1,1) = -(four*lam-one)
+        dNdxi(1,2) = -(four*lam-one)
+        dNdxi(1,3) = -(four*lam-one)
+        dNdxi(2,1) = (four*xi-one)
+        dNdxi(3,2) = (four*eta-one)
+        dNdxi(4,3) = (four*zeta-one)
+        dNdxi(5,1) = four*(lam-xi)
+        dNdxi(5,2) = -four*xi
+        dNdxi(5,3) = -four*xi
+        dNdxi(6,1) = four*eta
+        dNdxi(6,2) = four*xi
+        dNdxi(7,1) = -four*eta
+        dNdxi(7,2) = four*(lam-eta)
+        dNdxi(7,3) = -four*eta
+        dNdxi(8,1) = -four*zeta
+        dNdxi(8,2) = -four*zeta
+        dNdxi(8,3) = four*(lam-zeta)
+        dNdxi(9,1) = four*zeta
+        dNdxi(9,3) = four*xi
+        dNdxi(10,2) = four*zeta
+        dNdxi(10,3) = four*eta
 
       !      8-----------7
       !     /|          /|
@@ -1359,8 +1360,8 @@
       IMPLICIT NONE
 
       integer:: nNode, nInt
-      real*8 :: x1D(4), w1D(4)
-      real*8 :: w(nInt), xi(nInt,2)
+      double precision:: x1D(4), w1D(4)
+      double precision:: w(nInt), xi(nInt,2)
 
       w  = zero
       xi = zero
@@ -1371,8 +1372,8 @@
           xi(1,1) = third
           xi(2,1) = third
         else
-          write(15,*) 'wrong gauss points for tri3 element', nInt
-          write(*,*) 'wrong gauss points for tri3 element', nInt
+          write(15,*) 'wrong Gauss points for tri3 element', nInt
+          write(*,*) 'wrong Gauss points for tri3 element', nInt
           call xit
         endif
 
@@ -1387,8 +1388,8 @@
           xi(3,1) = half
           xi(3,2) = zero
         else
-          write(15,*) 'wrong gauss points for tri6 element', nInt
-          write(*,*) 'wrong gauss points for tri6 element', nInt
+          write(15,*) 'wrong Gauss points for tri6 element', nInt
+          write(*,*) 'wrong Gauss points for tri6 element', nInt
           call xit
         endif
         
@@ -1414,8 +1415,8 @@
           xi(4,1) = x1D(1)
           xi(4,2) = x1D(1)
         else
-          write(15,*) 'wrong gauss points for quad4 element', nInt
-          write(*,*) 'wrong gauss points for quad4 element', nInt
+          write(15,*) 'wrong Gauss points for quad4 element', nInt
+          write(*,*) 'wrong Gauss points for quad4 element', nInt
           call xit
         endif
 
@@ -1471,8 +1472,8 @@
           xi(9,2) = x1D(1)
 
         else
-          write(15,*) 'wrong gauss points for quad8 element', nInt
-          write(*,*) 'wrong gauss points for quad8 element', nInt
+          write(15,*) 'wrong Gauss points for quad8 element', nInt
+          write(*,*) 'wrong Gauss points for quad8 element', nInt
           call xit
         endif
 
@@ -1500,8 +1501,8 @@
 
       integer:: nNode, nInt
       integer:: i, j, k, n
-      real*8 :: x1D(4), w1D(4)
-      real*8 :: w(nInt), xi(nInt,3)
+      double precision:: x1D(4), w1D(4)
+      double precision:: w(nInt), xi(nInt,3)
 
       w  = zero
       xi = zero
@@ -1509,35 +1510,38 @@
       if(nNode.eq.4) then       ! 3D tet4 element (full integration)
         if(nInt.eq.1) then
           w(1) = sixth
-          xi(1:3,1) = fourth
+          xi(1,1:3) = fourth
 
         else
-          write(15,*) 'wrong gauss points for tet4 element', nInt
-          write(*,*) 'wrong gauss points for tet4 element', nInt
+          write(15,*) 'wrong Gauss points for tet4 element', nInt
+          write(*,*) 'wrong Gauss points for tet4 element', nInt
           call xit
         endif
 
       elseif(nNode.eq.10) then  ! 3D tet10 element (full integration)
 
         if (nInt.eq.4) then
-          w(1:4) = one/24.d0
+          w(1:4) = one/24.0d0
 
-          xi(1,1) = 0.58541020d0
-          xi(2,1) = 0.13819660d0
-          xi(3,1) = xi(2,1)
-          xi(1,2) = xi(2,1)
-          xi(2,2) = xi(1,1)
-          xi(3,2) = xi(2,1)
-          xi(1,3) = xi(2,1)
-          xi(2,3) = xi(2,1)
-          xi(3,3) = xi(1,1)
-          xi(4,1) = xi(2,1)
-          xi(4,2) = xi(2,1)
-          xi(4,3) = xi(2,1)
+          x1D(1) = 0.58541020d0
+          x1D(2) = 0.13819660d0
+
+          xi(1,1) = x1D(1)
+          xi(2,1) = x1D(2)
+          xi(3,1) = x1D(2)
+          xi(1,2) = x1D(2)
+          xi(2,2) = x1D(1)
+          xi(3,2) = x1D(2)
+          xi(1,3) = x1D(2)
+          xi(2,3) = x1D(2)
+          xi(3,3) = x1D(1)
+          xi(4,1) = x1D(2)
+          xi(4,2) = x1D(2)
+          xi(4,3) = x1D(2)
 
         else
-          write(15,*) 'wrong gauss points for tet10 element', nInt
-          write(*,*) 'wrong gauss points for tet10 element', nInt
+          write(15,*) 'wrong Gauss points for tet10 element', nInt
+          write(*,*) 'wrong Gauss points for tet10 element', nInt
           call xit
         endif
 
@@ -1565,8 +1569,8 @@
           end do
 
         else
-          write(15,*) 'wrong gauss points for hex8 element', nInt
-          write(*,*) 'wrong gauss points for hex8 element', nInt
+          write(15,*) 'wrong Gauss points for hex8 element', nInt
+          write(*,*) 'wrong Gauss points for hex8 element', nInt
           call xit
         endif
 
@@ -1610,8 +1614,8 @@
           end do
 
         else
-          write(15,*) 'wrong gauss points for hex20 element', nInt
-          write(*,*) 'wrong gauss points for hex20 element', nInt
+          write(15,*) 'wrong Gauss points for hex20 element', nInt
+          write(*,*) 'wrong Gauss points for hex20 element', nInt
           call xit
         endif
 
@@ -1624,12 +1628,12 @@
       RETURN
       END SUBROUTINE gaussQuadrtr3
 
-
 ************************************************************************
 
       SUBROUTINE faceNodes(nDim,nNode,face,list,nFaceNodes)
       ! this subroutine RETURNs the list of nodes on an
       ! element face for standard 2D and 3D Lagrangian elements
+      ! this subroutine is useful for applying traction-type BC
 
       IMPLICIT NONE
 
@@ -1637,29 +1641,29 @@
       integer, intent (out):: list(*)
       integer, intent (out):: nFaceNodes
 
-      integer :: list2(3), list3(4)
+      integer :: list3(3), list4(4)
 
       if (nDim.eq.2) then
-        list2(1:3) = [2,3,1]
-        list3(1:4) = [2,3,4,1]
+        list3(1:3) = [2,3,1]
+        list4(1:4) = [2,3,4,1]
 
         if (nNode.eq.3) then
           nFaceNodes = 2
           list(1) = face
-          list(2) = list2(face)
+          list(2) = list3(face)
         else if (nNode.eq.4) then
           nFaceNodes = 2
           list(1) = face
-          list(2) = list3(face)
+          list(2) = list4(face)
         else if (nNode.eq.6) then
           nFaceNodes = 3
           list(1) = face
-          list(2) = list2(face)
+          list(2) = list3(face)
           list(3) = face+3
         else if (nNode.eq.8) then
           nFaceNodes = 3
           list(1) = face
-          list(2) = list3(face)
+          list(2) = list4(face)
           list(3) = face+4
         endif
 
@@ -1724,7 +1728,7 @@
 
       IMPLICIT NONE
 
-      real*8 :: a(3), b(3), c(3)
+      double precision:: a(3), b(3), c(3)
 
       c(1) = a(2)*b(3)-a(3)*b(2)
       c(2) = b(1)*a(3)-a(1)*b(3)
@@ -1741,7 +1745,7 @@
       IMPLICIT NONE
 
       integer:: nDim, i
-      real*8 :: A(nDim,nDim), trA
+      double precision:: A(nDim,nDim), trA
 
       trA = zero
 
@@ -1759,12 +1763,13 @@
 
       IMPLICIT NONE
 
-      real*8 :: A(2,2), detA
+      double precision:: A(2,2), detA
 
       detA = A(1,1)*A(2,2) - A(1,2)*A(2,1)
 
       RETURN
       END SUBROUTINE detMat2
+
 ************************************************************************
 
       SUBROUTINE detMat3(A,detA)
@@ -1772,7 +1777,7 @@
 
       IMPLICIT NONE
 
-      real*8 :: A(3,3), detA
+      double precision:: A(3,3), detA
 
       detA = A(1,1)*A(2,2)*A(3,3)
      &     + A(1,2)*A(2,3)*A(3,1)
@@ -1793,19 +1798,21 @@
       IMPLICIT NONE
 
       integer:: istat
-      real*8 :: A(2,2),Ainv(2,2), detA, detAinv
+      double precision:: A(2,2),Ainv(2,2), detA, detAinv
 
       istat = 1
 
       call detMat2(A,detA)
 
       if (detA .le. zero) then
-        write(15,*) 'WARNING: subroutine inverseMat2:'
-        write(15,*) 'WARNING: det of mat= ', detA
-        write(*,*) 'WARNING: subroutine inverseMat2:'
-        write(*,*) 'WARNING: det of mat= ', detA
-        istat = 0
-        RETURN
+          write(15,*) 'WARNING: subroutine inverseMat2:'
+          write(15,*) 'WARNING: det of mat= ', detA
+
+          write(*,*) 'WARNING: subroutine inverseMat2:'
+          write(*,*) 'WARNING: det of mat= ', detA
+
+          istat = 0
+          RETURN
       end if
 
       detAinv = one/detA
@@ -1818,6 +1825,7 @@
       RETURN
 
       END SUBROUTINE inverseMat2
+
 ************************************************************************
 
       SUBROUTINE inverseMat3(A,Ainv,detA,istat)
@@ -1827,7 +1835,7 @@
       IMPLICIT NONE
 
       integer:: istat
-      real*8 :: A(3,3),Ainv(3,3), detA, detAinv
+      double precision:: A(3,3),Ainv(3,3), detA, detAinv
 
       istat = 1
 
@@ -1836,6 +1844,7 @@
       if (detA .le. zero) then
         write(15,*) 'WARNING: subroutine inverseMat3:'
         write(15,*) 'WARNING: det of mat= ', detA
+
         write(*,*) 'WARNING: subroutine inverseMat3:'
         write(*,*) 'WARNING: det of mat= ', detA
         istat = 0
@@ -1856,22 +1865,23 @@
 
       RETURN
       END SUBROUTINE inverseMat3
+
 ************************************************************************
 
       subroutine inverseMat(A,Ainv,n)
       ! this subroutine computes the inverse of an arbitrary
-      ! square matrix (nxn) by LU decomposition approach
+      ! square matrix of size nxn using LU decomposition 
 
       USE PARAMETERS
       IMPLICIT NONE
 
       integer,intent(in)   :: n
 
-      real*8,intent(inout) :: A(n,n)
-      real*8,intent(out)   :: Ainv(n,n)
+      double precision,intent(inout) :: A(n,n)
+      double precision,intent(out)   :: Ainv(n,n)
 
-      real*8 :: L(n,n), U(n,n), b(n), d(n), x(n)
-      real*8 :: coeff
+      double precision:: L(n,n), U(n,n), b(n), d(n), x(n)
+      double precision:: coeff
       integer :: i, j, k
 
       L = zero
@@ -1917,12 +1927,12 @@
       USE PARAMETERS
       IMPLICIT NONE
 
-      real*8, intent(in)  :: A(3,3)                   ! input matrix
-      real*8, intent(out) :: eigenvalues(3)           ! eigenvalues
-      real*8, intent(out) :: eigenvectors(3,3)        ! ith eigenvector is eigenvectors(1:3,i)
+      double precision, intent(in)  :: A(3,3)                   ! input matrix
+      double precision, intent(out) :: eigenvalues(3)           ! eigenvalues
+      double precision, intent(out) :: eigenvectors(3,3)        ! ith eigenvector is eigenvectors(1:3,i)
 
-      real*8 :: B(3,3), C(3,3), D(3,3)
-      real*8 :: p1, p2, p, q, r, phi, evnorm, tol
+      double precision:: B(3,3), C(3,3), D(3,3)
+      double precision:: p1, p2, p, q, r, phi, evnorm, tol
       integer:: i
 
       eigenvectors = zero
@@ -2001,10 +2011,10 @@
       USE PARAMETERS
       IMPLICIT NONE
 
-      real*8, intent(in) :: A(3,3)
+      double precision, intent(in) :: A(3,3)
 
-      real*8 :: D(3,3), V(3,3), eig(3)
-      real*8 :: B(3,3)
+      double precision:: D(3,3), V(3,3), eig(3)
+      double precision:: B(3,3)
 
       call eigenSym3(A,eig,V)
 
@@ -2027,9 +2037,9 @@
       USE PARAMETERS
       IMPLICIT NONE
 
-      real*8, intent (in)   :: A(3,3)
-      real*8, intent (out)  :: R(3,3), U(3,3), V(3,3)
-      real*8 :: Vinv(3,3), detV
+      double precision, intent (in)   :: A(3,3)
+      double precision, intent (out)  :: R(3,3), U(3,3), V(3,3)
+      double precision:: Vinv(3,3), detV
       integer:: nDim, istat
 
       !  Decompose A into A=RU=VR  where U,V are symmetric and R is orthogonal
@@ -2041,6 +2051,7 @@
       U = matmul(transpose(R),A)                      ! U = R^T*A
 
       end subroutine polarDecomp3
+
 ************************************************************************
 
       SUBROUTINE voigtAugment(vect2D, vect3D, ntens)
@@ -2051,7 +2062,7 @@
       IMPLICIT NONE
 
       integer:: ntens
-      real*8 :: vect2D(ntens,1), vect3D(nSymm,1)
+      double precision:: vect2D(ntens,1), vect3D(nSymm,1)
 
       vect3D = zero
 
@@ -2080,7 +2091,7 @@
       IMPLICIT NONE
 
       integer:: ntens
-      real*8 :: vect3D(nSymm,1), vect2D(ntens,1)
+      double precision:: vect3D(nSymm,1), vect2D(ntens,1)
 
       vect2D = zero
 
@@ -2107,7 +2118,7 @@
       IMPLICIT NONE
 
       integer:: i
-      real*8 :: ATens(2,2), AVect(3,1)
+      double precision:: ATens(2,2), AVect(3,1)
 
       do i = 1, 2
         AVect(i,1) = ATens(i,i)
@@ -2127,7 +2138,7 @@
       IMPLICIT NONE
 
       integer:: i
-      real*8 :: ATens(3,3), AVect(nSymm,1)
+      double precision:: ATens(3,3), AVect(nSymm,1)
 
       do i = 1, 3
         AVect(i,1) = ATens(i,i)
@@ -2143,13 +2154,13 @@
 ************************************************************************
 
       SUBROUTINE vector2symtensor2(Avect,Atens)
-      ! this subroutine transforms a 3x1 Voigt vector to 2x2 symmetric tensor
+      ! this subroutine transforms a 4x1 Voigt vector to 2x2 symmetric tensor
 
       USE PARAMETERS
       IMPLICIT NONE
 
       integer:: i
-      real*8 :: ATens(2,2), AVect(3,1)
+      double precision:: ATens(2,2), AVect(3,1)
 
       do i = 1, 2
         ATens(i,i) = AVect(i,1)
@@ -2170,7 +2181,7 @@
       IMPLICIT NONE
 
       integer:: i
-      real*8 :: AVect(6,1), ATens(3,3)
+      double precision:: AVect(6,1), ATens(3,3)
 
       do i = 1, 3
         ATens(i,i) = AVect(i,1)
@@ -2187,7 +2198,8 @@
       END SUBROUTINE vector2symtensor3
 
 ************************************************************************
-      SUBROUTINE tangent2matrix(C,D)
+
+      SUBROUTINE symtangent2matrix(C,D)
 
       ! this subroutine maps the fourth order material/spatial tangent
       ! tensor (3x3x3x3) to a 2nd order stiffness tensor (6x6) using
@@ -2198,7 +2210,7 @@
 
       integer:: i, j, k, l, rw, cl
       integer:: Voigt(nSymm,2)
-      real*8 :: C(3,3,3,3), D(nSymm,nSymm)
+      double precision:: C(3,3,3,3), D(nSymm,nSymm)
 
       ! Voigt convetion: (1,1) (2,2) (3,3) (2,3) (1,3) (1,2)
       Voigt = reshape((/ 1, 2, 3, 2, 1, 1,  1, 2, 3, 3, 3, 2 /),
@@ -2216,7 +2228,7 @@
       enddo
 
       RETURN
-      END SUBROUTINE tangent2matrix
+      END SUBROUTINE symtangent2matrix
 
 ************************************************************************
 ************************************************************************
