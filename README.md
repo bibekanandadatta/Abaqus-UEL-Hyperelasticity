@@ -1,9 +1,13 @@
 # Abaqus UEL Hyperelasticity
 
  
-This repository contains user element subroutines (UEL) for Abaqus/ Standard written in Fortran for finite strain elasticity (hyperelasticity). Standard displacement-based element formulation has been used. The purpose of the project is to make users familiar with developing finite strain user element subroutines (UEL) in Abaqus using a simple standard case. This source code contains necessary subroutines related to element operations and matrix algebra. Once comfortable, users can easily repurpose this source code as a template for their element.
+This repository contains the Fortran source code for finite strain elasticity (hyperelasticity) user element (UEL) subroutine and example input files for Abaqus/Standard. Standard displacement-based element formulation has been used. The purpose of the project is to make users familiar with developing the UEL subroutine in Abaqus/Standard using a standard displacement-based element formulation for a nonlinear (large strain) solid mechanics model. This source code contains necessary subroutines related to element operations and linear algebraic calculations.
 
-If you are very new to writing user subroutine, it is suggested you should look into [linear elasticity subroutine repository](https://github.com/bibekananda-datta/Abaqus-UEL-Elasticity) first before proceeding.
+
+
+> [!WARNING]
+> This repository is not meant to be a complete guideline or tutorial of Abaqus user element (UEL) subroutines. This feature is intended for advanced users, and I strongly recommend developers and users make themselves familiar with theories related to continuum mechanics and finite element analysis, Fortran programming, and Abaqus environments before using UEL. A simpler example of Abaqus UEL subroutine implementation which can also be a good starting point for new developers or users is [Abaqus-UEL-Elasticity](https://github.com/bibekananda-datta/Abaqus-UEL-Elasticity).
+
 
 
 ## Obtaining the file
@@ -12,85 +16,95 @@ If you have `git` installed, you can clone the repository to your local machine 
 ```bash
 git clone https://github.com/bibekananda-datta/Abaqus-UEL-Hyperelasticity.git
 ```
-Alternatively, you can download the files in a `zip` folder in this repository using the `code` drop-down menu on the top right corner
 
-To receive updates in this repository, you can also `fork` the repository and sync as updates are deployed, develop your code by creating a separate branch, and propose updates using the `pull` and `merge` features of GitHub.
+You can also `fork` the repository and sync as updates are deployed, test and develop your code by creating a separate branch.
+
+Alternatively, you can download the files in a `zip` folder in this repository using the `code` drop-down menu on the top right corner. In this approach, you will not receive any bug fixes and updates.
+
+
+
+
+## Description of the finite element formulation
+
+Finite element formulation for large strain problems (hyperelasticity, finite viscoelasticity, etc.) can be done in the reference configuration (total Lagrangian formulation) or the current configuration (updated Lagrangian formulation). Abaqus uses a Cauchy stress-based updated Lagrangian formulation for its built-in models. In this implementation, a second Piola-Kirchhoff (PK-II) stress-based total Lagrangian formulation has been adopted. Furthermore, two different types of constitutive models for hyperelastic materials, Neo-Hookean and Arruda-Boyce, have been implemented. For both implementations, coupled strain energy density formulations were assumed with no kinematic split. In the contrary, Abaqus uses an uncoupled split of the deformation gradient and strain energy density (split into deviatoric and volumetric parts).
+
+
+> [!NOTE]
+> For the built-in large displacement elements, Abaqus/Standard implements updated Lagrangian formulation with deformation gradient and strain energy density being split into deviatoric and volumetric parts.
 
 
 
 ## Description of the repository
 
-### `uel_nlmech_pk2.for` subroutine
-
-As a default, Abaqus prefers the user subroutines to be written in Fortran fixed form (F77 standard) while common features of modern Fortran can be included if the compiler allows. The element formulation is standard and uses a total Lagrangian approach based on the second Piola-Kirchhoff stress and so-called material tangent. The user element includes 4 types of 2D continuum solid elements (Tri3, Tri6, Quad4, and Quad8) in plane-strain and 4 types of 3D continuum solid elements (Tet4, Tet10, Hex8, Hex10). These elements can be used in both reduced and full integration schemes. It is up to the user to specify the correct number of integration points for each element. Body force and traction boundary conditions have not been implemented in this user subroutine, however, they can be applied by overlaying standard Abaqus elements on the user elements (to be discussed in the **Visualization** section). Since Abaqus/ Viewer does not provide native support for visualizing user elements, an additional layer of elements with the same element connectivity has been created and results at the integration points of the elements are stored using the `UVARM` subroutine.
-
-The constitutive law for the material is described by the quasi-incompressible Neo-Hookean model or the quasi-incompressible Arruda-Boyce model. The quasi-incompressibility condition was enforced using a penalty-like approach by prescribing a large bulk modulus compared to the shear modulus.
-
-
-**To-do list for elements:**
-- [ ] Add user subroutine for updated Lagrangian approach `uel_nlmech_cauchy.for`.
-
-
-> [!NOTE]
-> As of now, plane stress and axisymmetric elements are not available, but users can easily extend the subroutine to include these capabilities.
-> The constitutive behavior of the material can be extended to include finite viscoelasticity, finite plasticity, and uncoupled finite thermoelasticity.
-
-> [!WARNING]
-> If the elements are used for materials near-incompressibility limit or under bending case scenarios, the user may want to opt for higher-order elements. Please remember that these are standard displacement-based element formulations, and no special treatment for shear locking, hourglass modes, or volumetric locking is available.
-
-> [!TIP]
-> This file contains subroutines to obtain the Gauss quadrature information, interpolation functions for 2D and 3D Lagrangian elements and matrix operations. Users are highly recommended to go through these subroutines and can repurpose them to write their user element (UEL) code.
-
-
-
-### Example input files
-
-#### Properties
-
-A few sample input files are provided for different element types to demonstrate the usage of the user element subroutine capabilities in Abaqus. Users can use Abaqus/ CAE to create a standard Abaqus model and export `.inp` files. It is recommended to use the option `Do not use parts and assemblies in input files` from the **model attributes** drop-down menu before generating the input file. This option will generate a cleaner input file. Once the standard input file is exported from Abaqus, the user will need to modify it to use it with the UEL. For Neo-Hookean materials, the user needs to specify the shear modulus and bulk modulus which is 3-5 orders of magnitude larger than the shear modulus. For Arruda-Boyce material, another property, called locking stretch also needs to be specified. Additional integer properties to be specified are the number of integration points, `nInt`, type of constitutive model, `matID`, and the number of variables to be post-processed at the integration points `nPostVars`.
-
-
-#### Visualization
-
-An additional set of elements with the same element connectivity as the user element has been created in the input file to visualize the results. This technique was used since the programmed elements have the same interpolation functions and integration points as built-in continuum elements in Abaqus. These additional elements (so-called dummy elements) have negligible elastic properties and thus will not affect the results. If you are using a reduced integration element from the user subroutine, then use the same type of element from Abaqus as dummy elements. You can find an example Python file in [linear elasticity subroutine repository](https://github.com/bibekananda-datta/Abaqus-UEL-Elasticity) for parsing simple input files to create overlaying standard elements.
-
-
-> [!NOTE]
-> If the user elements have different nodal connectivity and integration points than the standard Abaqus elements, then this technique can not be used. In that case, the user will need to store the variables at the integration point using `SVARS` and post-process using a separate Python script (too complicated unless you need to!).
-
-> [!TIP]
-> User can specify body force and traction/ pressure type boundary conditions on the dummy elements since they share the same element connectivity, it will be included in the calculation.
-
-> [!TIP]
-> For larger models, the user can write Python or MATLAB script which will parse the ABAQUS-generated input file and add additional dummy elements. This will ease the pre-processing procedure.
+| File name     | Description   |
+| :---------    | :-----------  |
+| `uel_nlmech_pk2.for` | is the Fortran source code that implements PK-II stress-based Total Lagrangian user element formulation for hyperelastic materials (Neo-Hookean and Arruda-Boyce). The main `UEL` subroutine was to perform all the initial checks and the calculations are performed in a subsequent subroutine. The source code includes additional subroutines with Lagrangian interpolation functions for 4 types of 2D continuum elements (Tri3, Tri6, Quad4, and Quad8) and 4 types of 3D continuum elements (Tet4, Tet10, Hex8, Hex20) and Gaussian quadratures with reduced and full integration schemes. Body force and traction boundary conditions have not been implemented in this user subroutine, however, these can be applied by overlaying standard Abaqus elements on the user elements (to be discussed in the **Visualization** section). Since Abaqus/ Viewer does not provide native support for visualizing user elements, an additional layer of elements with the same element connectivity has been created and results at the integration points of the elements are stored using the `UVARM` subroutine. |
+| `<>.inp` | are the example input files prepared to be executed with the user element subroutine. Since the user-defined elements share the same topology as one of the Abaqus built-in elements, those models were built in Abaqus/CAE and then exported as input files. Later those input files were modified to include keywords and data to include user element definitions, properties, and overlaying dummy elements. |
+| `addElemNLMech.py` | is a Python code that modifies a simple input file and adds the overlaying dummy elements on the user elements. For complicated input files, this will not work properly and modification of this code will be required (optional). |
+| `runAbq.ps1` | is a PowerShell file that can invoke the Abaqus solver when executed  with the user subroutine and user-specified input file from the PowerShell terminal (optional).
+| `printAbq.ps1` | is a Powershell file that can print the Abaqus `.sta` file which logs the information related to the solution process (optional). |
+| Hyperelastic.pdf | is the theory and algorithm documentation for the finite element formulation and constitutive models being implemented in the provided source code. |
+| Abaqus Docs.pdf | is the collection of publicly available Abaqus documentation in PDF format which is related to Abaqus UEL. The web versions of these documents are available at https://help.3ds.com. |
 
 
 
 
+## Modeling in Abaqus
 
-## Configuring Abaqus and executing the subroutines
-
-To run user subroutines in Abaqus, you will need to install Intel Visual Studio and Intel oneAPI package and link them with Abaqus. Follow this [tutorial](https://bibekanandadatta.com/link-intel-and-vs-abaqus-2020/) if you have not done it yet. There might be other similar resources available to help you with configuring Abaqus for subroutine compilation and execution.
+Since the implemented user elements have the same topology as the built-in Abaqus elements, users can build a primary model in Abaqus/CAE and then export the input (`.inp`) file. Once the input file is available, as described in the Abaqus documentation, the following information needs to be modified.
 
 
-Make sure that the user subroutine and input file are in the same directory. Using the `Abaqus command line terminal` or `cmd` or `PowerShell`, you can execute the following command from the directory to execute the subroutine.
+### Properties
+
+Depending on the material model, the user needs to specify two or three properties for the material as listed below.
+
+- Shear modulus, $\mu$
+- Bulk modulus, $\kappa$
+- Locking stretch, $\lambda_\mathrm{L}$
+- Number of integration points, `nInt`
+- Material model, `matID`
+- Number of post-processed variables, `nPostVars`
+
+> [!NOTE] 
+> Use `matID = 1` for the Neo-Hookean model and `matID=2` for the Arruda-Boyce model. For the Neo-Hookean model, the locking stretch needs to be specified as zero, and For the Arruda-Boyce model, it should be a positive real number.
+
+> [!CAUTION] 
+> The standard displacement-based element formulation implemented here is known to behave poorly for quasi-incompressible cases because of volumetric locking.
+
+
+
+### Dummy elements for visualization
+
+To visualize the results, an additional set of built-in Abaqus elements with the same element connectivity as the user element has been created in the input file. These additional elements (so-called dummy elements) have negligible elastic properties and thus will not affect the results. If you are using a reduced integration element from the user subroutine, then use the same type of element from Abaqus as dummy elements.
+
+
+
+
+## Configuring Abaqus and executing the subroutine
+
+To run user subroutines in Abaqus, you will need to install Intel Visual Studio and Intel oneAPI package and link them with Abaqus. Follow [this tutorial](https://www.bibekanandadatta.com/blog/2021/link-intel-and-vs-abaqus-2020/) if you have not done it before.
+
+
+Make sure that the user subroutine and input file are in the same directory. Using the `Abaqus command line terminal` or `cmd terminal` or `PowerShell terminal`, you can execute the following command from the directory to execute the subroutine.
 
 ```bash
-abaqus interactive double analysis ask_delete=off job=your_job_name input=input_file_name.inp user=uel_mech.for cpus=no_of_processor
+abaqus interactive double analysis ask_delete=off job=<your_job_name> input=<input_file_name.inp> user=<source_code>
 ```
-Specify the variable names in the above command as needed.
+Specify the variable names (inside < >) in the above command as needed. For additional information on executing user subroutines, check the Abaqus user manual.
 
 If you use the PowerShell-based terminal, you can also execute the subroutine by running the `runAbq.ps1` file. Make sure to check the input file name in the file.
 ```bash
 ./runAbq
 ```
-To print the status file on the terminal, on a different terminal window, run the `print`
 
-For additional information on executing user subroutines, check the Abaqus/ Standard user manual.
-
-
+Users can print out the Abaqus `.sta` file by executing another PowerShell file in a different terminal opened in the same directory.
+```bash
+./printAbq
+```
 
 
 ## Citation
 
-In case you use this subroutine for educational or research purposes, please cite this source.
+In case you use this subroutine and documentation for educational or research purposes, please cite this source from the following DOI.
+
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.11078801.svg)](https://doi.org/10.5281/zenodo.11078801)
