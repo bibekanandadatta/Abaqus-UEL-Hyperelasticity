@@ -105,6 +105,24 @@ Users can print out the Abaqus `.sta` file by executing another PowerShell file 
 
 ## Citation
 
-In case you use this subroutine and documentation for educational or research purposes, please cite this source from the following DOI.
+If you use this repository (documentation or source code), please consider citing this from the following:
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.11078801.svg)](https://doi.org/10.5281/zenodo.11078801)
+
+APA format:
+```
+Datta, B. (2024, April 28). A nonlinear user element (UEL) implementation for hyperelastic materials in Abaqus/Standard. Zenodo. https://doi.org/10.5281/zenodo.11078801.
+```
+
+BibTeX:
+``` bibtex
+@misc{dattaNonlinearUserElement2024,
+  author       = {Datta, Bibekananda},
+  title        = {{A nonlinear user element (UEL) implementation for hyperelastic materials in Abaqus/Standard}},
+  month        = apr,
+  year         = 2024,
+  publisher    = {Zenodo},
+  doi          = {10.5281/zenodo.11078801},
+  url          = {https://doi.org/10.5281/zenodo.11078801}
+}
+```
