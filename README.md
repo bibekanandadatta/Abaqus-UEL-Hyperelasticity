@@ -26,18 +26,18 @@ Alternatively, you can download the files in a `zip` folder in this repository u
 
 ## Description of the finite element formulation
 
-Finite element formulation for large strain problems (hyperelasticity, finite viscoelasticity, etc.) can be done in the reference configuration (total Lagrangian formulation) or the current configuration (updated Lagrangian formulation). Abaqus uses a Cauchy stress-based updated Lagrangian formulation for its built-in models. In this implementation, a second Piola-Kirchhoff (PK-II) stress-based total Lagrangian formulation has been adopted. Furthermore, two different types of constitutive models for hyperelastic materials, Neo-Hookean and Arruda-Boyce, have been implemented. For both implementations, coupled strain energy density formulations were assumed with no kinematic split. In the contrary, Abaqus uses an uncoupled split of the deformation gradient and strain energy density (split into deviatoric and volumetric parts).
+Finite element formulation for large strain problems (hyperelasticity, finite viscoelasticity, etc.) can be done in the reference configuration (total Lagrangian formulation) or the current configuration (updated Lagrangian formulation). Abaqus uses a Cauchy stress-based updated Lagrangian formulation for its built-in models. In this implementation, a second Piola-Kirchhoff (PK-II) stress-based total Lagrangian formulation has been adopted. Furthermore, two different types of constitutive models for hyperelastic materials, Neo-Hookean and Arruda-Boyce, have been implemented. For both implementations, coupled strain energy density formulations were assumed with no kinematic split. On the contrary, Abaqus uses an uncoupled split of the deformation gradient and strain energy density (split into deviatoric and volumetric parts).
 
 
 > [!NOTE]
-> For the built-in large displacement elements, Abaqus/Standard implements updated Lagrangian formulation with deformation gradient and strain energy density being split into deviatoric and volumetric parts.
+> For the built-in large displacement elements, Abaqus/Standard implements an updated Lagrangian formulation with deformation gradient and strain energy density being split into deviatoric and volumetric parts.
 
 
 
 ## Description of the repository
 
-| File name     | Description   |
-| :---------    | :-----------  |
+|   File name   |  Description  |
+| ----------    | ------------  |
 | `uel_nlmech_pk2.for` | is the Fortran source code that implements PK-II stress-based Total Lagrangian user element formulation for hyperelastic materials (Neo-Hookean and Arruda-Boyce). The main `UEL` subroutine was to perform all the initial checks and the calculations are performed in a subsequent subroutine. The source code includes additional subroutines with Lagrangian interpolation functions for 4 types of 2D continuum elements (Tri3, Tri6, Quad4, and Quad8) and 4 types of 3D continuum elements (Tet4, Tet10, Hex8, Hex20) and Gaussian quadratures with reduced and full integration schemes. Body force and traction boundary conditions have not been implemented in this user subroutine, however, these can be applied by overlaying standard Abaqus elements on the user elements (to be discussed in the **Visualization** section). Since Abaqus/ Viewer does not provide native support for visualizing user elements, an additional layer of elements with the same element connectivity has been created and results at the integration points of the elements are stored using the `UVARM` subroutine. |
 | `<>.inp` | are the example input files prepared to be executed with the user element subroutine. Since the user-defined elements share the same topology as one of the Abaqus built-in elements, those models were built in Abaqus/CAE and then exported as input files. Later those input files were modified to include keywords and data to include user element definitions, properties, and overlaying dummy elements. |
 | `addElemNLMech.py` | is a Python code that modifies a simple input file and adds the overlaying dummy elements on the user elements. For complicated input files, this will not work properly and modification of this code will be required (optional). |
