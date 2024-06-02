@@ -36,11 +36,15 @@ Finite element formulation for large strain problems (hyperelasticity, finite vi
 
 ## Description of the repository
 
+All the source codes are located in the `src` subdirectory and the Abaqus test cases are located in the `tests` subdirectory. The documentations are available in the `docs` subdirectory. Compiling the source code requires the LAPACK library from the Intel oneMKL package. See below for the details.
+
 |   File name   |  Description  |
 | ----------    | ------------  |
 | `uel_nlmech_pk2.for` | is the Fortran source code that implements PK-II stress-based Total Lagrangian user element formulation for hyperelastic materials (Neo-Hookean and Arruda-Boyce). The main `UEL` subroutine was to perform all the initial checks and the calculations are performed in a subsequent subroutine. The source code includes additional subroutines with Lagrangian interpolation functions for 4 types of 2D continuum elements (Tri3, Tri6, Quad4, and Quad8) and 4 types of 3D continuum elements (Tet4, Tet10, Hex8, Hex20) and Gaussian quadratures with reduced and full integration schemes. Body force and traction boundary conditions have not been implemented in this user subroutine, however, these can be applied by overlaying standard Abaqus elements on the user elements (to be discussed in the **Visualization** section). Since Abaqus/ Viewer does not provide native support for visualizing user elements, an additional layer of elements with the same element connectivity has been created and results at the integration points of the elements are stored using the `UVARM` subroutine. |
-| `<>.inp` | are the example input files prepared to be executed with the user element subroutine. Since the user-defined elements share the same topology as one of the Abaqus built-in elements, those models were built in Abaqus/CAE and then exported as input files. Later those input files were modified to include keywords and data to include user element definitions, properties, and overlaying dummy elements. |
+| `<some_module>.for` | These are the utility files with different Fortran module that are included in the main source file using `include <filename.ext>` statement at the beginning of the main source code. |
+| `<...>.inp` | are the example input files prepared to be executed with the user element subroutine. Since the user-defined elements share the same topology as one of the Abaqus built-in elements, those models were built in Abaqus/CAE and then exported as input files. Later those input files were modified to include keywords and data to include user element definitions, properties, and overlaying dummy elements. |
 | `addElemNLMech.py` | is a Python code that modifies a simple input file and adds the overlaying dummy elements on the user elements. For complicated input files, this will not work properly and modification of this code will be required (optional). |
+| `abaqus_v6.env` | is the Abaqus environment file which adds the additional compiling option for the Intel oneMKL library. This needs to be in the same directory as the Abaqus jobs. |
 | `runAbq.ps1` | is a PowerShell file that can invoke the Abaqus solver when executed  with the user subroutine and user-specified input file from the PowerShell terminal (optional).
 | `printAbq.ps1` | is a Powershell file that can print the Abaqus `.sta` file which logs the information related to the solution process (optional). |
 | Hyperelastic.pdf | is the theory and algorithm documentation for the finite element formulation and constitutive models being implemented in the provided source code. |
@@ -66,7 +70,7 @@ Depending on the material model, the user needs to specify two or three properti
 - Number of post-processed variables, `nPostVars`
 
 > [!NOTE] 
-> Use `matID = 1` for the Neo-Hookean model and `matID=2` for the Arruda-Boyce model. For the Neo-Hookean model, the locking stretch needs to be specified as zero, and For the Arruda-Boyce model, it should be a positive real number.
+> Use `matID = 1` for the Neo-Hookean model and `matID = 2` for the Arruda-Boyce model. For the Neo-Hookean model, the locking stretch needs to be specified as zero, and For the Arruda-Boyce model, it should be a positive real number.
 
 > [!CAUTION] 
 > The standard displacement-based element formulation implemented here is known to behave poorly for quasi-incompressible cases because of volumetric locking.
@@ -82,13 +86,13 @@ To visualize the results, an additional set of built-in Abaqus elements with the
 
 ## Configuring Abaqus and executing the subroutine
 
-To run user subroutines in Abaqus, you will need to install Intel Visual Studio and Intel oneAPI package and link them with Abaqus. Follow [this tutorial](https://www.bibekanandadatta.com/blog/2021/link-intel-and-vs-abaqus-2020/) if you have not done it before.
+To run user subroutines in Abaqus, you will need to install Intel Visual Studio and Intel oneAPI package and link them with Abaqus. Follow [this blog tutorial](https://www.bibekanandadatta.com/blog/2021/link-intel-and-vs-abaqus-2020/) if you have not done it before. Additionally, [see this blog post](https://www.bibekanandadatta.com/blog/2024/lapack-Intel-Fortran-Abaqus/) to learn how to link and use LAPACK library from tge Intel oneMKL library to Abaqus user subroutines.
 
 
 Make sure that the user subroutine and input file are in the same directory. Using the `Abaqus command line terminal` or `cmd terminal` or `PowerShell terminal`, you can execute the following command from the directory to execute the subroutine.
 
 ```bash
-abaqus interactive double analysis ask_delete=off job=<your_job_name> input=<input_file_name.inp> user=<source_code>
+abaqus interactive double analysis ask_delete=off job=<your_job_name> input=<input_file_name.inp> user=../src/uel_nlmech_pk2.for
 ```
 Specify the variable names (inside < >) in the above command as needed. For additional information on executing user subroutines, check the Abaqus user manual.
 
