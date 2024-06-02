@@ -24,15 +24,15 @@
           use global_parameters, only: wp
           use error_logging
           implicit none
-          real(kind=wp), intent(in)   :: mat(:,:)
-          real(kind=wp), allocatable  :: vec(:)
+          real(wp), intent(in)        :: mat(:,:)
+          real(wp), allocatable       :: vec(:)
         end function diag_m
 
         module function diag_v(vec) result(mat)
           use global_parameters, only: wp
           implicit none
-          real(kind=wp), intent(in)   :: vec(:)
-          real(kind=wp), allocatable  :: mat(:,:)
+          real(wp), intent(in)        :: vec(:)
+          real(wp), allocatable       :: mat(:,:)
         end function diag_v
 
       end interface diag
@@ -43,14 +43,14 @@
         module function isEqualMat(A,B) result(comp)
           use global_parameters, only: wp
           implicit none
-          real(kind=wp), intent(in) :: A(:,:), B(:,:)
+          real(wp), intent(in)      :: A(:,:), B(:,:)
           logical                   :: comp
         end function isEqualMat
 
         module function isEqualVec(a,b) result(comp)
           use global_parameters, only: wp
           implicit none
-          real(kind=wp), intent(in) :: a(:), b(:)
+          real(wp), intent(in)      :: a(:), b(:)
           logical                   :: comp
         end function isEqualVec
 
@@ -65,23 +65,23 @@
         module function cross_product(a,b) result(c)
           use global_parameters, only: wp
           implicit none
-          real(kind=wp), intent(in)   :: a(3), b(3)
-          real(kind=wp)               :: c(3)
+          real(wp), intent(in)        :: a(3), b(3)
+          real(wp)                    :: c(3)
         end function cross_product
 
         module subroutine crossProduct(a,b,c)
           use global_parameters, only: wp
           implicit none
-          real(kind=wp), intent(in)  :: a(3), b(3)
-          real(kind=wp), intent(out) :: c(3)
+          real(wp), intent(in)       :: a(3), b(3)
+          real(wp), intent(out)      :: c(3)
         end subroutine crossProduct
 
         module subroutine diagonal(A,v,ask)
-          use global_parameters, only: wp, error, warn
+          use global_parameters, only: wp
           use error_logging
           implicit none
-          real(kind=wp), intent(inout)  :: A(:,:)
-          real(kind=wp), intent(inout)  :: v(:)
+          real(wp), intent(inout)       :: A(:,:)
+          real(wp), intent(inout)       :: v(:)
           character(len=*), intent(in)  :: ask
         end subroutine diagonal
 
@@ -89,99 +89,99 @@
           use global_parameters, only: wp, zero, one
           integer, intent(in)           :: m
           integer, intent(in), optional :: n
-          real(kind=wp), allocatable    :: ID(:,:)
+          real(wp), allocatable         :: ID(:,:)
         end function eye
 
         module subroutine eyeMat(A)
-          use global_parameters, only: wp, zero, one, error, warn
+          use global_parameters, only: wp, zero, one
           implicit none
-          real(kind=wp), intent(out)  :: A(:,:)
+          real(wp), intent(out)       :: A(:,:)
           integer                     :: i
         end subroutine eyeMat
 
         module function isSkew(A) result(skw)
           use global_parameters, only: wp
           implicit none
-          real(kind=wp), intent(in)     :: A(:,:)
+          real(wp), intent(in)          :: A(:,:)
           logical                       :: skw
         end function isSkew
 
         module function isSquare(A) result(sqr)
           use global_parameters, only: wp
           implicit none
-          real(kind=wp), intent(in)   :: A(:,:)
+          real(wp), intent(in)        :: A(:,:)
           logical                     :: sqr 
         end function isSquare
 
         module function isSymmetric(A) result(sym)
           use global_parameters, only: wp
           implicit none
-          real(kind=wp), intent(in)     :: A(:,:)
+          real(wp), intent(in)          :: A(:,:)
           logical                       :: sym  
         end function isSymmetric
 
          module function skew(A) result(skewA)
-          use global_parameters, only: wp, half, error, warn
+          use global_parameters, only: wp, half
           use error_logging
           implicit none
-          real(kind=wp), intent(in)   :: A(:,:)
-          real(kind=wp)               :: skewA(size(A,1),size(A,1))
+          real(wp), intent(in)        :: A(:,:)
+          real(wp)                    :: skewA(size(A,1),size(A,1))
         end function skew
 
         module subroutine skewMat(A,skewA)
-          use global_parameters, only: wp, half, error, warn
+          use global_parameters, only: wp, half
           use error_logging
           implicit none
-          real(kind=wp), intent(in)   :: A(:,:)
-          real(kind=wp), intent(out)  :: skewA(:,:)
+          real(wp), intent(in)        :: A(:,:)
+          real(wp), intent(out)       :: skewA(:,:)
         end subroutine skewMat
 
         module function sym(A) result(symA)
-          use global_parameters, only: wp, half, error, warn
+          use global_parameters, only: wp, half
           use error_logging
           implicit none
-          real(kind=wp), intent(in)   :: A(:,:)
-          real(kind=wp)               :: symA(size(A,1),size(A,2))
+          real(wp), intent(in)        :: A(:,:)
+          real(wp)                    :: symA(size(A,1),size(A,2))
         end function sym
 
         module subroutine symMat(A,symA)
-          use global_parameters, only: wp, half, error, warn
+          use global_parameters, only: wp, half
           use error_logging
           implicit none
-          real(kind=wp), intent(in)   :: A(:,:)
-          real(kind=wp), intent(out)  :: symA(:,:)
+          real(wp), intent(in)        :: A(:,:)
+          real(wp), intent(out)       :: symA(:,:)
         end subroutine symMat
 
         module function trace(A) result(trA)
-          use global_parameters, only: wp, zero, error, warn
+          use global_parameters, only: wp, zero
           use error_logging
           implicit none
-          real(kind=wp), intent(in)   :: A(:,:)
-          real(kind=wp)               :: trA
+          real(wp), intent(in)        :: A(:,:)
+          real(wp)                    :: trA
         end function trace
 
         module subroutine traceMat(A,trA)
-          use global_parameters, only: wp, zero, error, warn
+          use global_parameters, only: wp, zero
           use error_logging
           implicit none
-          real(kind=wp), intent(in)   :: A(:,:)
-          real(kind=wp), intent(out)  :: trA
+          real(wp), intent(in)        :: A(:,:)
+          real(wp), intent(out)       :: trA
         end subroutine traceMat
 
         module function triL(A) result(L)
-          use global_parameters, only: wp, zero, error, warn
+          use global_parameters, only: wp, zero
           use error_logging
           implicit none
-          real(kind=wp), intent(in)   :: A(:,:)
-          real(kind=wp)               :: L(size(A,1),size(A,2))
+          real(wp), intent(in)        :: A(:,:)
+          real(wp)                    :: L(size(A,1),size(A,2))
         end function triL
 
         module function triU(A) result(U)
-          use global_parameters, only: wp, zero, error, warn
+          use global_parameters, only: wp, zero
           use error_logging
           implicit none
-          real(kind=wp), intent(in)   :: A(:,:)
-          real(kind=wp)               :: U(size(A,1),size(A,2))
+          real(wp), intent(in)        :: A(:,:)
+          real(wp)                    :: U(size(A,1),size(A,2))
         end function triU
 
       end interface
@@ -193,19 +193,19 @@
       interface detMat
 
         module subroutine detMat_std(A,detA)
-          use global_parameters, only: wp, zero, one, error, warn
+          use global_parameters, only: wp, zero, one
           use error_logging
           implicit none
-          real(kind=wp), intent(in)   :: A(:,:)
-          real(kind=wp), intent(out)  :: detA
+          real(wp), intent(in)        :: A(:,:)
+          real(wp), intent(out)       :: detA
         end subroutine detMat_std
 
        module subroutine detMat_lapack(A,detA,lib)
-          use global_parameters, only: wp, zero, one, error, warn
+          use global_parameters, only: wp, zero, one
           use error_logging
           implicit none
-          real(kind=wp), intent(in)   :: A(:,:)
-          real(kind=wp), intent(out)  :: detA
+          real(wp), intent(in)        :: A(:,:)
+          real(wp), intent(out)       :: detA
           character(len=*), intent(in):: lib
         end subroutine detMat_lapack
 
@@ -218,16 +218,16 @@
         module function det_std(A) result(detA)
           use global_parameters, only: wp
           implicit none
-          real(kind=wp), intent(in)   :: A(:,:)
-          real(kind=wp)               :: detA
+          real(wp), intent(in)        :: A(:,:)
+          real(wp)                    :: detA
         end function det_std
           
         module function det_lapack(A,lib) result(detA)
           use global_parameters, only: wp
           implicit none 
-          real(kind=wp), intent(in)   :: A(:,:)
+          real(wp), intent(in)        :: A(:,:)
           character(len=*), intent(in):: lib
-          real(kind=wp)               :: detA
+          real(wp)                    :: detA
         end function det_lapack
         
       end interface det
@@ -237,11 +237,11 @@
       interface eigen
 
         module subroutine eigen_lapack_sym(A,eVal,eVec,lib)
-          use global_parameters, only: wp, zero, one, error, warn
+          use global_parameters, only: wp, zero, one
           use error_logging
           implicit none
-          real(kind=wp), intent(in)     :: A(:,:)
-          real(kind=wp), intent(out)    :: eVal(:), eVec(:,:)
+          real(wp), intent(in)          :: A(:,:)
+          real(wp), intent(out)         :: eVal(:), eVec(:,:)
           character(len=*), intent(in)  :: lib
         end subroutine eigen_lapack_sym
 
@@ -254,16 +254,16 @@
         module function inv_std(A) result(Ainv)
           use global_parameters, only: wp
           implicit none
-          real(kind=wp), intent(in)     :: A(:,:)
-          real(kind=wp)                 :: Ainv(size(A,1),size(A,2))
+          real(wp), intent(in)          :: A(:,:)
+          real(wp)                      :: Ainv(size(A,1),size(A,2))
         end function inv_std 
 
         module function inv_lapack(A,lib) result(Ainv)
           use global_parameters, only: wp
           implicit none
-          real(kind=wp), intent(in)     :: A(:,:)
+          real(wp), intent(in)          :: A(:,:)
           character(len=*), intent(in)  :: lib
-          real(kind=wp)                 :: Ainv(size(A,1),size(A,2))
+          real(wp)                      :: Ainv(size(A,1),size(A,2))
         end function inv_lapack
 
       end interface inv 
@@ -272,19 +272,19 @@
       interface inverse
 
         module subroutine inverseMat_std(A,Ainv)
-          use global_parameters, only: wp, zero, one, error, warn
+          use global_parameters, only: wp, zero, one
           use error_logging
           implicit none
-          real(kind=wp), intent(in)   :: A(:,:)
-          real(kind=wp), intent(out)  :: Ainv(:,:)
+          real(wp), intent(in)        :: A(:,:)
+          real(wp), intent(out)       :: Ainv(:,:)
         end subroutine inverseMat_std
 
         module subroutine inverseMat_lapack(A,Ainv,lib)
-          use global_parameters, only: wp, error, warn
+          use global_parameters, only: wp
           implicit none
-          real(kind=wp), intent(in)     :: A(:,:)
+          real(wp), intent(in)          :: A(:,:)
           character(len=*), intent(in)  :: lib
-          real(kind=wp), intent(out)    :: Ainv(:,:)
+          real(wp), intent(out)         :: Ainv(:,:)
         end subroutine inverseMat_lapack
 
       end interface
@@ -294,29 +294,29 @@
       interface linSolve
 
         module subroutine linSolve_std_LU(A,b,x)
-          use global_parameters, only: wp, zero, error, warn
+          use global_parameters, only: wp, zero
           use error_logging
           implicit none
-          real(kind=wp), intent(inout)  :: A(:,:), b(:)
-          real(kind=wp), intent(out)    :: x(:)
+          real(wp), intent(inout)       :: A(:,:), b(:)
+          real(wp), intent(out)         :: x(:)
         end subroutine linSolve_std_LU
 
         module subroutine linSolve_lapack_LU(A,b,x,lib)
           use global_parameters, only: wp
           use error_logging
           implicit none
-          real(kind=wp), intent(inout)    :: A(:,:), b(:)
+          real(wp), intent(inout)         :: A(:,:), b(:)
           character(len=*), intent(in)    :: lib
-          real(kind=wp), intent(out)      :: x(:)
+          real(wp), intent(out)           :: x(:)
         end subroutine linSolve_lapack_LU
 
         module subroutine linSolve_lapack_QR(A,b,x,lib,method)
-          use global_parameters, only: wp, error, warn
+          use global_parameters, only: wp
           use error_logging
           implicit none
-          real(kind=wp), intent(inout)    :: A(:,:), b(:)
+          real(wp), intent(inout)         :: A(:,:), b(:)
           character(len=*), intent(in)    :: lib, method
-          real(kind=wp), intent(out)      :: x(:)
+          real(wp), intent(out)           :: x(:)
         end subroutine linSolve_lapack_QR
 
       end interface linSolve
@@ -326,22 +326,22 @@
       interface LUfact
 
         module subroutine luDecompose_std(A,L,U)
-          use global_parameters, only: wp, zero, one, error, warn
+          use global_parameters, only: wp, zero, one
           use error_logging
           implicit none
-          real(kind=wp), intent(in)   :: A(:,:)
-          real(kind=wp), intent(out)  :: L(:,:), U(:,:)
+          real(wp), intent(in)        :: A(:,:)
+          real(wp), intent(out)       :: L(:,:), U(:,:)
         end subroutine luDecompose_std
 
         module subroutine luDecompose_lapack(A,P,L,U,lib)
-          use global_parameters, only: wp, zero, one, error, warn
+          use global_parameters, only: wp, zero, one
           use error_logging
           implicit none
-          real(kind=wp), intent(in)   :: A(:,:)
+          real(wp), intent(in)        :: A(:,:)
           character(len=*), intent(in):: lib
-          real(kind=wp), intent(out)  :: P(size(A,1),size(A,1))
-          real(kind=wp), intent(out)  :: L(size(A,1),size(A,1))
-          real(kind=wp), intent(out)  :: U(size(A,1),size(A,2))
+          real(wp), intent(out)       :: P(size(A,1),size(A,1))
+          real(wp), intent(out)       :: L(size(A,1),size(A,1))
+          real(wp), intent(out)       :: U(size(A,1),size(A,2))
         end subroutine luDecompose_lapack
 
       end interface LUfact
@@ -355,60 +355,60 @@
         module function cond(A,norm) result(con)
           use global_parameters, only: wp
           implicit none 
-          real(kind=wp), intent(in)       :: A(:,:)
-          character(len=1), intent(inout) :: norm
-          real(kind=wp)                   :: con
+          real(wp), intent(in)            :: A(:,:)
+          character(len=1), intent(in)    :: norm
+          real(wp)                        :: con
         end function cond
 
         module subroutine condition(A,cond,norm)
-          use global_parameters, only: wp, one, error, warn
+          use global_parameters, only: wp, one
           use error_logging
           implicit none
-          real(kind=wp), intent(in)       :: A(:,:)
-          real(kind=wp), intent(out)      :: cond
-          character(len=1), intent(inout) :: norm
+          real(wp), intent(in)            :: A(:,:)
+          real(wp), intent(out)           :: cond
+          character(len=1), intent(in) :: norm
         end subroutine condition
 
         module function norm(A,normType) result(anorm)
           use global_parameters, only: wp
           implicit none
-          real(kind=wp), intent(in)       :: A(:,:)
-          character(len=1), intent(inout) :: normType
-          real(kind=wp)                   :: anorm
+          real(wp), intent(in)            :: A(:,:)
+          character(len=1), intent(in)    :: normType
+          real(wp)                        :: anorm
         end function norm
 
         module subroutine polarDecompose(A,V,U,R)
-          use global_parameters, only: wp, zero, error, warn
+          use global_parameters, only: wp, zero
           use error_logging
           implicit none
-          real(kind=wp), intent (in)    :: A(:,:)
-          real(kind=wp), intent (out)   :: R(:,:), U(:,:), V(:,:)
+          real(wp), intent (in)     :: A(:,:)
+          real(wp), intent (out)    :: R(:,:), U(:,:), V(:,:)
         end subroutine polarDecompose
 
         module function solve(A,b,lib,method) result(x)
           use global_parameters, only: wp
           use error_logging
           implicit none
-          real(kind=wp), intent(in)               :: A(:,:)
-          real(kind=wp), intent(in)               :: b(:)
+          real(wp), intent(in)                    :: A(:,:)
+          real(wp), intent(in)                    :: b(:)
           character(len=*), intent(in), optional  :: lib
           character(len=*), intent(in), optional  :: method
-          real(kind=wp)                           :: x(size(b))
+          real(wp)                                :: x(size(b))
         end function solve
 
         module function sqrtm(A) result(sqrtA)
           use global_parameters, only: wp
           implicit none
-          real(kind=wp), intent(in)   :: A(:,:)
-          real(kind=wp)               :: sqrtA(size(A,1),size(A,2))  
+          real(wp), intent(in)        :: A(:,:)
+          real(wp)                    :: sqrtA(size(A,1),size(A,2))  
         end function sqrtm
 
         module subroutine sqrtMat(A,B)
-          use global_parameters, only: wp, zero, error, warn
+          use global_parameters, only: wp, zero
           use error_logging
           implicit none
-          real(kind=wp), intent(inout)  :: A(:,:)
-          real(kind=wp), intent(out)    :: B(:,:)
+          real(wp), intent(inout)       :: A(:,:)
+          real(wp), intent(out)         :: B(:,:)
         end subroutine sqrtMat
 
       end interface
@@ -434,8 +434,8 @@
 
         implicit none
 
-        real(kind=wp), intent(in)   :: a(3), b(3)
-        real(kind=wp)               :: c(3)
+        real(wp), intent(in)        :: a(3), b(3)
+        real(wp)                    :: c(3)
 
         c(1) = a(2)*b(3)-a(3)*b(2)
         c(2) = b(1)*a(3)-a(1)*b(3)
@@ -453,8 +453,8 @@
 
         implicit none
 
-        real(kind=wp), intent(in)  :: a(3), b(3)
-        real(kind=wp), intent(out) :: c(3)
+        real(wp), intent(in)       :: a(3), b(3)
+        real(wp), intent(out)      :: c(3)
 
         c(1) = a(2)*b(3)-a(3)*b(2)
         c(2) = b(1)*a(3)-a(1)*b(3)
@@ -467,12 +467,12 @@
       module function diag_m(mat) result(vec)
       ! returns the diagonal of a square matrix
 
-        use global_parameters, only: wp, error, warn
+        use global_parameters, only: wp
         use error_logging
 
         implicit none
-        real(kind=wp), intent(in)   :: mat(:,:)
-        real(kind=wp), allocatable  :: vec(:)
+        real(wp), intent(in)        :: mat(:,:)
+        real(wp), allocatable       :: vec(:)
         integer                     :: m, n, i
         type(logger)                :: msg
 
@@ -501,8 +501,8 @@
       use global_parameters, only: wp
       implicit none
 
-      real(kind=wp), intent(in)   :: vec(:)
-      real(kind=wp), allocatable  :: mat(:,:)
+      real(wp), intent(in)        :: vec(:)
+      real(wp), allocatable       :: mat(:,:)
       integer                     :: dim, i
 
       dim = size(vec)
@@ -519,13 +519,13 @@
       module subroutine diagonal(A,v,ask)
       ! this subroutine returns the diagonal of a square martrix
 
-        use global_parameters, only: wp, error, warn
+        use global_parameters, only: wp
         use error_logging
 
         implicit none
 
-        real(kind=wp), intent(inout)  :: A(:,:)
-        real(kind=wp), intent(inout)  :: v(:)
+        real(wp), intent(inout)       :: A(:,:)
+        real(wp), intent(inout)       :: v(:)
         character(len=*), intent(in)  :: ask
         integer                       :: m, n, i
         type(logger)                  :: msg
@@ -565,7 +565,7 @@
 
         integer, intent(in)           :: m
         integer, intent(in), optional :: n
-        real(kind=wp), allocatable    :: ID(:,:)
+        real(wp), allocatable         :: ID(:,:)
         integer                       :: i, dim
 
         if ( present(n) ) then
@@ -588,11 +588,11 @@
       module subroutine eyeMat(A)
       ! returns an identity matrix of dimension n x n
 
-        use global_parameters, only: wp, zero, one, error, warn
+        use global_parameters, only: wp, zero, one
 
         implicit none
 
-        real(kind=wp), intent(out)  :: A(:,:)
+        real(wp), intent(out)       :: A(:,:)
         integer                     :: m, n, i
 
         m = size(A,1)
@@ -613,7 +613,7 @@
 
         implicit none
 
-        real(kind=wp), intent(in) :: A(:,:), B(:,:)
+        real(wp), intent(in)      :: A(:,:), B(:,:)
         logical                   :: comp
         integer                   :: m1, n1, m2, n2
 
@@ -638,7 +638,7 @@
 
         implicit none
 
-        real(kind=wp), intent(in) :: a(:), b(:)
+        real(wp), intent(in)      :: a(:), b(:)
         logical                   :: comp
         integer                   :: n1, n2
 
@@ -661,7 +661,7 @@
 
         implicit none
 
-        real(kind=wp), intent(in)     :: A(:,:)
+        real(wp), intent(in)          :: A(:,:)
         logical                       :: skw
 
         if ( all( abs(A+transpose(A)) .lt. epsilon(A) ) ) then
@@ -680,7 +680,7 @@
 
         implicit none
         
-        real(kind=wp), intent(in)   :: A(:,:)
+        real(wp), intent(in)        :: A(:,:)
         logical                     :: sqr 
         integer                     :: m, n
 
@@ -703,7 +703,7 @@
 
         implicit none
 
-        real(kind=wp), intent(in)     :: A(:,:)
+        real(wp), intent(in)          :: A(:,:)
         logical                       :: sym
 
         if ( all( abs(A-transpose(A)) .lt. epsilon(A) ) ) then
@@ -719,13 +719,13 @@
       module function skew(A) result(skewA)
       ! calculates the skew part of a square matrix
 
-        use global_parameters, only: wp, half, error, warn
+        use global_parameters, only: wp, half
         use error_logging
 
         implicit none
 
-        real(kind=wp), intent(in)   :: A(:,:)
-        real(kind=wp)               :: skewA(size(A,1),size(A,1))
+        real(wp), intent(in)        :: A(:,:)
+        real(wp)                    :: skewA(size(A,1),size(A,1))
         integer                     :: m, n
         type(logger)                :: msg
 
@@ -747,13 +747,13 @@
       module subroutine skewMat(A,skewA)
       ! calculates the skew part of a square matrix
 
-        use global_parameters, only: wp, half, error, warn
+        use global_parameters, only: wp, half
         use error_logging
 
         implicit none
 
-        real(kind=wp), intent(in)   :: A(:,:)
-        real(kind=wp), intent(out)  :: skewA(:,:)
+        real(wp), intent(in)        :: A(:,:)
+        real(wp), intent(out)       :: skewA(:,:)
         integer                     :: m1, n1, m2, n2, i
         type(logger)                :: msg
 
@@ -776,13 +776,13 @@
 
       module function sym(A) result(symA)
 
-        use global_parameters, only: wp, half, error, warn
+        use global_parameters, only: wp, half
         use error_logging
 
         implicit none
 
-        real(kind=wp), intent(in)   :: A(:,:)
-        real(kind=wp)               :: symA(size(A,1),size(A,2))
+        real(wp), intent(in)        :: A(:,:)
+        real(wp)                    :: symA(size(A,1),size(A,2))
         integer                     :: m, n
         type(logger)                :: msg
 
@@ -804,13 +804,13 @@
       module subroutine symMat(A,symA)
       ! calculates the symmetric part of a square matix
 
-        use global_parameters, only: wp, half, error, warn
+        use global_parameters, only: wp, half
         use error_logging
 
         implicit none
 
-        real(kind=wp), intent(in)   :: A(:,:)
-        real(kind=wp), intent(out)  :: symA(:,:)
+        real(wp), intent(in)        :: A(:,:)
+        real(wp), intent(out)       :: symA(:,:)
         integer                     :: m1, n1, m2, n2, i
         type(logger)                :: msg
 
@@ -833,13 +833,13 @@
 
       module function trace(A) result(trA)
 
-        use global_parameters, only: wp, zero, error, warn
+        use global_parameters, only: wp, zero
         use error_logging
 
         implicit none
 
-        real(kind=wp), intent(in)   :: A(:,:)
-        real(kind=wp)               :: trA
+        real(wp), intent(in)        :: A(:,:)
+        real(wp)                    :: trA
         integer                     :: i, m, n
         type(logger)                :: msg
 
@@ -863,13 +863,13 @@
 
       module subroutine traceMat(A,trA)
 
-        use global_parameters, only: wp, zero, error, warn
+        use global_parameters, only: wp, zero
         use error_logging
 
         implicit none
 
-        real(kind=wp), intent(in)   :: A(:,:)
-        real(kind=wp), intent(out)  :: trA
+        real(wp), intent(in)        :: A(:,:)
+        real(wp), intent(out)       :: trA
         integer                     :: i, m, n
         type(logger)                :: msg
 
@@ -894,13 +894,13 @@
       module function triL(A) result (L)
       ! this subroutine returns the lower triangular part of a square matrix
 
-        use global_parameters, only: wp, zero, error, warn
+        use global_parameters, only: wp, zero
         use error_logging
 
         implicit none
 
-        real(kind=wp), intent(in)   :: A(:,:)
-        real(kind=wp)               :: L(size(A,1),size(A,2))
+        real(wp), intent(in)        :: A(:,:)
+        real(wp)                    :: L(size(A,1),size(A,2))
         integer                     :: i, m, n
         type(logger)                :: msg
 
@@ -925,13 +925,13 @@
       module function triU(A) result(U)
       ! this subroutine returns the upper triangular part of a square matrix
 
-        use global_parameters, only: wp, zero, error, warn
+        use global_parameters, only: wp, zero
         use error_logging
 
         implicit none
 
-        real(kind=wp), intent(in)   :: A(:,:)
-        real(kind=wp)               :: U(size(A,1),size(A,2))
+        real(wp), intent(in)        :: A(:,:)
+        real(wp)                    :: U(size(A,1),size(A,2))
         integer                     :: i, m, n
         type(logger)                :: msg
 
@@ -975,8 +975,8 @@
 
         implicit none
 
-        real(kind=wp), intent(in)   :: A(:,:)
-        real(kind=wp)               :: detA
+        real(wp), intent(in)        :: A(:,:)
+        real(wp)                    :: detA
 
         call detMat_std(A,detA)
 
@@ -987,15 +987,15 @@
       module subroutine detMat_std(A,detA)
       ! this subroutine calculates the determinant of a square matrix [A]
 
-        use global_parameters, only: wp, zero, one, error, warn
+        use global_parameters, only: wp, zero, one
         use error_logging
 
         implicit none
 
-        real(kind=wp), intent(in)   :: A(:,:)
-        real(kind=wp), intent(out)  :: detA
-        real(kind=wp)               :: L(size(A,1),size(A,2))
-        real(kind=wp)               :: U(size(A,1),size(A,2))
+        real(wp), intent(in)        :: A(:,:)
+        real(wp), intent(out)       :: detA
+        real(wp)                    :: L(size(A,1),size(A,2))
+        real(wp)                    :: U(size(A,1),size(A,2))
         integer                     :: m, n, i
         type(logger)                :: msg
 
@@ -1045,8 +1045,8 @@
 
         implicit none
 
-        real(kind=wp), intent(in)     :: A(:,:)
-        real(kind=wp)                 :: Ainv(size(A,1),size(A,2))
+        real(wp), intent(in)          :: A(:,:)
+        real(wp)                      :: Ainv(size(A,1),size(A,2))
 
         call inverseMat_std(A,Ainv)
 
@@ -1057,18 +1057,18 @@
       module subroutine inverseMat_std(A,Ainv)
       ! this subroutine returns Ainv and detA for a square matrix A
 
-      use global_parameters, only: wp, zero, one, error, warn
+      use global_parameters, only: wp, zero, one
       use error_logging
 
       implicit none
 
-      real(kind=wp), intent(in)   :: A(:,:)
-      real(kind=wp), intent(out)  :: Ainv(:,:)
-      real(kind=wp)               :: detA, rdetA
-      real(kind=wp)               :: L(size(A,1),size(A,2))
-      real(kind=wp)               :: U(size(A,1),size(A,2))
-      real(kind=wp)               :: b(size(A,1)), d(size(A,1))
-      real(kind=wp)               :: x(size(A,1))
+      real(wp), intent(in)        :: A(:,:)
+      real(wp), intent(out)       :: Ainv(:,:)
+      real(wp)                    :: detA, rdetA
+      real(wp)                    :: L(size(A,1),size(A,2))
+      real(wp)                    :: U(size(A,1),size(A,2))
+      real(wp)                    :: b(size(A,1)), d(size(A,1))
+      real(wp)                    :: x(size(A,1))
       integer                     :: m1, n1, m2, n2, i, j, k
       type(logger)                :: msg
 
@@ -1140,14 +1140,14 @@
       module subroutine linSolve_std_LU(A,b,x)
       ! this subroutine solves for linear system using LU decomposition
 
-        use global_parameters, only: wp, zero, error, warn
+        use global_parameters, only: wp, zero
         use error_logging
 
         implicit none
 
-        real(kind=wp), intent(inout)  :: A(:,:), b(:)
-        real(kind=wp), intent(out)    :: x(:)
-        real(kind=wp)                 :: Ainv(size(A,1),size(A,2))
+        real(wp), intent(inout)       :: A(:,:), b(:)
+        real(wp), intent(out)         :: x(:)
+        real(wp)                      :: Ainv(size(A,1),size(A,2))
         integer                       :: m, n
         type(logger)                  :: msg
 
@@ -1172,13 +1172,13 @@
       ! this subroutine computes the inverse of an arbitrary
       ! square matrix of size nxn using LU decomposition
 
-        use global_parameters, only: wp, zero, one, error, warn
+        use global_parameters, only: wp, zero, one
         use error_logging
         implicit none
 
-        real(kind=wp), intent(in)   :: A(:,:)
-        real(kind=wp), intent(out)  :: L(:,:), U(:,:)
-        real(kind=wp)               :: coeff, detA
+        real(wp), intent(in)        :: A(:,:)
+        real(wp), intent(out)       :: L(:,:), U(:,:)
+        real(wp)                    :: coeff, detA
         integer                     :: m1, n1, m2, n2, m3, n3
         integer                     :: i, j
         type(logger)                :: msg
@@ -1239,9 +1239,9 @@
 
         implicit none 
 
-        real(kind=wp), intent(in)       :: A(:,:)
-        character(len=1), intent(inout) :: norm
-        real(kind=wp)                   :: con
+        real(wp), intent(in)            :: A(:,:)
+        character(len=1), intent(in)    :: norm
+        real(wp)                        :: con
 
         call condition(A,con,norm)
 
@@ -1253,22 +1253,22 @@
       ! this subroutine calculates condiiton of a matrix based on
       ! '1' or 'I' norm. there is no subroutine in LAPACK for 2-norm
 
-        use global_parameters, only: wp, one, error, warn
+        use global_parameters, only: wp, one
         use error_logging
 
         implicit none
 
-        real(kind=wp), intent(in)       :: A(:,:)
-        real(kind=wp), intent(out)      :: cond
-        character(len=1), intent(inout) :: norm
+        real(wp), intent(in)            :: A(:,:)
+        real(wp), intent(out)           :: cond
+        character(len=1), intent(in)    :: norm
         integer                         :: m, n, lda, info
         integer                         :: ipiv(min(size(A,1),
      &                                              size(A,2)))
         integer                         :: iwork(size(A,2))
-        real(kind=wp)                   :: work(4*size(A,1))
-        real(kind=wp)                   :: anorm, rcond, dlange
-        real(kind=wp)                   :: mat(size(A,1),size(A,2))
-        real(kind=wp), parameter        :: tol = 1.0e-6_wp
+        real(wp)                        :: work(4*size(A,1))
+        real(wp)                        :: anorm, rcond, dlange
+        real(wp)                        :: mat(size(A,1),size(A,2))
+        real(wp), parameter             :: tol = 1.0e-6_wp
         type(logger)                    :: msg
 
         m = size(A,1)
@@ -1319,9 +1319,9 @@
 
         implicit none 
 
-        real(kind=wp), intent(in)   :: A(:,:)
+        real(wp), intent(in)        :: A(:,:)
         character(len=*), intent(in):: lib
-        real(kind=wp)               :: detA
+        real(wp)                    :: detA
 
         call detMat_lapack(A,detA,lib)
 
@@ -1332,20 +1332,20 @@
       module subroutine detMat_lapack(A,detA,lib)
       ! calculates determinant of matrix using LAPACK's DGETRF
 
-        use global_parameters, only: wp, one, zero, error, warn
+        use global_parameters, only: wp, one, zero
         use error_logging
         implicit none
 
-        real(kind=wp), intent(in)   :: A(:,:)
+        real(wp), intent(in)        :: A(:,:)
         character(len=*), intent(in):: lib
-        real(kind=wp), intent(out)  :: detA
+        real(wp), intent(out)       :: detA
         integer                     :: ipiv(min(size(A,1),size(A,2)))
         integer                     :: m, n, lda, i, info
-        real(kind=wp)               :: mat( size(A,1),size(A,2) )
+        real(wp)                    :: mat( size(A,1),size(A,2) )
         type(logger)                :: msg
 
         if ( trim(lib) .ne. 'LAPACK' ) then
-          call msg%ferror(flag=warn, src='detMat_lapack',
+          call msg%ferror(flag=error, src='detMat_lapack',
      &           msg='Wrong keyword for library.', ch=lib)
           return
         end if
@@ -1388,12 +1388,12 @@
       ! this subroutine calculates the eigen value and vectors
       ! of a symmetric matrix using DGEEV subroutine from LAPACK
 
-        use global_parameters, only: wp, zero, error, warn
+        use global_parameters, only: wp, zero
         use error_logging
 
         implicit none
-        real(kind=wp), intent(in)     :: A(:,:)
-        real(kind=wp), intent(out)    :: eVal(:), eVec(:,:)
+        real(wp), intent(in)          :: A(:,:)
+        real(wp), intent(out)         :: eVal(:), eVec(:,:)
         character(len=*), intent(in)  :: lib
         integer                       :: info, lda, lwork, i, j
         integer                       :: dummy(1)
@@ -1404,7 +1404,7 @@
 
 
         if ( trim(lib) .ne. 'LAPACK' ) then
-          call msg%ferror(flag=warn, src='detMat_lapack',
+          call msg%ferror(flag=error, src='detMat_lapack',
      &           msg='Wrong keyword for library.', ch=lib)
           return
         end if
@@ -1447,9 +1447,9 @@
 
         implicit none
 
-        real(kind=wp), intent(in)     :: A(:,:)
+        real(wp), intent(in)          :: A(:,:)
         character(len=*), intent(in)  :: lib
-        real(kind=wp)                 :: Ainv(size(A,1),size(A,2))
+        real(wp)                      :: Ainv(size(A,1),size(A,2))
 
         call inverseMat_lapack(A,Ainv,lib)
 
@@ -1461,22 +1461,22 @@
       ! this subroutine calculates inverse of a square matrix
       ! it uses DGETRF and DGETRI subroutines from LAPACK
 
-        use global_parameters, only: wp, error, warn
+        use global_parameters, only: wp
         use error_logging
 
         implicit none
 
-        real(kind=wp), intent(in)     :: A(:,:)
+        real(wp), intent(in)          :: A(:,:)
         character(len=*), intent(in)  :: lib
-        real(kind=wp), intent(out)    :: Ainv(:,:)
+        real(wp), intent(out)         :: Ainv(:,:)
         integer                       :: ipiv(min(size(A,1),size(A,2)))
         integer                       :: m, n, lda, lwork, info
         integer, parameter            :: nb = 64
-        real(kind=wp), allocatable    :: work(:)
+        real(wp), allocatable         :: work(:)
         type(logger)                  :: msg
 
         if (trim(lib) .ne. 'LAPACK') then
-          call msg%ferror(flag=warn, src='inverseMat_lapack',
+          call msg%ferror(flag=error, src='inverseMat_lapack',
      &           msg='Wrong keyword for library.', ch=lib)
           return
         end if
@@ -1524,23 +1524,23 @@
       module subroutine linSolve_lapack_LU(A,b,x,lib)
       ! this subroutine solves for linear system using LAPACK subroutine
 
-        use global_parameters, only: wp, error, warn
+        use global_parameters, only: wp
         use error_logging
 
         implicit none
 
-        real(kind=wp), intent(inout)    :: A(:,:), b(:)
+        real(wp), intent(inout)         :: A(:,:), b(:)
         character(len=*), intent(in)    :: lib
-        real(kind=wp), intent(out)      :: x(:)
+        real(wp), intent(out)           :: x(:)
         integer                         :: ipiv(size(A,2))
         integer                         :: m, n, lda, ldb
         integer                         :: info
-        real(kind=wp)                   :: mat(size(A,1),size(A,2))
+        real(wp)                        :: mat(size(A,1),size(A,2))
         integer, parameter              :: nrhs = 1
         type(logger)                    :: msg
 
         if (trim(lib) .ne. 'LAPACK') then
-          call msg%ferror(flag=warn, src='linSolve_lapack_LU',
+          call msg%ferror(flag=error, src='linSolve_lapack_LU',
      &           msg='Wrong keyword for library.', ch=lib)
           return
         end if
@@ -1585,22 +1585,22 @@
       ! this subroutine solves for linear system using LAPACK subroutine
       ! optional method is QR approach
 
-        use global_parameters, only: wp, error, warn
+        use global_parameters, only: wp
         use error_logging
 
         implicit none
 
-        real(kind=wp), intent(inout)    :: A(:,:), b(:)
+        real(wp), intent(inout)         :: A(:,:), b(:)
         character(len=*), intent(in)    :: lib, method
-        real(kind=wp), intent(out)      :: x(:)
+        real(wp), intent(out)           :: x(:)
         integer                         :: m, n, lda, ldb, lwork, info
         integer, allocatable            :: work(:)
-        real(kind=wp)                   :: mat(size(A,1),size(A,2))
+        real(wp)                        :: mat(size(A,1),size(A,2))
         integer, parameter              :: nb = 64, nrhs = 1
         type(logger)                    :: msg
 
         if ( trim(lib) .ne. 'LAPACK' ) then
-          call msg%ferror(flag=warn, src='linSolve_lapack_QR',
+          call msg%ferror(flag=error, src='linSolve_lapack_QR',
      &           msg='Wrong keyword for library.', ch=lib)
           return
         end if
@@ -1623,7 +1623,7 @@
      &                work, lwork, info)
 
         else
-          call msg%ferror(flag=warn, src='linSolve_lapack_QR',
+          call msg%ferror(flag=error, src='linSolve_lapack_QR',
      &           msg='Wrong keyword for method.', ch=method)
           return
         end if
@@ -1635,23 +1635,23 @@
       module subroutine luDecompose_lapack(A,P,L,U,lib)
       ! calculates A = P * L* U using LAPACK routines DGETRF
 
-        use global_parameters, only: wp, zero, one, error, warn
+        use global_parameters, only: wp, zero, one
         use error_logging
 
         implicit none
 
-        real(kind=wp), intent(in)   :: A(:,:)
+        real(wp), intent(in)        :: A(:,:)
         character(len=*), intent(in):: lib
-        real(kind=wp), intent(out)  :: P(size(A,1),size(A,1))
-        real(kind=wp), intent(out)  :: L(size(A,1),size(A,1))
-        real(kind=wp), intent(out)  :: U(size(A,1),size(A,2))
+        real(wp), intent(out)       :: P(size(A,1),size(A,1))
+        real(wp), intent(out)       :: L(size(A,1),size(A,1))
+        real(wp), intent(out)       :: U(size(A,1),size(A,2))
         integer                     :: ipiv(min(size(A,1),size(A,2)))
         integer                     :: m, n, lda, info, i
-        real(kind=wp)               :: row(size(A,1))
+        real(wp)                    :: row(size(A,1))
         type(logger)                :: msg
 
         if ( trim(lib) .ne. 'LAPACK' ) then
-          call msg%ferror(flag=warn, src='luDecompose_lapack',
+          call msg%ferror(flag=error, src='luDecompose_lapack',
      &            msg='Wrong keyword for library.', ch=lib)
           return
         end if
@@ -1701,17 +1701,17 @@
       ! this subroutine compute left and right polar decompositions
       ! of matrix A (used for deformation gradient)
 
-        use global_parameters, only: wp, zero, error, warn
+        use global_parameters, only: wp, zero
         use error_logging
 
         implicit none
 
-        real(kind=wp), intent (in)    :: A(:,:)
-        real(kind=wp), intent (out)   :: R(:,:), U(:,:), V(:,:)
-        real(kind=wp)                 :: Vinv(size(V,1),size(V,2))
-        real(kind=wp)                 :: detV
-        integer                       :: m, n
-        type(logger)                  :: msg
+        real(wp), intent (in)     :: A(:,:)
+        real(wp), intent (out)    :: R(:,:), U(:,:), V(:,:)
+        real(wp)                  :: Vinv(size(V,1),size(V,2))
+        real(wp)                  :: detV
+        integer                   :: m, n
+        type(logger)              :: msg
 
         m = size(A,1)
         n = size(A,2)
@@ -1742,15 +1742,15 @@
 
         implicit none
 
-        real(kind=wp), intent(in)       :: A(:,:)
-        character(len=1), intent(inout) :: normType
-        real(kind=wp)                   :: anorm
+        real(wp), intent(in)            :: A(:,:)
+        character(len=1), intent(in)    :: normType
+        real(wp)                        :: anorm
         integer                         :: m, n, lda, info
         integer                         :: ipiv(min(size(A,1),
      &                                              size(A,2)))
-        real(kind=wp)                   :: work(4*size(A,1))
-        real(kind=wp)                   :: dlange
-        real(kind=wp)                   :: mat(size(A,1),size(A,2))
+        real(wp)                        :: work(4*size(A,1))
+        real(wp)                        :: dlange
+        real(wp)                        :: mat(size(A,1),size(A,2))
 
         m = size(A,1)
         n = size(A,2)
@@ -1766,20 +1766,20 @@
 
       module function solve(A,b,lib,method) result(x)
 
-        use global_parameters, only: wp, error, warn
+        use global_parameters, only: wp
         use error_logging
 
         implicit none
 
-        real(kind=wp), intent(in)               :: A(:,:)
-        real(kind=wp), intent(in)               :: b(:)
+        real(wp), intent(in)                    :: A(:,:)
+        real(wp), intent(in)                    :: b(:)
         character(len=*), intent(in), optional  :: lib
         character(len=*), intent(in), optional  :: method
-        real(kind=wp)                           :: x(size(b))
+        real(wp)                                :: x(size(b))
         integer                                 :: m, n
         type(logger)                            :: msg
         
-        real(kind=wp)       :: mat(size(A,1),size(A,2)), vec(size(b))
+        real(wp)            :: mat(size(A,1),size(A,2)), vec(size(b))
 
         m = size(A,1)
         n = size(A,2)
@@ -1814,9 +1814,9 @@
 
         implicit none
 
-        real(kind=wp), intent(in)   :: A(:,:)
-        real(kind=wp)               :: sqrtA(size(A,1),size(A,2))
-        real(kind=wp)               :: mat(size(A,1),size(A,2))
+        real(wp), intent(in)        :: A(:,:)
+        real(wp)                    :: sqrtA(size(A,1),size(A,2))
+        real(wp)                    :: mat(size(A,1),size(A,2))
 
         mat = A
         call sqrtMat(mat,sqrtA)
@@ -1828,16 +1828,16 @@
       module subroutine sqrtMat(A,B)
       ! this subroutines computes square root of a symmetric matrix
 
-        use global_parameters, only: wp, zero, error, warn
+        use global_parameters, only: wp, zero
         use error_logging
 
         implicit none
 
-        real(kind=wp), intent(inout)  :: A(:,:)
-        real(kind=wp), intent(out)    :: B(:,:)
-        real(kind=wp)                 :: D(size(A,1),size(A,2))
-        real(kind=wp)                 :: eVal(size(A,1))
-        real(kind=wp)                 :: eVec(size(A,1),size(A,2))
+        real(wp), intent(inout)       :: A(:,:)
+        real(wp), intent(out)         :: B(:,:)
+        real(wp)                      :: D(size(A,1),size(A,2))
+        real(wp)                      :: eVal(size(A,1))
+        real(wp)                      :: eVec(size(A,1),size(A,2))
         character(len=*), parameter   :: lib = 'LAPACK'
         integer                       :: m1, n1, m2, n2, i
         type(logger)                  :: msg

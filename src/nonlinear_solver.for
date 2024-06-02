@@ -1,6 +1,10 @@
 ! **********************************************************************
 ! *************** NONLINEAR NEWTON-RAPHSON SOLVER MODULE ***************
 ! **********************************************************************
+! **********************************************************************
+!     Author: Bibekananda Datta (C) May 2024. All Rights Reserved.
+!  This module and dependencies are shared under 3-clause BSD license
+! **********************************************************************
 
       module nonlinear_solver
 
@@ -10,15 +14,15 @@
       ! last two attributes are not applicable to single variable solver
       type, public  :: options
         integer           :: maxIter    = 100
-        real(kind=wp)     :: tolfx      = 1.0e-13_wp
-        real(kind=wp)     :: tolx       = 1.0e-10_wp      ! unused criterion
+        real(wp)          :: tolfx      = 1.0e-13_wp
+        real(wp)          :: tolx       = 1.0e-10_wp      ! unused criterion
         character(len=8)  :: fdScheme   = 'Forward'       ! 'Backward' or 'Central'
-        real(kind=wp)     :: fdStep     = sqrt(eps)
+        real(wp)          :: fdStep     = sqrt(eps)
         character(len=16) :: algo       = 'Newton'        ! 'Linesearch`
-        real(kind=wp)     :: minAlpha   = 0.1_wp
-        real(kind=wp)     :: maxAlpha   = 1.0_wp          ! start w/ NR solver
-        real(kind=wp)     :: c          = 0.5_wp
-        real(kind=wp)     :: tau        = 0.5_wp
+        real(wp)          :: minAlpha   = 0.1_wp
+        real(wp)          :: maxAlpha   = 1.0_wp          ! start w/ NR solver
+        real(wp)          :: c          = 0.5_wp
+        real(wp)          :: tau        = 0.5_wp
         character(len=8)  :: lib        = 'LAPACK'        ! highly recommended
         character(len=8)  :: method     = 'QR'            ! alternative: 'LU'
       end type options
@@ -50,20 +54,20 @@
         subroutine func_interface(x, fx, dfx, stateVars)
           use global_parameters, only: wp
           implicit none
-          real(kind=wp), intent(in)             :: x
-          real(kind=wp), intent(out)            :: fx
-          real(kind=wp), intent(out), optional  :: dfx
-          real(kind=wp), intent(in), optional   :: stateVars(:)
+          real(wp), intent(in)                  :: x
+          real(wp), intent(out)                 :: fx
+          real(wp), intent(out), optional       :: dfx
+          real(wp), intent(in), optional        :: stateVars(:)
         end subroutine func_interface
 
         ! abstract interface for the system of "n" nonlinear equations
         subroutine func_interface_n(x, fvec, fjac, stateVars)
           use global_parameters, only: wp
           implicit none
-          real(kind=wp), intent(in)             :: x(:)
-          real(kind=wp), intent(out)            :: fvec(:)
-          real(kind=wp), intent(out), optional  :: fjac(:,:)
-          real(kind=wp), intent(in), optional   :: stateVars(:)
+          real(wp), intent(in)                  :: x(:)
+          real(wp), intent(out)                 :: fvec(:)
+          real(wp), intent(out), optional       :: fjac(:,:)
+          real(wp), intent(in), optional        :: stateVars(:)
         end subroutine func_interface_n
 
       end interface
@@ -77,21 +81,21 @@
       subroutine newton(func, xOld, x, jac, stateVars, opts)
       ! standard Newton-Raphson solver for a single nonlinear equation
 
-        use global_parameters, only: wp, error, warn
+        use global_parameters, only: wp
         use linear_algebra
         use error_logging
 
         implicit none
 
         procedure(func_interface)               :: func
-        real(kind=wp), intent(in)               :: xOld
-        real(kind=wp), intent(out)              :: x
+        real(wp), intent(in)                    :: xOld
+        real(wp), intent(out)                   :: x
         logical, intent(in), optional           :: jac
-        real(kind=wp), intent(in), optional     :: stateVars(:)
+        real(wp), intent(in), optional          :: stateVars(:)
         type(options), intent(in), optional     :: opts
         type(options)                           :: params
-        real(kind=wp)                           :: fx, dfx, dx
-        real(kind=wp)                           :: fx0
+        real(wp)                                :: fx, dfx, dx
+        real(wp)                                :: fx0
         integer                                 :: iter
         type(logger)                            :: msg
 
@@ -149,24 +153,24 @@
       ! follows the exit criterion of 'fail-safe Newton-Raphson' algorithm
       ! from Numerical Recipes by Press et al. (second volume)
 
-        use global_parameters, only: wp, zero, half, two, error, warn
+        use global_parameters, only: wp, zero, half, two
         use error_logging
 
         implicit none
 
         procedure(func_interface)               :: func
-        real(kind=wp), intent(inout)            :: xOld
-        real(kind=wp), intent(in)               :: xMin, xMax
-        real(kind=wp), intent(out)              :: x
+        real(wp), intent(inout)                 :: xOld
+        real(wp), intent(in)                    :: xMin, xMax
+        real(wp), intent(out)                   :: x
         logical, intent(in), optional           :: jac
-        real(kind=wp), intent(in), optional     :: stateVars(:)
+        real(wp), intent(in), optional          :: stateVars(:)
         type(options), intent(in), optional     :: opts
         type(options)                           :: params
-        real(kind=wp)                           :: fx, dfx
-        real(kind=wp)                           :: xl, xh, temp
-        real(kind=wp)                           :: fxMin, fxMax
-        real(kind=wp)                           :: fx0
-        real(kind=wp)                           :: dx, dxOld
+        real(wp)                                :: fx, dfx
+        real(wp)                                :: xl, xh, temp
+        real(wp)                                :: fxMin, fxMax
+        real(wp)                                :: fx0
+        real(wp)                                :: dx, dxOld
         integer                                 :: iter
         type(logger)                            :: msg
 
@@ -297,25 +301,25 @@
       ! Newton-Raphson solver for a system of nonlinear equations
       ! A backtracking 'Linesearch' option can be used for solution
 
-        use global_parameters, only: wp, error, warn
+        use global_parameters, only: wp
         use linear_algebra
         use error_logging
 
         implicit none
 
         procedure(func_interface_n)             :: func
-        real(kind=wp), intent(in)               :: xOld(:)
-        real(kind=wp), intent(out)              :: x(:)
+        real(wp), intent(in)                    :: xOld(:)
+        real(wp), intent(out)                   :: x(:)
         logical, optional                       :: jac
-        real(kind=wp), intent(in), optional     :: stateVars(:)
+        real(wp), intent(in), optional          :: stateVars(:)
         type(options), intent(in), optional     :: opts
         type(options)                           :: params
-        real(kind=wp)                           :: fvec(size(x))
-        real(kind=wp)                           :: rhs(size(x))
-        real(kind=wp)                           :: fjac(size(x),size(x))
-        real(kind=wp)                           :: dx(size(x))
-        real(kind=wp)                           :: fvec0(size(x))
-        real(kind=wp)                           :: fnorm
+        real(wp)                                :: fvec(size(x))
+        real(wp)                                :: rhs(size(x))
+        real(wp)                                :: fjac(size(x),size(x))
+        real(wp)                                :: dx(size(x))
+        real(wp)                                :: fvec0(size(x))
+        real(wp)                                :: fnorm
         integer                                 :: iter
         type(logger)                            :: msg
 
@@ -397,24 +401,24 @@
       ! uses a backtracking linesearch algorithm. see details below:
       ! https://en.wikipedia.org/wiki/Backtracking_line_search
 
-        use global_parameters, only: wp, two, half, error, warn
+        use global_parameters, only: wp, two, half
 
         implicit none
 
         procedure(func_interface_n)         :: func
-        real(kind=wp), intent(in)           :: xOld(:)
-        real(kind=wp), intent(inout)        :: fvec(:)
-        real(kind=wp), intent(in)           :: fjac(:,:)
-        real(kind=wp), intent(in)           :: dx(:)
+        real(wp), intent(in)                :: xOld(:)
+        real(wp), intent(inout)             :: fvec(:)
+        real(wp), intent(in)                :: fjac(:,:)
+        real(wp), intent(in)                :: dx(:)
         type(options), intent(in)           :: params
-        real(kind=wp), intent(inout)        :: x(:)
-        real(kind=wp), intent(in), optional :: stateVars(:)
-        real(kind=wp)                       :: gradf(size(x))
-        real(kind=wp)                       :: t, slope, alpha
+        real(wp), intent(inout)             :: x(:)
+        real(wp), intent(in), optional      :: stateVars(:)
+        real(wp)                            :: gradf(size(x))
+        real(wp)                            :: t, slope, alpha
         logical                             :: checkAlpha
-        real(kind=wp)                       :: xtmp(size(x))
-        real(kind=wp)                       :: fvectmp(size(x))
-        real(kind=wp)                       :: fnorm0, fnorm, ftmp
+        real(wp)                            :: xtmp(size(x))
+        real(wp)                            :: fvectmp(size(x))
+        real(wp)                            :: fnorm0, fnorm, ftmp
         integer                             :: i
 
         fnorm0  = norm2(fvec)
@@ -461,20 +465,20 @@
       subroutine dfdx(func,x,fx,dfx,stateVars,opts)
       ! subroutine to calculate numerical derivative of a single function
 
-        use global_parameters, only: wp, zero, two, eps, error, warn
+        use global_parameters, only: wp, zero, two, eps
         use error_logging
 
         implicit none
 
         procedure(func_interface)               :: func
-        real(kind=wp), intent(in)               :: x, fx
-        real(kind=wp), intent(out)              :: dfx
-        real(kind=wp), intent(in), optional     :: stateVars(:)
+        real(wp), intent(in)                    :: x, fx
+        real(wp), intent(out)                   :: dfx
+        real(wp), intent(in), optional          :: stateVars(:)
         type(options), intent(inout), optional  :: opts
         type(options)                           :: params
-        real(kind=wp)                           :: h
-        real(kind=wp)                           :: x_h, fx_h
-        real(kind=wp)                           :: fx_h1, fx_h2
+        real(wp)                                :: h
+        real(wp)                                :: x_h, fx_h
+        real(wp)                                :: fx_h1, fx_h2
         integer                                 :: i
         type(logger)                            :: msg
 
@@ -521,22 +525,22 @@
       subroutine dfdx_n(func,x,fvec,fjac,stateVars,opts)
       ! subroutine to calculate numerical jacobian of a set of functions
 
-        use global_parameters, only: wp, zero, two, eps, error, warn
+        use global_parameters, only: wp, zero, two, eps
         use error_logging
 
         implicit none
 
         procedure(func_interface_n)             :: func
-        real(kind=wp), intent(in)               :: x(:), fvec(:)
-        real(kind=wp), intent(out)              :: fjac(:,:)
-        real(kind=wp), intent(in), optional     :: stateVars(:)
+        real(wp), intent(in)                    :: x(:), fvec(:)
+        real(wp), intent(out)                   :: fjac(:,:)
+        real(wp), intent(in), optional          :: stateVars(:)
         type(options), intent(in), optional     :: opts
         type(options)                           :: params
-        real(kind=wp)                           :: h
-        real(kind=wp)                           :: x_h(size(x))
-        real(kind=wp)                           :: fvec_h(size(x))
-        real(kind=wp)                           :: fvec_h1(size(x))
-        real(kind=wp)                           :: fvec_h2(size(x))
+        real(wp)                                :: h
+        real(wp)                                :: x_h(size(x))
+        real(wp)                                :: fvec_h(size(x))
+        real(wp)                                :: fvec_h1(size(x))
+        real(wp)                                :: fvec_h2(size(x))
         integer                                 :: i
         type(logger)                            :: msg
 

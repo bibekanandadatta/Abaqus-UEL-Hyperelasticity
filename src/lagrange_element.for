@@ -4,6 +4,10 @@
 !   collection of subroutines to perform element realted calculations
 !            subroutines are arranged in alphabetical order.
 ! **********************************************************************
+! **********************************************************************
+!     Author: Bibekananda Datta (C) May 2024. All Rights Reserved.
+!  This module and dependencies are shared under 3-clause BSD license
+! **********************************************************************
 
       module lagrange_element
 
@@ -24,8 +28,8 @@
           use global_parameters, only: wp
           implicit none 
           type(element), intent(in)   :: elem
-          real(kind=wp), intent(in)   :: xiCoord(:)
-          real(kind=wp), intent(out)  :: Nxi(:), dNdxi(:,:)
+          real(wp), intent(in)        :: xiCoord(:)
+          real(wp), intent(out)       :: Nxi(:), dNdxi(:,:)
         end subroutine evalInterpFunc
 
         module subroutine faceNodes(nDim,nNode,face,nFaceNodes,list)
@@ -61,8 +65,8 @@
         implicit none 
 
         type(element), intent(in)   :: elem
-        real(kind=wp), intent(in)   :: xiCoord(:)
-        real(kind=wp), intent(out)  :: Nxi(:), dNdxi(:,:)
+        real(wp), intent(in)        :: xiCoord(:)
+        real(wp), intent(out)       :: Nxi(:), dNdxi(:,:)
 
         if (elem%nDim .eq. 1) then
           call interpFunc1(elem%nNode, xiCoord, Nxi, dNdxi)
@@ -89,9 +93,9 @@
       implicit none
       
       integer, intent(in)         :: nNode
-      real(kind=wp), intent(in)   :: xiCoord(:)
-      real(kind=wp), intent(out)  :: Nxi(:), dNdxi(:,:)
-      real(kind=wp)               :: xi
+      real(wp), intent(in)        :: xiCoord(:)
+      real(wp), intent(out)       :: Nxi(:), dNdxi(:,:)
+      real(wp)                    :: xi
       type(logger)                :: msg
 
       ! location in the master element
@@ -140,9 +144,9 @@
       implicit none
 
       integer, intent(in)         :: nNode
-      real(kind=wp), intent(in)   :: xiCoord(:)
-      real(kind=wp), intent(out)  :: Nxi(:), dNdxi(:,:)
-      real(kind=wp)               :: xi, eta, lam
+      real(wp), intent(in)        :: xiCoord(:)
+      real(wp), intent(out)       :: Nxi(:), dNdxi(:,:)
+      real(wp)                    :: xi, eta, lam
       type(logger)                :: msg
 
       ! location in the master element
@@ -302,9 +306,9 @@
       implicit none
 
       integer, intent(in)         :: nNode
-      real(kind=wp), intent(in)   :: xiCoord(:)
-      real(kind=wp), intent(out)  :: Nxi(:), dNdxi(:,:)
-      real(kind=wp)               :: xi, eta, zeta, lam
+      real(wp), intent(in)        :: xiCoord(:)
+      real(wp), intent(out)       :: Nxi(:), dNdxi(:,:)
+      real(wp)                    :: xi, eta, zeta, lam
       type(logger)                :: msg
 
       ! Nxi(i)          = shape function of node i at the intpt.

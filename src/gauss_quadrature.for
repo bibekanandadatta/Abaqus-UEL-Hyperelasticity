@@ -5,6 +5,11 @@
 !                       (b) full integration: tri and tet elements
 !                       (c) reduced and full integration: quad and hex elements
 ! **********************************************************************
+! **********************************************************************
+!     Author: Bibekananda Datta (C) May 2024. All Rights Reserved.
+!  This module and dependencies are shared under 3-clause BSD license
+! **********************************************************************
+
       module gauss_quadrature
 
       private :: gaussQuadrtr1, gaussQuadrtr2, gaussQuadrtr3
@@ -20,8 +25,8 @@
 
         implicit none
 
-        type(element)               :: elem
-        real(kind=wp), intent(out)  :: w(:), xi(:,:)
+        type(element)           :: elem
+        real(wp), intent(out)   :: w(:), xi(:,:)
 
         if (elem%nDim .eq. 1) then
           call gaussQuadrtr1(elem%nNode,elem%nInt,w,xi)
@@ -42,9 +47,9 @@
 
       implicit none
 
-      integer, intent(in)         :: nNode, nInt
-      real(kind=wp), intent(out)  :: w(:), xi(:,:)
-      type(logger)                :: msg
+      integer, intent(in)     :: nNode, nInt
+      real(wp), intent(out)   :: w(:), xi(:,:)
+      type(logger)            :: msg
 
       w = zero
       xi = zero
@@ -55,7 +60,7 @@
           xi = two
         else
           call msg%ferror(flag=error,src='gaussQuadrtr1',
-     &                    msg='Wrong Gauss points.', ia=nInt)
+     &                    msg='Invalid Gauss points.', ia=nInt)
           return
         end if           ! end int for 2-noded bar
 
@@ -73,13 +78,13 @@
           xi(3,1) = sqrt(three/five)
         else
           call msg%ferror(flag=error,src='gaussQuadrtr1',
-     &                    msg='Wrong Gauss points.', ia=nInt)
+     &                    msg='Invalid Gauss points.', ia=nInt)
           return
         end if           ! end int for 3-noded bar
 
       else
         call msg%ferror(flag=error,src='gaussQuadrtr1',
-     &                  msg='Wrong Gauss points.', ia=nInt)
+     &                  msg='Invalid Gauss points.', ia=nInt)
         return
       end if
 
@@ -99,10 +104,10 @@
 
       implicit none
 
-      integer, intent(in)         :: nNode, nInt
-      real(kind=wp), intent(out)  :: w(:), xi(:,:)
-      real(kind=wp)               :: x1D(4), w1D(4)
-      type(logger)                :: msg
+      integer, intent(in)     :: nNode, nInt
+      real(wp), intent(out)   :: w(:), xi(:,:)
+      real(wp)                :: x1D(4), w1D(4)
+      type(logger)            :: msg
 
       w  = zero
       xi = zero
@@ -114,7 +119,7 @@
           xi(2,1) = third
         else
           call msg%ferror(flag=error,src='gaussQuadrtr2',
-     &                    msg='Wrong Gauss points.', ia=nInt)
+     &                    msg='Invalid Gauss points.', ia=nInt)
           return
         end if
 
@@ -130,7 +135,7 @@
           xi(3,2) = zero
         else
          call msg%ferror(flag=error,src='gaussQuadrtr2',
-     &                    msg='Wrong Gauss points', ia=nInt)
+     &                    msg='Invalid Gauss points.', ia=nInt)
           return
         end if
 
@@ -157,7 +162,7 @@
           xi(4,2) = x1D(1)
         else
           call msg%ferror(flag=error,src='gaussQuadrtr2',
-     &                    msg='Wrong Gauss points', ia=nInt)
+     &                    msg='Invalid Gauss points.', ia=nInt)
           return
         end if
 
@@ -214,13 +219,13 @@
 
         else
           call msg%ferror(flag=error,src='gaussQuadrtr2',
-     &                     msg='Wrong Gauss points', ia=nInt)
+     &                     msg='Invalid Gauss points.', ia=nInt)
           return
         end if
 
       else
         call msg%ferror(flag=error,src='gaussQuadrtr2',
-     &                    msg='Wrong Gauss points', ia=nInt)
+     &                    msg='Invalid Gauss points.', ia=nInt)
         return
       end if
 
@@ -240,11 +245,11 @@
 
       implicit none
 
-      integer, intent(in)         :: nNode, nInt
-      real(kind=wp), intent(out)  :: w(:), xi(:,:)
-      real(kind=wp)               :: x1D(4), w1D(4)
-      integer                     :: i, j, k, n
-      type(logger)                :: msg
+      integer, intent(in)     :: nNode, nInt
+      real(wp), intent(out)   :: w(:), xi(:,:)
+      real(wp)                :: x1D(4), w1D(4)
+      integer                 :: i, j, k, n
+      type(logger)            :: msg
 
       w  = zero
       xi = zero
@@ -256,7 +261,7 @@
 
         else
           call msg%ferror(flag=error,src='gaussQuadrtr3',
-     &                    msg='Wrong Gauss points', ia=nInt)
+     &                    msg='Invalid Gauss points.', ia=nInt)
           return
         end if
 
@@ -283,7 +288,7 @@
 
         else
           call msg%ferror(flag=error,src='gaussQuadrtr3',
-     &                    msg='Wrong Gauss points', ia=nInt)
+     &                    msg='Invalid Gauss points.', ia=nInt)
           return
         end if
 
@@ -312,7 +317,7 @@
 
         else
          call msg%ferror(flag=error,src='gaussQuadrtr3',
-     &                   msg='Wrong Gauss points', ia=nInt)
+     &                   msg='Invalid Gauss points.', ia=nInt)
           return
         end if
 
@@ -357,13 +362,13 @@
 
         else
           call msg%ferror(flag=error,src='gaussQuadrtr3',
-     &                    msg='Wrong Gauss points', ia=nInt)
+     &                    msg='Invalid Gauss points.', ia=nInt)
           return
         end if
 
       else
        call msg%ferror(flag=error,src='gaussQuadrtr3',
-     &                 msg='Wrong Gauss points', ia=nInt)
+     &                 msg='Invalid Gauss points.', ia=nInt)
         return
       end if
 

@@ -1,19 +1,27 @@
 ! **********************************************************************
 ! ************************ ERROR LOGGING MODULE ************************
 ! **********************************************************************
+!         Fortran class to print error and debugging messages
+! **********************************************************************
+!     Author: Bibekananda Datta (C) May 2024. All Rights Reserved.
+!  This module and dependencies are shared under 3-clause BSD license
+! **********************************************************************
       module error_logging
 
-        use global_parameters, only: error, warn, debug
-        use global_parameters, only: stderr, stddbg
+        !! global error handling variables: flags and file unit numbers
+        integer, parameter  :: error  = 1,  warn      = 2
+        integer, parameter  :: debug  = 3,  verbosity = debug
+        integer, parameter  :: stderr = 15, stddbg    = 16
+        
         type, public  :: logger
-          integer, private            :: warn   = warn
-          integer, private            :: error  = error
-          integer, private            :: debug  = debug
-          integer, private            :: verbosity = debug
-          integer, private            :: stderr  = stderr
-          integer, private            :: stddbg  = stddbg
-          character(len=512), private :: errfile = 'error.dat'
-          character(len=512), private :: dbgfile = 'debug.dat'
+          integer, private            :: error      = error
+          integer, private            :: warn       = warn
+          integer, private            :: debug      = debug
+          integer, private            :: verbosity  = verbosity
+          integer, private            :: stderr     = stderr
+          integer, private            :: stddbg     = stddbg
+          character(len=512), private :: errfile    = 'error.dat'
+          character(len=512), private :: dbgfile    = 'debug.dat'
 
           contains
           private
@@ -117,7 +125,7 @@
 
         subroutine ferror(self,flag,src,msg,ch,la,ia,ra,ivec,rvec)
 
-          use global_parameters, only: wp, warn
+          use global_parameters, only: wp
 
           implicit none
 

@@ -1,3 +1,12 @@
+! **********************************************************************
+! ******************* ABAQUS POST-PROCESSING MODULE ********************
+! **********************************************************************
+!         defines the mesh parameters and global variable for 
+!        post-processing element output of Abaqus user elements
+! **********************************************************************
+!     Author: Bibekananda Datta (C) May 2024. All Rights Reserved.
+!  This module and dependencies are shared under 3-clause BSD license
+! **********************************************************************
       module post_processing
 
         use global_parameters, only: wp
@@ -13,3 +22,4 @@
         real(wp), allocatable :: globalPostVars(:,:,:)
 
       end module post_processing
+! **********************************************************************

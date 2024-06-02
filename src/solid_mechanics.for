@@ -1,6 +1,10 @@
 ! **********************************************************************
 ! solid mechanics module with subroutines to perform tensor manipulation
 ! **********************************************************************
+! **********************************************************************
+!     Author: Bibekananda Datta (C) May 2024. All Rights Reserved.
+!  This module and dependencies are shared under 3-clause BSD license
+! **********************************************************************
 
       module solid_mechanics
 
@@ -20,10 +24,10 @@
 
         implicit none
 
-        real(kind=wp), intent(in)   :: C(3,3,3,3)
-        real(kind=wp), intent(out)  :: Dmat(nSymm,nSymm)
-        integer                     :: Voigt(nSymm,2)
-        integer                     :: i, j, k, l, rw, cl
+        real(wp), intent(in)    :: C(3,3,3,3)
+        real(wp), intent(out)   :: Dmat(nSymm,nSymm)
+        integer                 :: Voigt(nSymm,2)
+        integer                 :: i, j, k, l, rw, cl
 
         ! Voigt convetion: (1,1) (2,2) (3,3) (2,3) (1,3) (1,2)
         Voigt = reshape(  [ 1, 2, 3, 2, 1, 1,
@@ -56,9 +60,9 @@
 
         implicit none
 
-        real(kind=wp), intent(in)   :: ATens(:,:)
-        real(kind=wp), intent(out)  :: AVect(:,:)
-        integer                     :: nDim, nStress, i
+        real(wp), intent(in)    :: ATens(:,:)
+        real(wp), intent(out)   :: AVect(:,:)
+        integer                 :: nDim, nStress, i
 
         nDim    = size(ATens,1)
         nStress = size(AVect,1)
@@ -89,9 +93,9 @@
 
         implicit none
 
-        real(kind=wp), intent(in)   :: AVect(:,:)
-        real(kind=wp), intent(out)  :: ATens(:,:)
-        integer                     :: nDim, nStress, i
+        real(wp), intent(in)    :: AVect(:,:)
+        real(wp), intent(out)   :: ATens(:,:)
+        integer                 :: nDim, nStress, i
 
         nDim    = size(ATens,1)
         nStress = size(AVect,1)
@@ -126,9 +130,9 @@
 
         implicit none
 
-        real(kind=wp), intent(in)   :: vect2D(:,:)
-        real(kind=wp), intent(out)  :: vect3D(nSymm,1)
-        integer                     :: nStress
+        real(wp), intent(in)    :: vect2D(:,:)
+        real(wp), intent(out)   :: vect3D(nSymm,1)
+        integer                 :: nStress
 
         nStress = size(vect2D,1)
         vect3D  = zero
@@ -157,9 +161,9 @@
 
         implicit none
 
-        real(kind=wp), intent(in)   :: vect3D(nSymm,1)
-        real(kind=wp), intent(out)  :: vect2D(:,:)
-        integer                     :: nStress
+        real(wp), intent(in)    :: vect3D(nSymm,1)
+        real(wp), intent(out)   :: vect2D(:,:)
+        integer                 :: nStress
 
         nStress = size(vect2D,1)
         vect2D  = zero
@@ -178,6 +182,5 @@
 
       end module solid_mechanics
 
-! **********************************************************************
 ! **********************************************************************
 ! **********************************************************************
