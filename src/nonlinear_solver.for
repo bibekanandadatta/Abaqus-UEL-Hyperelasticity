@@ -14,11 +14,11 @@
       ! last two attributes are not applicable to single variable solver
       type, public  :: options
         integer           :: maxIter    = 100
-        real(wp)          :: tolfx      = 1.0e-13_wp
-        real(wp)          :: tolx       = 1.0e-10_wp      ! unused criterion
-        character(len=8)  :: fdScheme   = 'Forward'       ! 'Backward' or 'Central'
+        real(wp)          :: tolfx      = 1.0e-12_wp      
+        real(wp)          :: tolx       = 1.0e-8_wp      
+        character(len=8)  :: fdScheme   = 'Forward'       ! other: 'Backward' or 'Central'
         real(wp)          :: fdStep     = sqrt(eps)
-        character(len=16) :: algo       = 'Newton'        ! 'Linesearch`
+        character(len=16) :: algo       = 'Newton'        ! other: 'Linesearch`
         real(wp)          :: minAlpha   = 0.1_wp
         real(wp)          :: maxAlpha   = 1.0_wp          ! start w/ NR solver
         real(wp)          :: c          = 0.5_wp
@@ -51,23 +51,23 @@
       abstract interface
 
         ! abstract interface for a single nonlinear equation
-        subroutine func_interface(x, fx, dfx, stateVars)
+        subroutine func_interface(x, fx, dfx, vars)
           use global_parameters, only: wp
           implicit none
           real(wp), intent(in)                  :: x
           real(wp), intent(out)                 :: fx
           real(wp), intent(out), optional       :: dfx
-          real(wp), intent(in), optional        :: stateVars(:)
+          real(wp), intent(in), optional        :: vars(:)
         end subroutine func_interface
 
         ! abstract interface for the system of "n" nonlinear equations
-        subroutine func_interface_n(x, fvec, fjac, stateVars)
+        subroutine func_interface_n(x, fvec, fjac, vars)
           use global_parameters, only: wp
           implicit none
           real(wp), intent(in)                  :: x(:)
           real(wp), intent(out)                 :: fvec(:)
           real(wp), intent(out), optional       :: fjac(:,:)
-          real(wp), intent(in), optional        :: stateVars(:)
+          real(wp), intent(in), optional        :: vars(:)
         end subroutine func_interface_n
 
       end interface
@@ -78,7 +78,7 @@
 
 ! **********************************************************************
 
-      subroutine newton(func, xOld, x, jac, stateVars, opts)
+      subroutine newton(func, xOld, x, jac, vars, opts)
       ! standard Newton-Raphson solver for a single nonlinear equation
 
         use global_parameters, only: wp
@@ -91,7 +91,7 @@
         real(wp), intent(in)                    :: xOld
         real(wp), intent(out)                   :: x
         logical, intent(in), optional           :: jac
-        real(wp), intent(in), optional          :: stateVars(:)
+        real(wp), intent(in), optional          :: vars(:)
         type(options), intent(in), optional     :: opts
         type(options)                           :: params
         real(wp)                                :: fx, dfx, dx
@@ -107,17 +107,17 @@
 
           ! evaluate the function and its derivative
           if ( present(jac) .and. (jac .eq. .true.) )  then
-            if ( present(stateVars) ) then
-              call func(x, fx, dfx, stateVars=stateVars)
+            if ( present(vars) ) then
+              call func(x, fx, dfx, vars=vars)
             else
               call func(x, fx, dfx)
             end if
 
           else if ( ( present(jac) .and. (jac .eq. .false.) )
      &              .or. (.not. present(jac)) )   then
-            if ( present(stateVars) ) then
-              call func(x, fx, stateVars=stateVars)
-              call fdjac(func, x, fx, dfx, stateVars=stateVars)
+            if ( present(vars) ) then
+              call func(x, fx, vars=vars)
+              call fdjac(func, x, fx, dfx, vars=vars)
             else
               call func(x, fx)
               call fdjac(func, x, fx, dfx)
@@ -131,7 +131,8 @@
           if (iter .eq. 1) fx0 = fx
 
           if ( ( abs(fx)/abs(fx0) .le. params%tolfx )
-     &        .or. ( abs(fx) .le. params%tolfx ) ) then
+     &        .or. ( abs(fx) .le. params%tolfx ) 
+     &        .or. ( abs(dx) .le. params%tolx) ) then
             return
           else
             dx  = - fx/dfx
@@ -148,7 +149,7 @@
 ! **********************************************************************
 
       subroutine newton_hybrid(func, xOld, x, xMin, xMax,
-     &                         jac, stateVars, opts)
+     &                         jac, vars, opts)
       ! Implements a hybrid bisection-Newton-Raphson approach
       ! follows the exit criterion of 'fail-safe Newton-Raphson' algorithm
       ! from Numerical Recipes by Press et al. (second volume)
@@ -163,7 +164,7 @@
         real(wp), intent(in)                    :: xMin, xMax
         real(wp), intent(out)                   :: x
         logical, intent(in), optional           :: jac
-        real(wp), intent(in), optional          :: stateVars(:)
+        real(wp), intent(in), optional          :: vars(:)
         type(options), intent(in), optional     :: opts
         type(options)                           :: params
         real(wp)                                :: fx, dfx
@@ -176,8 +177,8 @@
 
         if ( present(opts) ) params = opts
 
-        call func(xMin, fxMin, stateVars=stateVars)
-        call func(xMax, fxMax, stateVars=stateVars)
+        call func(xMin, fxMin, vars=vars)
+        call func(xMax, fxMax, vars=vars)
 
         if ( fxMin*fxMax .gt. zero ) then
           x = xOld
@@ -205,23 +206,23 @@
         if ( xOld .lt. xMin ) xOld = xMin
         if ( xOld .gt. xMax ) xOld = xMax
 
-        x = xOld
+        x     = xOld
         dxOld = abs(xMax - xMin)
-        dx = dxOld
+        dx    = dxOld
 
-        ! evaluate the function and its derivative
+        ! evaluate the function and its derivative at initial guess
         if ( present(jac) .and. (jac .eq. .true.) )  then
-          if ( present(stateVars) ) then
-            call func(x, fx, dfx, stateVars=stateVars)
+          if ( present(vars) ) then
+            call func(x, fx, dfx, vars=vars)
           else
             call func(x, fx, dfx)
           end if
 
         else if ( ( present(jac) .and. (jac .eq. .false.) )
      &            .or. (.not. present(jac)) )   then
-          if ( present(stateVars) ) then
-            call func(x, fx, stateVars=stateVars)
-            call fdjac(func, x, fx, dfx, stateVars=stateVars)
+          if ( present(vars) ) then
+            call func(x, fx, vars=vars)
+            call fdjac(func, x, fx, dfx, vars=vars)
           else
             call func(x, fx)
             call fdjac(func, x, fx, dfx)
@@ -256,17 +257,17 @@
 
           ! evaluate the function and its derivative
           if ( present(jac) .and. (jac .eq. .true.) )  then
-            if ( present(stateVars) ) then
-              call func(x, fx, dfx, stateVars=stateVars)
+            if ( present(vars) ) then
+              call func(x, fx, dfx, vars=vars)
             else
               call func(x, fx, dfx)
             end if
 
           else if ( ( present(jac) .and. (jac .eq. .false.) )
      &        .or. (.not. present(jac)) )   then
-            if ( present(stateVars) ) then
-              call func(x, fx, stateVars=stateVars)
-              call fdjac(func, x, fx, dfx, stateVars=stateVars)
+            if ( present(vars) ) then
+              call func(x, fx, vars=vars)
+              call fdjac(func, x, fx, dfx, vars=vars)
             else
               call func(x, fx)
               call fdjac(func, x, fx, dfx)
@@ -277,8 +278,10 @@
             return
           end if
 
+
           if ( ( abs(fx)/abs(fx0) .le. params%tolfx )
-     &        .or. ( abs(fx) .le. params%tolfx ) ) then
+     &        .or. ( abs(fx) .le. params%tolfx ) 
+     &        .or. ( abs(dx) .le. params%tolx) ) then
             return
           end if
 
@@ -297,7 +300,7 @@
 
 ! **********************************************************************
 
-      subroutine fsolve(func, xOld, x, jac, stateVars, opts)
+      subroutine fsolve(func, xOld, x, jac, vars, opts)
       ! Newton-Raphson solver for a system of nonlinear equations
       ! A backtracking 'Linesearch' option can be used for solution
 
@@ -311,7 +314,7 @@
         real(wp), intent(in)                    :: xOld(:)
         real(wp), intent(out)                   :: x(:)
         logical, optional                       :: jac
-        real(wp), intent(in), optional          :: stateVars(:)
+        real(wp), intent(in), optional          :: vars(:)
         type(options), intent(in), optional     :: opts
         type(options)                           :: params
         real(wp)                                :: fvec(size(x))
@@ -330,17 +333,17 @@
 
           ! evaluate the function (n) and its jacobian (nxn)
           if ( present(jac) .and. (jac .eq. .true.) )  then
-            if ( present(stateVars) ) then
-              call func(x, fvec, fjac, stateVars=stateVars)
+            if ( present(vars) ) then
+              call func(x, fvec, fjac, vars=vars)
             else
               call func(x, fvec, fjac)
             end if
 
           else if ( ( present(jac) .and. (jac .eq. .false.) )
      &        .or. (.not. present(jac)) )   then
-            if ( present(stateVars) ) then
-              call func(x, fvec, stateVars=stateVars)
-              call fdjac(func, x, fvec, fjac, stateVars=stateVars)
+            if ( present(vars) ) then
+              call func(x, fvec, vars=vars)
+              call fdjac(func, x, fvec, fjac, vars=vars)
             else
               call func(x, fvec)
               call fdjac(func, x, fvec, fjac)
@@ -380,7 +383,7 @@
 
           else if ( trim(params%algo) .eq. 'Linesearch' ) then
             call lineSearch(func, x, fjac, fvec,
-     &                  dx, params, x, stateVars)
+     &                  dx, params, x, vars)
           else
             call msg%ferror(flag=error, src='fsolve',
      &                msg='Illegal argument.', ch=trim(params%algo))
@@ -397,7 +400,7 @@
 ! **********************************************************************
 
       subroutine lineSearch(func, xOld, fjac, fvec,
-     &                      dx, params, x, stateVars)
+     &                      dx, params, x, vars)
       ! uses a backtracking linesearch algorithm. see details below:
       ! https://en.wikipedia.org/wiki/Backtracking_line_search
 
@@ -412,7 +415,7 @@
         real(wp), intent(in)                :: dx(:)
         type(options), intent(in)           :: params
         real(wp), intent(inout)             :: x(:)
-        real(wp), intent(in), optional      :: stateVars(:)
+        real(wp), intent(in), optional      :: vars(:)
         real(wp)                            :: gradf(size(x))
         real(wp)                            :: t, slope, alpha
         logical                             :: checkAlpha
@@ -432,8 +435,8 @@
         do
           xtmp = xOld + alpha * dx
 
-          if ( present(stateVars) ) then
-            call func(xtmp, fvectmp, stateVars=stateVars)
+          if ( present(vars) ) then
+            call func(xtmp, fvectmp, vars=vars)
           else
             call func(xtmp, fvectmp)
           end if
@@ -462,10 +465,10 @@
 !       subroutines to calculate numerical derivative or jacobian
 ! **********************************************************************
 
-      subroutine dfdx(func,x,fx,dfx,stateVars,opts)
+      subroutine dfdx(func,x,fx,dfx,vars,opts)
       ! subroutine to calculate numerical derivative of a single function
 
-        use global_parameters, only: wp, zero, two, eps
+        use global_parameters, only: wp, zero, one, two, eps
         use error_logging
 
         implicit none
@@ -473,7 +476,7 @@
         procedure(func_interface)               :: func
         real(wp), intent(in)                    :: x, fx
         real(wp), intent(out)                   :: dfx
-        real(wp), intent(in), optional          :: stateVars(:)
+        real(wp), intent(in), optional          :: vars(:)
         type(options), intent(inout), optional  :: opts
         type(options)                           :: params
         real(wp)                                :: h
@@ -486,29 +489,31 @@
 
         x_h = x
 
-        h = abs(x_h)*params%fdStep
-        if (h .eq. zero) then
+        if ( abs(x_h) .le. one) then
           h = params%fdStep
+        else
+          h = abs(x_h)*params%fdStep
         end if
 
-        if ( trim(params%fdScheme).eq. 'Forward') then
+        if ( trim(params%fdScheme) .eq. 'Forward') then
 
           x_h = x_h + h
-          call func(x_h, fx_h, stateVars=stateVars)
+          call func(x_h, fx_h, vars=vars)
           dfx = (fx_h - fx)/h
 
         else if( trim(params%fdScheme) .eq. 'Backward') then
 
           x_h = x_h - h
-          call func(x_h, fx_h, stateVars=stateVars)
+          call func(x_h, fx_h, vars=vars)
           dfx = (fx_h - fx)/h
 
         else if ( trim(params%fdScheme) .eq. 'Central' ) then
 
           x_h = x_h + h
-          call func(x_h, fx_h1, stateVars=stateVars)
-          x_h = x_h - two*h
-          call func(x_h, fx_h2, stateVars=stateVars)
+          call func(x_h, fx_h1, vars=vars)
+          x_h = x 
+          x_h = x_h - h
+          call func(x_h, fx_h2, vars=vars)
           dfx = (fx_h1 - fx_h2)/(two*h)
 
         else
@@ -522,10 +527,10 @@
 
 ! **********************************************************************
 
-      subroutine dfdx_n(func,x,fvec,fjac,stateVars,opts)
+      subroutine dfdx_n(func,x,fvec,fjac,vars,opts)
       ! subroutine to calculate numerical jacobian of a set of functions
 
-        use global_parameters, only: wp, zero, two, eps
+        use global_parameters, only: wp, zero, one, two, eps
         use error_logging
 
         implicit none
@@ -533,7 +538,7 @@
         procedure(func_interface_n)             :: func
         real(wp), intent(in)                    :: x(:), fvec(:)
         real(wp), intent(out)                   :: fjac(:,:)
-        real(wp), intent(in), optional          :: stateVars(:)
+        real(wp), intent(in), optional          :: vars(:)
         type(options), intent(in), optional     :: opts
         type(options)                           :: params
         real(wp)                                :: h
@@ -550,29 +555,31 @@
 
           x_h = x
 
-          h = abs(x_h(i))*params%fdStep
-          if (h .eq. zero) then
+          if ( abs(x_h(i)) .le. one) then
             h = params%fdStep
+          else
+            h = abs(x_h(i))*params%fdStep
           end if
 
           if ( trim(params%fdScheme).eq. 'Forward' ) then
 
-            x_h(i) = x_h(i) + h
-            call func(x_h, fvec_h, stateVars=stateVars)
+            x_h(i)    = x_h(i) + h
+            call func(x_h, fvec_h, vars=vars)
             fjac(:,i) = (fvec_h - fvec)/h
 
           else if( trim(params%fdScheme) .eq. 'Backward' ) then
 
-            x_h(i) = x_h(i) - h
-            call func(x_h, fvec_h, stateVars=stateVars)
+            x_h(i)    = x_h(i) - h
+            call func(x_h, fvec_h, vars=vars)
             fjac(:,i) = (fvec_h - fvec)/h
 
           else if ( trim(params%fdScheme) .eq. 'Central' )  then
 
-            x_h(i) = x_h(i) + h
-            call func(x_h, fvec_h1, stateVars=stateVars)
-            x_h(i) = x_h(i) - two*h
-            call func(x_h, fvec_h2, stateVars=stateVars)
+            x_h(i)    = x_h(i) + h
+            call func(x_h, fvec_h1, vars=vars)
+            x_h       = x
+            x_h(i)    = x_h(i) - h
+            call func(x_h, fvec_h2, vars=vars)
             fjac(:,i) = (fvec_h1 - fvec_h2)/(two*h)
 
           else

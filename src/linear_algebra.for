@@ -5,56 +5,13 @@
 !     computations. subroutines are arranged in alphabetical order.
 ! **********************************************************************
 !   this module has three submodules: utilities, computational, lapack
-!     * requires Intel oneMKL libraries for compiling and linking *
+!     * REQUIRES Intel oneMKL libraries for compiling and linking *
 ! **********************************************************************
 !     Author: Bibekananda Datta (C) May 2024. All Rights Reserved.
 !  This module and dependencies are shared under 3-clause BSD license
 ! **********************************************************************
 
       module linear_algebra
-
-! **********************************************************************
-!   generic interfaces for the subroutines in the utilities submodule
-! **********************************************************************
-
-
-      interface diag
-
-        module function diag_m(mat) result(vec)
-          use global_parameters, only: wp
-          use error_logging
-          implicit none
-          real(wp), intent(in)        :: mat(:,:)
-          real(wp), allocatable       :: vec(:)
-        end function diag_m
-
-        module function diag_v(vec) result(mat)
-          use global_parameters, only: wp
-          implicit none
-          real(wp), intent(in)        :: vec(:)
-          real(wp), allocatable       :: mat(:,:)
-        end function diag_v
-
-      end interface diag
-
-
-      interface isEqual
-
-        module function isEqualMat(A,B) result(comp)
-          use global_parameters, only: wp
-          implicit none
-          real(wp), intent(in)      :: A(:,:), B(:,:)
-          logical                   :: comp
-        end function isEqualMat
-
-        module function isEqualVec(a,b) result(comp)
-          use global_parameters, only: wp
-          implicit none
-          real(wp), intent(in)      :: a(:), b(:)
-          logical                   :: comp
-        end function isEqualVec
-
-      end interface isEqual
 
 ! **********************************************************************
 !   interfaces for the other subroutines from the utilities submodule
@@ -85,6 +42,29 @@
           character(len=*), intent(in)  :: ask
         end subroutine diagonal
 
+      end interface
+
+      interface diag
+
+        module function diag_m(mat) result(vec)
+          use global_parameters, only: wp
+          use error_logging
+          implicit none
+          real(wp), intent(in)        :: mat(:,:)
+          real(wp), allocatable       :: vec(:)
+        end function diag_m
+
+        module function diag_v(vec) result(mat)
+          use global_parameters, only: wp
+          implicit none
+          real(wp), intent(in)        :: vec(:)
+          real(wp), allocatable       :: mat(:,:)
+        end function diag_v
+
+      end interface diag
+
+      interface
+
         module function eye(m, n) result(ID)
           use global_parameters, only: wp, zero, one
           integer, intent(in)           :: m
@@ -98,6 +78,28 @@
           real(wp), intent(out)       :: A(:,:)
           integer                     :: i
         end subroutine eyeMat
+
+      end interface
+
+      interface isEqual
+
+        module function isEqualMat(A,B) result(comp)
+          use global_parameters, only: wp
+          implicit none
+          real(wp), intent(in)      :: A(:,:), B(:,:)
+          logical                   :: comp
+        end function isEqualMat
+
+        module function isEqualVec(a,b) result(comp)
+          use global_parameters, only: wp
+          implicit none
+          real(wp), intent(in)      :: a(:), b(:)
+          logical                   :: comp
+        end function isEqualVec
+
+      end interface isEqual
+
+      interface
 
         module function isSkew(A) result(skw)
           use global_parameters, only: wp
@@ -958,10 +960,6 @@
 !         computational submodule contains some subroutines for
 !         linear algebraic calculations using LU decomposition
 ! **********************************************************************
-! **********************************************************************
-!   TODO: add the following subroutines to the computational submodule
-!   QRdecompose_std, linSolveQR_std, eigen_std_sym, norm, condition
-! **********************************************************************
 
       submodule (linear_algebra) computational
 
@@ -1221,10 +1219,6 @@
 ! **********************************************************************
 !    lapack submodule includes wrapper subroutines for multiple LAPACK
 !     subroutines to perform linear algebraic calculation on matrices
-! **********************************************************************
-! **********************************************************************
-!       TODO: add the following subroutines to the lapack submodule
-!             normMat, QRdecompose_lapack, eigen_lapack_general
 ! **********************************************************************
 
       submodule (linear_algebra) lapack
@@ -1861,7 +1855,7 @@
 
         D = zero
         do i = 1,m1
-          D(i,i) = dsqrt( eVal(i) )
+          D(i,i) = sqrt( eVal(i) )
         end do
 
         B = matmul( eVec, matmul(D,transpose(eVec)) )
@@ -1870,6 +1864,5 @@
 
       end submodule lapack
 
-! **********************************************************************
 ! **********************************************************************
 ! **********************************************************************

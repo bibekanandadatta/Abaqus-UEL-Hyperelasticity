@@ -24,13 +24,13 @@
 
       interface
 
-        module subroutine evalInterpFunc(elem,xiCoord,Nxi,dNdxi)
+        module subroutine calcInterpFunc(elem,xiCoord,Nxi,dNdxi)
           use global_parameters, only: wp
           implicit none 
           type(element), intent(in)   :: elem
           real(wp), intent(in)        :: xiCoord(:)
           real(wp), intent(out)       :: Nxi(:), dNdxi(:,:)
-        end subroutine evalInterpFunc
+        end subroutine calcInterpFunc
 
         module subroutine faceNodes(nDim,nNode,face,nFaceNodes,list)
           implicit none
@@ -57,7 +57,7 @@
 
       contains
 
-      module subroutine evalInterpFunc(elem,xiCoord,Nxi,dNdxi)
+      module subroutine calcInterpFunc(elem,xiCoord,Nxi,dNdxi)
       ! driver subroutine to calculate shape functions and derivatives
 
         use global_parameters, only: wp
@@ -76,7 +76,7 @@
           call interpFunc3(elem%nNode, xiCoord, Nxi, dNdxi)
         end if
 
-      end subroutine evalinterpFunc
+      end subroutine calcInterpFunc
 
 ! **********************************************************************
 

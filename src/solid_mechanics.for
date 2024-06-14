@@ -83,6 +83,36 @@
       end subroutine symtensor2vector
 
 ! **********************************************************************
+      
+      subroutine unsymtensor2matrix(tensor,matrix)
+      ! this subroutine maps the fourth order tensor to a rank-2 matrix
+
+        use global_parameters, only: wp, zero
+
+        implicit none
+
+        real(wp), intent(in)    :: tensor(:,:,:,:)
+        real(wp), intent(out)   :: matrix(size(tensor,1),size(tensor,3))
+        integer                 :: i, j, k, l, m, n, nDim
+
+        nDim    = size(tensor,1)
+        matrix  = zero
+
+        do i = 1,nDim
+          do j = 1,nDim
+            do k = 1,nDim
+              do l = 1,nDim
+                m           = (i-1)*nDim + j
+                n           = (k-1)*nDim + l
+                matrix(m,n) = tensor(j,i,l,k)
+              end do
+            end do
+          end do
+        end do
+
+      end subroutine unsymtensor2matrix
+
+! **********************************************************************
 
       subroutine vector2symtensor(AVect, ATens)
       ! this subroutine transforms a Voigt vector to symmetric tensor
