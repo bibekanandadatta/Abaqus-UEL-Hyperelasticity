@@ -91,9 +91,10 @@
 
         implicit none
 
-        real(wp), intent(in)    :: tensor(:,:,:,:)
-        real(wp), intent(out)   :: matrix(size(tensor,1),size(tensor,3))
-        integer                 :: i, j, k, l, m, n, nDim
+        real(wp), intent(in)  :: tensor(:,:,:,:)
+        real(wp), intent(out) :: matrix(size(tensor,1)*size(tensor,2),
+     &                                  size(tensor,3)*size(tensor,4))
+        integer               :: i, j, k, l, m, n, nDim
 
         nDim    = size(tensor,1)
         matrix  = zero

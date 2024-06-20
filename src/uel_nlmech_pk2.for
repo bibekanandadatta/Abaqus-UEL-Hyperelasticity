@@ -416,7 +416,7 @@
 
       ! assign the element stiffness matrix to abaqus-defined variable
       AMATRX(1:NDOFEL,1:NDOFEL) = Kuu(1:uDOFEl,1:uDOFEl)
-      RHS(1:MLVARX,1)           = Ru(1:uDOFEl,1)
+      RHS(1:NDOFEL,1)           = Ru(1:uDOFEl,1)
 
       end subroutine uelNLMECH
 

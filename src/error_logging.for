@@ -10,13 +10,13 @@
 
       ! global error handling variables: flags and file unit numbers
       integer, parameter  :: debug = 1, warn = 2, error = 3   ! log levels
-      integer, parameter  :: verbosity = debug                ! default verbosity
+      integer, parameter  :: verbosity = warn                 ! default verbosity
       integer, parameter  :: stderr = 15, stddbg = 16         ! file units
       
       type, public  :: logger
-        integer, private            :: error      = error
-        integer, private            :: warn       = warn
         integer, private            :: debug      = debug
+        integer, private            :: warn       = warn
+        integer, private            :: error      = error
         integer, private            :: verbosity  = verbosity
         integer, private            :: stderr     = stderr
         integer, private            :: stddbg     = stddbg
@@ -67,10 +67,10 @@
         if (present(dbgfile))   self%dbgfile    = dbgfile
 
         ! open files for debugging and error logging
-        if (self%verbosity .ge. self%debug) then
-          open(unit=self%stddbg, file=self%dbgfile, status='unknown')
+        if ((self%verbosity .ge. self%warn)) then
           open(unit=self%stderr, file=self%errfile, status='unknown')
-        else if ((self%verbosity .ge. self%warn)) then
+        else if (self%verbosity .ge. self%debug) then
+          open(unit=self%stddbg, file=self%dbgfile, status='unknown')
           open(unit=self%stderr, file=self%errfile, status='unknown')
         end if
 
@@ -111,41 +111,41 @@
         funit = self%stderr
 
         if ((present(time)) .and. (time .eq. .true.)) then
-          write(funit,'(6(A,I0),A)',advance='no')
-     &        '[', YR,'-',MM,'-',DD, ' ', HR,':',MIN,':',SEC, '] '
           write(*,'(6(A,I0),A)',advance='no')
+     &        '[', YR,'-',MM,'-',DD, ' ', HR,':',MIN,':',SEC, '] '
+          write(funit,'(6(A,I0),A)',advance='no')
      &        '[', YR,'-',MM,'-',DD, ' ', HR,':',MIN,':',SEC, '] '
         end if
 
         if (present(msg)) then
-          write(funit,'(A)',advance='no')  trim(msg)
           write(*,'(A)',advance='no')      trim(msg)
+          write(funit,'(A)',advance='no')  trim(msg)
         end if
 
         if (present(ia)) then
-          write(funit,'(1x,I0)',advance='no') ia
           write(*,'(1x,I0)',advance='no')     ia
+          write(funit,'(1x,I0)',advance='no') ia
         end if
 
         if (present(ra)) then
-          write(funit,'(1x,g0)',advance='no')  ra
           write(*,'(1x,g0)',advance='no')      ra
+          write(funit,'(1x,g0)',advance='no')  ra
         end if
 
         if (present(ch)) then
-          write(funit,'(1x,A)',advance='no') ch
           write(*,'(1x,A)',advance='no')     ch
+          write(funit,'(1x,A)',advance='no') ch
         end if
 
         if (present(la)) then
-          write(funit,'(L)',advance='no')  la
           write(*,'(L)',advance='no')      la
+          write(funit,'(L)',advance='no')  la
         end if
 
         ! print a new line after each pass
-        write(funit,'(A)',advance='no')  new_line(ch)
         write(*,'(A)',advance='no')      new_line(ch)
-
+        write(funit,'(A)',advance='no')  new_line(ch)
+        
       end subroutine finfo
 
 ! **********************************************************************
@@ -188,79 +188,69 @@
 
           funit = self%stderr
 
-          write(funit,'(6(A,I0),A)',advance='no')
-     &        '[', YR,'-',MM,'-',DD, ' ', HR,':',MIN,':',SEC, '] '
           write(*,'(6(A,I0),A)',advance='no')
+     &        '[', YR,'-',MM,'-',DD, ' ', HR,':',MIN,':',SEC, '] '
+          write(funit,'(6(A,I0),A)',advance='no')
      &        '[', YR,'-',MM,'-',DD, ' ', HR,':',MIN,':',SEC, '] '
 
           if (flag .eq. self%error) then
-            write(funit,'(A)', advance='no')  '(ERROR) '
             write(*,'(A)', advance='no')      '(ERROR) '
-          elseif ( (flag .eq. self%warn) ) then
-            write(funit,'(A)',advance='no')  '(WARNING) '
+            write(funit,'(A)', advance='no')  '(ERROR) '
+          else if ( (flag .eq. self%warn) ) then
             write(*,'(A)',advance='no')      '(WARNING) '
-          endif
+            write(funit,'(A)',advance='no')  '(WARNING) '
+          end if
 
-          write(funit,'(A)',advance='no') '<'//trim(src)//'> '
           write(*,'(A)',advance='no')     '<'//trim(src)//'> '
-
+          write(funit,'(A)',advance='no') '<'//trim(src)//'> '
+          
 
           if (present(msg)) then
-            write(funit,'(A)',advance='no')  trim(msg)
             write(*,'(A)',advance='no')      trim(msg)
+            write(funit,'(A)',advance='no')  trim(msg)
           end if
 
           if (present(ia)) then
-            write(funit,'(1x,I0,1x)',advance='no') ia
             write(*,'(1x,I0,1x)',advance='no')     ia
-
+            write(funit,'(1x,I0,1x)',advance='no') ia
+          
             ! print a new line after each pass
-            write(funit,'(A)', advance='no')  new_line(ch)
             write(*,'(A)', advance='no')      new_line(ch)
+            write(funit,'(A)', advance='no')  new_line(ch)
+            
           end if
 
           if (present(ra)) then
-            write(funit,'(1x,g0,1x)',advance='no')  ra
             write(*,'(1x,g0,1x)',advance='no')      ra
-
-            ! print a new line after each pass
-            write(funit,'(A)', advance='no')  new_line(ch)
-            write(*,'(A)', advance='no')      new_line(ch)
+            write(funit,'(1x,g0,1x)',advance='no')  ra
           end if
 
           if (present(ch)) then
-            write(funit,'(1x,A,1x)',advance='no') ch
             write(*,'(1x,A,1x)',advance='no')     ch
-
-            ! print a new line after each pass
-            write(funit,'(A)', advance='no')  new_line(ch)
-            write(*,'(A)', advance='no')      new_line(ch)
+            write(funit,'(1x,A,1x)',advance='no') ch
           end if
 
           if (present(la)) then
-            write(funit,'(L)',advance='no')  la
             write(*,'(L)',advance='no')      la
-
-            ! print a new line after each pass
-            write(funit,'(A)', advance='no')  new_line(ch)
-            write(*,'(A)', advance='no')      new_line(ch)
+            write(funit,'(L)',advance='no')  la
+            
           end if
 
           if (present(ivec)) then
-            write(funit,'(10000(2x,g0))')  ivec
             write(*,'(10000(2x,g0))')      ivec
-          endif
+            write(funit,'(10000(2x,g0))')  ivec
+          end if
 
           if (present(rvec)) then
-            write(funit,'(10000(2x,g0))')  rvec
             write(*,'(10000(2x,g0))')      rvec
-          endif
+            write(funit,'(10000(2x,g0))')  rvec
+          end if
 
           ! print a new line after each pass
-          write(funit,'(A)',advance='no')  new_line(ch)
           write(*,'(A)',advance='no')      new_line(ch)
+          write(funit,'(A)',advance='no')  new_line(ch)
 
-        endif
+        end if
 
       end subroutine ferror
 
@@ -296,84 +286,73 @@
           funit = self%stddbg
 
           if (present(src)) then
-            write(funit,'(A)',advance='no') '<'//trim(src)//'> '
             write(*,'(A)',advance='no')     '<'//trim(src)//'> '
+            write(funit,'(A)',advance='no') '<'//trim(src)//'> '
           end if
 
           if (present(msg)) then
-            write(funit,'(A)',advance='no')  trim(msg)
             write(*,'(A)',advance='no')      trim(msg)
+            write(funit,'(A)',advance='no')  trim(msg)
           end if
 
           if (present(ia)) then
-            write(funit,'(1x,I0,1x)',advance='no') ia
             write(*,'(1x,I0,1x)',advance='no')     ia
-
-            ! print a new line after each pass
-            write(funit,'(A)', advance='no')  new_line(ch)
-            write(*,'(A)', advance='no')      new_line(ch)
+            write(funit,'(1x,I0,1x)',advance='no') ia
           end if
 
           if (present(ra)) then
-            write(funit,'(1x,g0,1x)',advance='no')  ra
             write(*,'(1x,g0,1x)',advance='no')      ra
-
-            ! print a new line after each pass
-            write(funit,'(A)', advance='no')  new_line(ch)
-            write(*,'(A)', advance='no')      new_line(ch)
+            write(funit,'(1x,g0,1x)',advance='no')  ra
           end if
 
           if (present(ch)) then
-            write(funit,'(1x,A,1x)',advance='no') ch
             write(*,'(1x,A,1x)',advance='no')     ch
-
-            ! print a new line after each pass
-            write(funit,'(A)', advance='no')  new_line(ch)
-            write(*,'(A)', advance='no')      new_line(ch)
+            write(funit,'(1x,A,1x)',advance='no') ch
           end if
 
           if (present(la)) then
-            write(funit,'(L)',advance='no')  la
             write(*,'(L)',advance='no')      la
-
-            ! print a new line after each pass
-            write(funit,'(A)', advance='no')  new_line(ch)
-            write(*,'(A)', advance='no')      new_line(ch)
+            write(funit,'(L)',advance='no')  la
           end if
 
           if (present(ivec)) then
-            write(funit,'(10000(2x,g0))')  ivec
             write(*,'(10000(2x,g0))')      ivec
-          endif
+            write(funit,'(10000(2x,g0))')  ivec
+          end if
 
           if (present(rvec)) then
-            write(funit,'(10000(2x,g0))')  rvec
             write(*,'(10000(2x,g0))')      rvec
-          endif
+            write(funit,'(10000(2x,g0))')  rvec
+          end if
 
           if (present(imat)) then
             ! print a new line before matrix
-            write(funit,'(A)', advance='no')  new_line(ch)
             write(*,'(A)', advance='no')      new_line(ch)
+            write(funit,'(A)', advance='no')  new_line(ch)
+            
             
             do i = 1, size(imat,1)
-              write(funit,'(10000(I0,2x))')  imat(i,:)
               write(*,'(10000(I0,2x))')      imat(i,:)
-            enddo
-          endif
+              write(funit,'(10000(I0,2x))')  imat(i,:)
+            end do
+          end if
 
           if (present(rmat)) then
             ! print a new line after each pass
-            write(funit,'(A)', advance='no')  new_line(ch)
             write(*,'(A)', advance='no')      new_line(ch)
+            write(funit,'(A)', advance='no')  new_line(ch)
 
             do i = 1, size(rmat,1)
-              write(funit,'(10000(g0,2x))')  rmat(i,:)
               write(*,'(10000(g0,2x))')      rmat(i,:)
-            enddo
-          endif
+              write(funit,'(10000(g0,2x))')  rmat(i,:)
+            end do
+          end if
 
-        endif
+          ! print a new line after each pass
+          write(*,'(A)',advance='no')      new_line(ch)
+          write(funit,'(A)',advance='no')  new_line(ch)
+
+        end if
 
       end subroutine fdebug
 
