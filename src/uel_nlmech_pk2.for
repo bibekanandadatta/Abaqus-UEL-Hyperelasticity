@@ -46,8 +46,8 @@
 !                        POST-PROCESSED VARIABLES
 !                     (follows the convention above)
 !
-!     uvar(1:nStress)                 Cauchy stress tensor components
-!     uvar(nStress+1:2*nStress)         Euler strain tensor components
+!     uvar(1:nStress)               Cauchy stress tensor components
+!     uvar(nStress+1:2*nStress)     Euler strain tensor components
 !
 ! **********************************************************************
 !               VARIABLES TO BE UPDATED WITHIN THE SUBROUTNE
@@ -558,7 +558,7 @@
       stressTensorPK2     = Gshear*(ID3-Cinv) + Kappa*log(detF)*Cinv
 
       stressTensorCauchy  = (one/detF)*( Gshear*(B-ID3) +
-     & 											Kappa*log(detF)*ID3 )
+     &                      Kappa*log(detF)*ID3 )
 
 
       ! transforms the stiffness tensor 3x3x3x3 to a 6x6 matrix
