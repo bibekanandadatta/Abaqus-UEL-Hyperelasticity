@@ -1,7 +1,7 @@
 # Abaqus UEL Hyperelasticity
 
  
-This repository contains the Fortran source code for finite strain elasticity (hyperelasticity) user element (UEL) subroutine and example input files for Abaqus/Standard. Standard displacement-based element formulation has been used. The purpose of the project is to make users familiar with developing the UEL subroutine in Abaqus/Standard using a standard displacement-based element formulation for a nonlinear (large strain) solid mechanics model. This source code contains necessary subroutines related to element operations and linear algebraic calculations.
+This repository contains the Fortran source code for finite strain elasticity (hyperelasticity) user element (UEL) subroutine and example input files for Abaqus/Standard. Standard displacement-based element formulation has been used. The purpose of the project is to make users familiar with developing the UEL subroutine in Abaqus/Standard using a standard displacement-based element formulation for a nonlinear (large strain) solid mechanics model. This source code contains necessary subroutines within different modules related to element operations and linear algebraic calculations.
 
 
 
@@ -42,6 +42,7 @@ All the source codes are located in the `src` subdirectory and the Abaqus test c
 |   File name   |  Description  |
 | ----------    | ------------  |
 | `uel_nlmech_pk2.for` | is the Fortran source code that implements PK-II stress-based Total Lagrangian user element formulation for hyperelastic materials (Neo-Hookean and Arruda-Boyce). The main `UEL` subroutine was to perform all the initial checks and the calculations are performed in a subsequent subroutine. The source code includes additional subroutines with Lagrangian interpolation functions for 4 types of 2D continuum elements (Tri3, Tri6, Quad4, and Quad8) and 4 types of 3D continuum elements (Tet4, Tet10, Hex8, Hex20) and Gaussian quadratures with reduced and full integration schemes. Body force and traction boundary conditions have not been implemented in this user subroutine, however, these can be applied by overlaying standard Abaqus elements on the user elements (to be discussed in the **Visualization** section). Since Abaqus/ Viewer does not provide native support for visualizing user elements, an additional layer of elements with the same element connectivity has been created and results at the integration points of the elements are stored using the `UVARM` subroutine. |
+| `uel_nlmech_pk2_Fbar.for` | is an extension of the standard finite element formulation implemented in `uel_nlmech_pk2.for`. As the name suggests, this implementation incorporated F-bar modification for fully-integrated 8-noded trilinear  and 4-noded bilinear quadrilateral elements in total Lagrangian framework. F-bar element formulation is known to cure volumetric locking for quasi-incompressible materials at finite strain. | 
 | `<some_module>.for` | These are the utility files with different Fortran module that are included in the main source file using `include <filename.ext>` statement at the beginning of the main source code. |
 | `<...>.inp` | are the example input files prepared to be executed with the user element subroutine. Since the user-defined elements share the same topology as one of the Abaqus built-in elements, those models were built in Abaqus/CAE and then exported as input files. Later those input files were modified to include keywords and data to include user element definitions, properties, and overlaying dummy elements. |
 | `addElemNLMech.py` | is a Python code that modifies a simple input file and adds the overlaying dummy elements on the user elements. For complicated input files, this will not work properly and modification of this code will be required (optional). |
@@ -74,7 +75,7 @@ Depending on the material model, the user needs to specify two or three properti
 > Use `matID = 1` for the Neo-Hookean model and `matID = 2` for the Arruda-Boyce model. For the Neo-Hookean model, the locking stretch needs to be specified as zero, and For the Arruda-Boyce model, it should be a positive real number.
 
 > [!CAUTION] 
-> The standard displacement-based element formulation implemented here is known to behave poorly for quasi-incompressible cases because of volumetric locking.
+> Under certain loading conditions, some of the element formulations, especially lower-order displacement based elements and fully-integrated higher-order elements, implemented here may suffer from volumetric locking issue. In such case, the users should use higher order elements with reduced integration (8-node quarilateral with 4 Gauss points in 2D and 20-node hexahedral with 8 Gauss points) or F-bar element formulation for fully integrated 8-node hexahedral and 4-node quadirlateral.
 
 
 

@@ -635,8 +635,6 @@
         end if
       end if
 
-      return
-
       end subroutine faceNodes
 
       end submodule interpolation

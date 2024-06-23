@@ -2,6 +2,8 @@
 ! ********* ABAQUS/ STANDARD USER ELEMENT SUBROUTINE (UEL) *************
 ! **********************************************************************
 !  large strain displacement element + Neo-Hookean & Arruda-Boyce model
+!   linear quad and hex element formulation use F-bar method to avoid
+!   volumetric locking at near-incompressibility limit (de Souza Neto)
 ! **********************************************************************
 !                     BIBEKANANDA DATTA (C) MAY 2024
 !                 JOHNS HOPKINS UNIVERSITY, BALTIMORE, MD
@@ -151,8 +153,10 @@
       ! vector and tangent matrix used in the formulation. Currently
       ! available elements are 2D and 3D continuum elements of different
       ! shapes (TRI, QUAD, TET, HEX) and polynomial order (linear and
-      ! qaudratic) with full and reduced integration. No specialzed
-      ! numerical technique was employed to alleviate volumetric locking.
+      ! qaudratic) with full and reduced integration. 
+      ! 4-node linear QUAD and 8-node linear HEX elements use F-bar 
+      ! technique proposed by de Souza Neto (IJSS, 1996) to alleviate
+      ! volumetric locking near incompressibility limit.
 
       use global_parameters
       use error_logging
@@ -213,7 +217,8 @@
       real(wp)              :: SIGMA_F(nDim*nNode,nDim*nNode)
 
       ! material point quantities (variables)
-      real(wp)              :: F(3,3)
+      real(wp)              :: F(3,3), detF, Fbar(3,3)
+      real(wp)              :: FInv(3,3), FInvT(3,3)
       real(wp)              :: strainLagrange(nStress,1)
       real(wp)              :: strainEuler(nStress,1)
       real(wp)              :: stressCauchy(nStress,1)
@@ -221,7 +226,22 @@
       real(wp)              :: stressPK2(nStress,1)
       real(wp)              :: Dmat(nStress,nStress)
       real(wp)              :: Cmat(3,3,3,3)
-      
+
+
+      ! additional variables for F-bar method (element and material)
+      real(wp)              :: centroid(nDim)
+      real(wp)              :: Nxi0(nNode), dNdxi0(nNode,nDim)
+      real(wp)              :: dXdxi0(nDim,nDim), dxidX0(nDim,nDim)
+      real(wp)              :: dNdX0(nNode,nDim), detJ0
+      real(wp)              :: Ga0(nDim**2,nDim), Gmat0(nDim**2,uDOFEl)
+      real(wp)              :: F0(3,3), detF0
+      real(wp)              :: F0Inv(3,3), F0InvT(3,3)
+      real(wp)              :: QR0Tensor(nDim,nDim,nDim,nDim)
+      real(wp)              :: QRTensor(nDim,nDim,nDim,nDim)
+      real(wp)              :: QR0mat(nDim*nDim,nDim*nDim)
+      real(wp)              :: QRmat(nDim*nDim,nDim*nDim)
+      real(wp)              :: tanFac1, tanFac2, resFac
+
 
       ! additional field variables (at nodes and int pt)
       real(wp)              :: fieldNode(npredf,nNode)
@@ -232,7 +252,7 @@
       real(wp)              :: Kuu(uDOFEl,uDOFEl), Ru(uDOFEl,1)
 
       ! loop counter variables
-      integer               :: i, j, intPt
+      integer               :: i, j, k, l, m, n, p, q, intPt
       integer               :: matID
 
       ! element type
@@ -247,7 +267,11 @@
      &                            nNode=nNode,nInt=nInt)
 
       ! initialize the matrices and vectors
+      F0      = zero
       F       = zero
+      Fbar    = zero
+      Ga0     = zero
+      Gmat0   = zero
       Na      = zero
       Ba      = zero
       Ga      = zero
@@ -276,8 +300,53 @@
 
      !!!!!!!!!!!!!!!!! ELEMENT RELATED OPERATIONS !!!!!!!!!!!!!!!!!!!!!!
 
-      ! obtain gauss quadrature points and weights
       call eyeMat(ID)
+
+      ! For fully-integrated linear quad and hex elements, calculate Gmat0.
+      ! These calculations are done to evaluate volumetric deformation
+      ! gradient at centroid which will be used in to define F-bar later.
+      if ( ((jtype .eq. 3) .and. (nInt .eq. 8))
+     &    .or. ((jtype .eq. 7) .and. (nInt .eq. 4)) ) then
+
+        centroid = zero
+
+        ! evaluate the interpolation functions and derivates at centroid
+        call calcInterpFunc(solidFiniteStrain, centroid, Nxi0, dNdxi0)
+
+        ! calculate element jacobian and global shape func gradient at centroid
+        dXdxi0  = matmul(coords,dNdxi0)       ! calculate the jacobian (dXdxi) at centroid
+        detJ0   = det(dXdxi0)                 ! calculate jacobian determinant at centroid
+
+        if (detJ0 .le. zero) then
+          call msg%ferror( flag=warn, src='uelNLMech',
+     &      msg='Negative element jacobian at centroid.', ia=jelem)
+        end if
+
+        dxidX0 = inv(dXdxi0)                  ! calculate jacobian inverse
+        dNdX0  = matmul(dNdxi0,dxidX0)        ! calculate dNdX at centroid
+
+        do i=1,nNode
+
+          ! form the nodal-level matrix: [Ga0] at the centroid
+          do j = 1, nDim
+            Ga0(nDim*(j-1)+1:nDim*j,1:nDim) = dNdX0(i,j)*ID
+          end do
+
+          ! form the [G0] matrix at the centroid
+          Gmat0(1:nDim**2,nDim*(i-1)+1:nDim*i) = Ga0(1:nDim**2,1:nDim)
+        end do                             ! end of nodal point loop
+
+        F0(1:nDim,1:nDim) = ID + matmul(uNode,dNdX0)
+
+        if (analysis .eq. 'PE') F0(3,3) = one
+
+        detF0   = det(F0)
+        F0Inv   = inv(F0)
+        F0InvT  = transpose(F0Inv)
+
+      end if                              ! end of centroid level calculation
+
+      ! obtain gauss quadrature points and weights
       call getGaussQuadrtr(solidFiniteStrain,w,xi)
 
       ! loop through all the integration points (main/ external loop)
@@ -345,6 +414,33 @@
 
         if (analysis .eq. 'PE')  F(3,3) = one
 
+        ! calculate material point jacobian (volume change)
+        detF    = det(F)
+        FInv    = inv(F)
+        FInvT   = transpose(FInv)
+
+        ! definition of modified deformation gradient
+        if ( (jtype .eq. 3) .and. (nInt .eq. 8) ) then
+          ! plane strain linear quad element
+          Fbar    = (detF0/detF)**(third) * F
+          resFac  = (detF0/detF)**(-two/three)
+          tanFac1 = (detF0/detF)**(-one/three)
+          tanFac2 = (detF0/detF)**(-two/three)
+        else if ( (jtype .eq. 7) .and. (nInt .eq. 4) ) then
+          ! three-dimensional linear hex element
+          Fbar(1:nDim,1:nDim) = (detF0/detF)**(half) * F(1:nDim,1:nDim)
+          Fbar(3,3)           = one
+          resFac              = (detF0/detF)**(-half)
+          tanFac1             = one
+          tanFac2             = (detF0/detF)**(-half)
+        else
+          Fbar    = F
+          resFac  = one
+          tanFac1 = one
+          tanFac2 = one
+        end if
+
+
     !     ! interpolate the field variables at the integration point
     !     ! (CAUTION: this not yet tested or used)
     !     do k = 1, npredf
@@ -358,7 +454,7 @@
         if (matID .eq. 1) then
           call umatNeoHookean(kstep,kinc,time,dtime,nDim,analysis,
      &            nstress,nNode,jelem,coords,intpt,props,nprops,
-     &            jprops,njprops,F,svars,nsvars,fieldVar,dfieldVar,
+     &            jprops,njprops,Fbar,svars,nsvars,fieldVar,dfieldVar,
      &            npredf,
      &            stressPK2,Dmat,Cmat,
      &            stressCauchy,stressPK1,strainLagrange,strainEuler)
@@ -366,7 +462,7 @@
         else if (matID .eq. 2) then
           call umatArrudaBoyce(kstep,kinc,time,dtime,nDim,analysis,
      &            nstress,nNode,jelem,coords,intpt,props,nprops,
-     &            jprops,njprops,F,svars,nsvars,fieldVar,dfieldVar,
+     &            jprops,njprops,Fbar,svars,nsvars,fieldVar,dfieldVar,
      &            npredf,
      &            stressPK2,Dmat,Cmat,
      &            stressCauchy,stressPK1,strainLagrange,strainEuler)
@@ -396,21 +492,118 @@
           do j = 1, nNode
               if (i .eq. j) then                    ! banded diagonal
                   SIGMA_F(nDim*(i-1)+1:nDim*i,nDim*(j-1)+1:nDim*j)
-     &                              = F(1:nDim,1:nDim)
+     &                              = Fbar(1:nDim,1:nDim)
               end if
           end do
         end do
 
         ! form the stiffness matrix and residual vector
-        Kuu = Kuu + w(intpt) * detJ *
-     &      ( 
-     &        matmul( transpose(matmul(Bmat,SIGMA_F)),
-     &        matmul (Dmat, matmul(Bmat,SIGMA_F)) )
-     &        + matmul( transpose(Gmat), matmul(SIGMA_S,Gmat)) 
+        ! tanFac1 and resFac1 will perform modification on the tangent
+        ! and residual depending on the type of element being used.
+        Kuu = Kuu + w(intpt) * detJ * tanFac1 *
+     &      (
+     &      matmul( transpose(matmul(Bmat,SIGMA_F)),
+     &          matmul (Dmat,matmul(Bmat,SIGMA_F)) )
+     &      + matmul( transpose(Gmat), matmul(SIGMA_S,Gmat))
      &      )
 
-        Ru  = Ru - w(intpt) * detJ *
+        Ru  = Ru - w(intpt) * detJ * resFac *
      &      matmul( transpose(matmul(Bmat,SIGMA_F)), stressPK2 )
+
+        ! perform F-bar modification on linear hex element
+        if ((jtype .eq. 3) .and. (nInt .eq. 8)) then
+          ! form fourth-order QR0 and QR tensor
+          QR0Tensor = zero
+          QRTensor  = zero
+
+          do i = 1,nDim
+            do j = 1,nDim
+              do k = 1,nDim
+                do l = 1,nDim
+                  do m = 1,nDim
+                    do n = 1,nDim
+                      do p = 1,nDim
+                        do q = 1,nDim
+
+                          QR0Tensor(i,j,k,l) = QR0Tensor(i,j,k,l)
+     &                        + third * F0InvT(k,l) *
+     &                          (
+     &                            Fbar(i,p) * Cmat(p,j,m,n)
+     &                            * Fbar(q,m) * Fbar(q,n)
+     &                            - Fbar(i,q) * stressTensorPK2(q,j)
+     &                          )
+
+                          QRTensor(i,j,k,l) = QRTensor(i,j,k,l)
+     &                        + third * FInvT(k,l) *
+     &                          (
+     &                            Fbar(i,p) * Cmat(p,j,m,n)
+     &                            * Fbar(q,m) * Fbar(q,n)
+     &                            - Fbar(i,q) * stressTensorPK2(q,j)
+     &                          )
+                        end do
+                      end do
+                    end do
+                  end do
+                end do
+              end do
+            end do
+          end do
+
+          ! reshape QR and QR0 tensor into matrix form
+          call unsymtensor2matrix(QR0Tensor,QR0mat)
+          call unsymtensor2matrix(QRTensor,QRmat)
+
+          ! modify the element tangent matrix
+          Kuu   = Kuu + w(intPt) * detJ * tanFac2  *
+     &              (
+     &              matmul(transpose(Gmat), matmul(QR0mat,Gmat0))
+     &              - matmul(transpose(Gmat), matmul(QRmat,Gmat))
+     &              )
+
+        end if
+
+        ! do F-bar modification on linear quad element
+        if ( (jtype .eq. 7) .and. (nInt .eq. 4) ) then
+          ! form fourth-order QR0 and QR tensor
+          QR0Tensor = zero
+          QRTensor  = zero
+
+          do i = 1,nDim
+            do j = 1,nDim
+              do k = 1,nDim
+                do l = 1,nDim
+                  do m = 1,nDim
+                    do n = 1,nDim
+                      do p = 1,nDim
+                        do q = 1,nDim
+                          QR0Tensor(i,j,k,l) = QR0Tensor(i,j,k,l)
+     &                        + half * Fbar(i,p) * Cmat(p,j,q,n)
+     &                        * Fbar(m,n) * Fbar(m,q) * F0InvT(k,l)
+
+                          QRTensor(i,j,k,l) = QRTensor(i,j,k,l)
+     &                        + half * Fbar(i,p) * Cmat(p,j,q,n)
+     &                        * Fbar(m,n) * Fbar(m,q) * FInvT(k,l)
+                        end do
+                      end do
+                    end do
+                  end do
+                end do
+              end do
+            end do
+          end do
+
+          ! reshape QR and QR0 tensor into matrix form
+          call unsymtensor2matrix(QR0Tensor,QR0mat)
+          call unsymtensor2matrix(QRTensor,QRmat)
+
+          ! modify the element tangent matrix
+          Kuu = Kuu + w(intPt) * detJ * tanFac2  *
+     &              (
+     &              matmul(transpose(Gmat), matmul(QR0mat,Gmat0))
+     &              - matmul(transpose(Gmat), matmul(QRmat,Gmat))
+     &              )
+
+        end if
 
       !!!!!!!!!!!!!! TANGENT MATRIX AND RESIDUAL VECTOR !!!!!!!!!!!!!!!!
 
@@ -823,7 +1016,7 @@
 
       else if ((abs(x) .ge. 0.84136_wp) .and. (abs(x) .lt. one)) then
         InvLangevin = one/(sign(one,x)-x)
-        
+
       else
         call msg%ferror(flag=error, src='umatArrudaBoyce:InvLangevin',
      &                  msg='Unbound argument.', ra = x)
