@@ -10,6 +10,8 @@ This repository contains the Fortran source code for finite strain elasticity (h
 
 
 
+
+
 ## Obtaining the file
 
 If you have `git` installed, you can clone the repository to your local machine using
@@ -25,6 +27,9 @@ Alternatively, you can download the files in a `zip` folder in this repository u
 > Compiling the source code requires the LAPACK library from the Intel oneMKL package. See below for the details.
 
 
+
+
+
 ## Description of the finite element formulation
 
 Finite element formulation for large strain problems (hyperelasticity, finite viscoelasticity, etc.) can be done in the reference configuration (total Lagrangian formulation) or the current configuration (updated Lagrangian formulation). Abaqus uses a Cauchy stress-based updated Lagrangian formulation for its built-in models. In this implementation, a second Piola-Kirchhoff (PK-II) stress-based total Lagrangian formulation has been adopted. Furthermore, two different types of constitutive models for hyperelastic materials, Neo-Hookean and Arruda-Boyce, have been implemented. For both implementations, coupled strain energy density formulations were assumed with no kinematic split. On the contrary, Abaqus uses an uncoupled split of the deformation gradient and strain energy density (split into deviatoric and volumetric parts).
@@ -32,6 +37,8 @@ Finite element formulation for large strain problems (hyperelasticity, finite vi
 
 > [!NOTE]
 > For the built-in large displacement elements, Abaqus/Standard implements an updated Lagrangian formulation with deformation gradient and strain energy density being split into deviatoric and volumetric parts.
+
+
 
 
 
@@ -43,14 +50,16 @@ All the source codes are located in the `src` subdirectory and the Abaqus test c
 | ----------    | ------------  |
 | `uel_nlmech_pk2.for` | is the Fortran source code that implements PK-II stress-based Total Lagrangian user element formulation for hyperelastic materials (Neo-Hookean and Arruda-Boyce). The main `UEL` subroutine was to perform all the initial checks and the calculations are performed in a subsequent subroutine. The source code includes additional subroutines with Lagrangian interpolation functions for 4 types of 2D continuum elements (Tri3, Tri6, Quad4, and Quad8) and 4 types of 3D continuum elements (Tet4, Tet10, Hex8, Hex20) and Gaussian quadratures with reduced and full integration schemes. Body force and traction boundary conditions have not been implemented in this user subroutine, however, these can be applied by overlaying standard Abaqus elements on the user elements (to be discussed in the **Visualization** section). Since Abaqus/ Viewer does not provide native support for visualizing user elements, an additional layer of elements with the same element connectivity has been created and results at the integration points of the elements are stored using the `UVARM` subroutine. |
 | `uel_nlmech_pk2_Fbar.for` | is an extension of the standard finite element formulation implemented in `uel_nlmech_pk2.for`. As the name suggests, this implementation incorporated F-bar modification for fully-integrated 8-noded trilinear  and 4-noded bilinear quadrilateral elements in total Lagrangian framework. F-bar element formulation is known to cure volumetric locking for quasi-incompressible materials at finite strain. | 
+| `uel_nlmech_pk1.for` | is Fortran source code for PK-I stress-based total Lagrangian finite element formulation. This implementation only has Neo-Hookean material model. |
+| `uel_nlmech_pk1_Fbar.for` | is an extension of `uel_nlmech_pk1.for` with F-bar formulation for fully-integrated first-order elements. | 
 | `<some_module>.for` | These are the utility files with different Fortran module that are included in the main source file using `include <filename.ext>` statement at the beginning of the main source code. |
 | `<...>.inp` | are the example input files prepared to be executed with the user element subroutine. Since the user-defined elements share the same topology as one of the Abaqus built-in elements, those models were built in Abaqus/CAE and then exported as input files. Later those input files were modified to include keywords and data to include user element definitions, properties, and overlaying dummy elements. |
 | `addElemNLMech.py` | is a Python code that modifies a simple input file and adds the overlaying dummy elements on the user elements. For complicated input files, this will not work properly and modification of this code will be required (optional). |
 | `abaqus_v6.env` | is the Abaqus environment file for Windows systems which adds the additional compiling option for the Intel oneMKL library. This needs to be in the same directory as the Abaqus jobs. |
 | `runAbq.ps1` | is a PowerShell file that can invoke the Abaqus solver when executed  with the user subroutine and user-specified input file from the PowerShell terminal (optional).
 | `printAbq.ps1` | is a Powershell file that can print the Abaqus `.sta` file which logs the information related to the solution process (optional). |
-| Hyperelastic.pdf | is the theory and algorithm documentation for the finite element formulation and constitutive models being implemented in the provided source code. |
-| Abaqus Docs.pdf | is the collection of publicly available Abaqus documentation in PDF format which is related to Abaqus UEL. The web versions of these documents are available at https://help.3ds.com. |
+| hyperelastic_elem.pdf | is the theory and algorithm documentation for the finite element formulation and constitutive models being implemented in the provided source code. |
+| Abaqus docs.pdf | is the collection of publicly available Abaqus documentation in PDF format which is related to Abaqus UEL. The web versions of these documents are available at https://help.3ds.com. |
 
 
 
@@ -71,17 +80,22 @@ Depending on the material model, the user needs to specify two or three properti
 - Material model, `matID`
 - Number of post-processed variables, `nPostVars`
 
+
 > [!NOTE] 
-> Use `matID = 1` for the Neo-Hookean model and `matID = 2` for the Arruda-Boyce model. For the Neo-Hookean model, the locking stretch needs to be specified as zero, and For the Arruda-Boyce model, it should be a positive real number.
+> Use `matID = 1` for the Neo-Hookean model and `matID = 2` for the Arruda-Boyce model. For the Neo-Hookean model, the locking stretch is $\lambda_L = 0 $, and for the Arruda-Boyce model, it should be a positive real number. For PK-I stress-based implementation, only Neo-Hookean model is available. But it can be easily extended to include Arruda-Boyce model.
+
 
 > [!CAUTION] 
-> Under certain loading conditions, some of the element formulations, especially lower-order displacement based elements and fully-integrated higher-order elements, implemented here may suffer from volumetric locking issue. In such case, the users should use higher order elements with reduced integration (8-node quarilateral with 4 Gauss points in 2D and 20-node hexahedral with 8 Gauss points) or F-bar element formulation for fully integrated 8-node hexahedral and 4-node quadirlateral.
+> Under certain loading conditions, some of the element formulations, especially lower-order displacement based elements and fully-integrated higher-order elements, implemented here may suffer from volumetric locking issue. In such case, the users should use higher order elements with reduced integration (8-node quarilateral with 4 Gauss points in 2D and 20-node hexahedral with 8 Gauss points) or F-bar element formulation for fully integrated 8-node hexahedral and 4-node quadirlateral. While the standard displacement implementations are symmetric, to make the input files general, `unsymm` options were used in element definition and later in the solver since F-bar elements are unsymmetric. If you experience convergence issue with any given input file (especially Arruda-Boyce model with F-bar formulation), use different time step sizes to achieve convergence.
+
+
 
 
 
 ### Dummy elements for visualization
 
 To visualize the results, an additional set of built-in Abaqus elements with the same element connectivity as the user element has been created in the input file. These additional elements (so-called dummy elements) have negligible elastic properties and thus will not affect the results. If you are using a reduced integration element from the user subroutine, then use the same type of element from Abaqus as dummy elements.
+
 
 
 
@@ -107,6 +121,8 @@ Users can print out the Abaqus `.sta` file by executing another PowerShell file 
 ```bash
 ./printAbq
 ```
+
+
 
 
 ## Citation

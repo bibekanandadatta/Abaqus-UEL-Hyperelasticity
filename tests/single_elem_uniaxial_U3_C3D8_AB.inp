@@ -12,7 +12,7 @@
 7,           0.,           1.,           0.
 8,           0.,           0.,           0.
 **************************************************
-*User Element,Type=U3,Nodes=8,Coordinates=3,Properties=3,Iproperties=3
+*User Element,Type=U3,Nodes=8,Coordinates=3,Properties=3,Iproperties=3,Unsymm
 1,2,3
 *Element, type=U3
 1, 5, 6, 8, 7, 1, 2, 4, 3
@@ -47,7 +47,8 @@
  1,
 **************************************************
 *uel property,elset=all
-** Gshear, kbulk, lam_L, nInt, matFlag, localPostVars
+** Gshear, kbulk, lam_L, nInt, matID, localPostVars
+** matID = 2 for Arruda-Boyce
 100.E3, 10000E3, 5., 8, 2, 12
 **************************************************
 ** same element connectivity as the user element
@@ -73,11 +74,9 @@ Rear, 3, 3
 *Amplitude, name=LinearRamp
 0., 0., 100., 1.
 **************************************************
-*Step, name=Stretch, nlgeom=YES, inc=50000
+*Step, name=Stretch, nlgeom=YES, unsymm=YES, inc=50000
 *Static
-0.1, 100., 1E-9, 5.
-*Controls, Parameters=Time Incrementation
-,,,,,,,20,,10,,,,
+5., 100., 1E-3, 10.
 *Boundary, amplitude=LinearRamp
 Right, 1, 1, 1
 *Restart, write, frequency=0 

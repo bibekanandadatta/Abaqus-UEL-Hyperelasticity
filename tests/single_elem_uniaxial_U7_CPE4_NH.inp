@@ -8,7 +8,7 @@
 3,           0.,           1.
 4,           1.,           1.
 **************************************************
-*User Element,Type=U7,Nodes=4,Coordinates=2,Properties=3,Iproperties=3
+*User Element,Type=U7,Nodes=4,Coordinates=2,Properties=3,Iproperties=3,Unsymm
 1,2
 *Element, type=U7
 1, 1, 2, 4, 3
@@ -35,8 +35,8 @@
  1,
 **************************************************
 *uel property,elset=all
-** Gshear, kbulk, lam_L, nInt, matFlag, localPostVars
-** lam_L = 0. for Neo-Hookean
+** Gshear, kbulk, lam_L, nInt, matID, localPostVars
+** matID = 2 for Arruda-Boyce, lam_L = 0. for Neo-Hookean
 100.E3, 10000.E3, 0., 4, 1, 6
 **************************************************
 ** same element connectivity as the user element
@@ -63,7 +63,7 @@ Bottom, 2, 2
 **************************************************
 *Step, name=Stretch, nlgeom=YES, inc=50000
 *Static
-0.1, 100., 1E-3, 5.
+5., 100., 1E-3, 10.
 *Controls, Parameters=Time Incrementation
 ,,,,,,,20,,10,,,,
 *Boundary, amplitude=LinearRamp
