@@ -14,8 +14,8 @@
       ! last two attributes are not applicable to single variable solver
       type, public  :: options
         integer           :: maxIter    = 100
-        real(wp)          :: tolfx      = 1.0e-12_wp      
-        real(wp)          :: tolx       = 1.0e-8_wp      
+        real(wp)          :: tolfx      = 1.0e-12_wp
+        real(wp)          :: tolx       = 1.0e-8_wp
         character(len=8)  :: fdScheme   = 'Forward'       ! other: 'Backward' or 'Central'
         real(wp)          :: fdStep     = sqrt(eps)
         character(len=16) :: algo       = 'Newton'        ! other: 'Linesearch`
@@ -131,7 +131,7 @@
           if (iter .eq. 1) fx0 = fx
 
           if ( ( abs(fx)/abs(fx0) .le. params%tolfx )
-     &        .or. ( abs(fx) .le. params%tolfx ) 
+     &        .or. ( abs(fx) .le. params%tolfx )
      &        .or. ( abs(dx) .le. params%tolx) ) then
             return
           else
@@ -280,7 +280,7 @@
 
 
           if ( ( abs(fx)/abs(fx0) .le. params%tolfx )
-     &        .or. ( abs(fx) .le. params%tolfx ) 
+     &        .or. ( abs(fx) .le. params%tolfx )
      &        .or. ( abs(dx) .le. params%tolx) ) then
             return
           end if
@@ -373,7 +373,7 @@
      &            (trim(params%method)) .eq. 'QR' )  then
             call linSolve(fjac, rhs, dx, params%lib, params%method)
           else
-            call msg%ferror(flag=error, src='fsolve', 
+            call msg%ferror(flag=error, src='fsolve',
      &            msg='Illegal arguments for library and method.')
             return
           end if
@@ -511,7 +511,7 @@
 
           x_h = x_h + h
           call func(x_h, fx_h1, vars=vars)
-          x_h = x 
+          x_h = x
           x_h = x_h - h
           call func(x_h, fx_h2, vars=vars)
           dfx = (fx_h1 - fx_h2)/(two*h)

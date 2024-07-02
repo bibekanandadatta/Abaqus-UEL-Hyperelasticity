@@ -12,7 +12,7 @@
       integer, parameter  :: debug = 1, warn = 2, error = 3   ! log levels
       integer, parameter  :: verbosity = warn                 ! default verbosity
       integer, parameter  :: stderr = 15, stddbg = 16         ! file units
-      
+
       type, public  :: logger
         integer, private            :: debug      = debug
         integer, private            :: warn       = warn
@@ -27,14 +27,14 @@
         private
         procedure, public :: initialize, fopen, finfo, ferror, fdebug
       end type logger
-        
+
 ! **********************************************************************
 
       contains
 
       subroutine initialize(self, verbosity, stderr, stddbg)
 
-      ! This subroutine allows to change the verbosity of the logging 
+      ! This subroutine allows to change the verbosity of the logging
       ! as well as to set the file unit numbers for error and debugging
       ! files. The names of the file are set while opening the file.
 
@@ -145,13 +145,13 @@
         ! print a new line after each pass
         write(*,'(A)',advance='no')      new_line(ch)
         write(funit,'(A)',advance='no')  new_line(ch)
-        
+
       end subroutine finfo
 
 ! **********************************************************************
 
       subroutine ferror(self,flag,src,msg,ch,la,ia,ra,ivec,rvec)
-      
+
       ! This subroutine is used to print warning and error messages on
       ! screen and in the error file (if the files are opened).
       ! It can not print matrices, and a flag and sorce file name has to
@@ -203,7 +203,7 @@
 
           write(*,'(A)',advance='no')     '<'//trim(src)//'> '
           write(funit,'(A)',advance='no') '<'//trim(src)//'> '
-          
+
 
           if (present(msg)) then
             write(*,'(A)',advance='no')      trim(msg)
@@ -213,11 +213,11 @@
           if (present(ia)) then
             write(*,'(1x,I0,1x)',advance='no')     ia
             write(funit,'(1x,I0,1x)',advance='no') ia
-          
+
             ! print a new line after each pass
             write(*,'(A)', advance='no')      new_line(ch)
             write(funit,'(A)', advance='no')  new_line(ch)
-            
+
           end if
 
           if (present(ra)) then
@@ -233,7 +233,7 @@
           if (present(la)) then
             write(*,'(L)',advance='no')      la
             write(funit,'(L)',advance='no')  la
-            
+
           end if
 
           if (present(ivec)) then
@@ -266,7 +266,7 @@
         use global_parameters, only: wp
 
         implicit none
-        
+
         class(logger), intent(in)               :: self
         character(len=*), intent(in), optional  :: src
         character(len=*), intent(in), optional  :: msg
@@ -329,8 +329,8 @@
             ! print a new line before matrix
             write(*,'(A)', advance='no')      new_line(ch)
             write(funit,'(A)', advance='no')  new_line(ch)
-            
-            
+
+
             do i = 1, size(imat,1)
               write(*,'(10000(I0,2x))')      imat(i,:)
               write(funit,'(10000(I0,2x))')  imat(i,:)
@@ -357,6 +357,6 @@
       end subroutine fdebug
 
       end module error_logging
-      
+
 ! **********************************************************************
 ! **********************************************************************

@@ -11,6 +11,8 @@
 
       module lagrange_element
 
+      use global_parameters
+
       type, public  :: element
         integer                     :: nDim
         character(len=8)            :: analysis
@@ -26,7 +28,7 @@
 
         module subroutine calcInterpFunc(elem,xiCoord,Nxi,dNdxi)
           use global_parameters, only: wp
-          implicit none 
+          implicit none
           type(element), intent(in)   :: elem
           real(wp), intent(in)        :: xiCoord(:)
           real(wp), intent(out)       :: Nxi(:), dNdxi(:,:)
@@ -47,12 +49,12 @@
 ! ****************** INTERPOLATION FUNCTION SUBMODULE ******************
 ! **********************************************************************
 !  available elements:    (a) 1D bar/truss element (2 and 3 nodes)
-!                         (b) 2D tri elements (3 and 6 nodes) 
+!                         (b) 2D tri elements (3 and 6 nodes)
 !                         (c) 2D quad elements (4 and 8 nodes)
 !                         (d) 3D tet elements (4 and 10 nodes)
 !                         (e) 3D hex elements (8 and 20 nodes)
 ! **********************************************************************
-      
+
       submodule (lagrange_element) interpolation
 
       contains
@@ -62,17 +64,17 @@
 
         use global_parameters, only: wp
 
-        implicit none 
+        implicit none
 
         type(element), intent(in)   :: elem
         real(wp), intent(in)        :: xiCoord(:)
         real(wp), intent(out)       :: Nxi(:), dNdxi(:,:)
 
-        if (elem%nDim .eq. 1) then
+        if (elem%nDim  .eq.  1) then
           call interpFunc1(elem%nNode, xiCoord, Nxi, dNdxi)
-        else if (elem%nDim .eq. 2) then 
+        else if (elem%nDim  .eq.  2) then
           call interpFunc2(elem%nNode, xiCoord, Nxi, dNdxi)
-        else if (elem%nDim .eq. 3) then
+        else if (elem%nDim  .eq.  3) then
           call interpFunc3(elem%nNode, xiCoord, Nxi, dNdxi)
         end if
 
@@ -81,9 +83,9 @@
 ! **********************************************************************
 
       subroutine interpFunc1(nNode,xiCoord,Nxi,dNdxi)
-      ! this subroutine calculates shape function of 1D elements 
+      ! this subroutine calculates shape function of 1D elements
       ! available 1D elements are: 2 and 3 node bar/truss
-        
+
       ! Nxi(i)          = shape function of node i at the intpt.
       ! dNdxi(i,j)      = derivative wrt j direction of shape fn of node i
 
@@ -91,7 +93,7 @@
       use error_logging
 
       implicit none
-      
+
       integer, intent(in)         :: nNode
       real(wp), intent(in)        :: xiCoord(:)
       real(wp), intent(out)       :: Nxi(:), dNdxi(:,:)
@@ -101,7 +103,7 @@
       ! location in the master element
       xi    = xiCoord(1)
 
-      if (nNode .eq. 2) then      ! 2 node linear bar element
+      if (nNode  .eq.  2) then      ! 2 node linear bar element
         ! shape functions
         Nxi(1) = half*(one - xi)
         Nxi(2) = half*(one + xi)
@@ -110,7 +112,7 @@
         dNdxi(1,1)  = -half
         dNdxi(2,1)  = half
 
-      else if (nNode .eq. 3) then  ! 3 node quadratic bar element
+      else if (nNode  .eq.  3) then  ! 3 node quadratic bar element
         ! shape functions
         Nxi(1)  = -half*xi*(one - xi)
         Nxi(2)  = one-xi**two
@@ -132,9 +134,9 @@
 ! **********************************************************************
 
       subroutine interpFunc2(nNode,xiCoord,Nxi,dNdxi)
-      ! this subroutine calculates shape function of 2D elements 
+      ! this subroutine calculates shape function of 2D elements
       ! available 2D elements are: 3 node tri, 6 node tri, 4 node quad, 8 node quad
-        
+
       ! Nxi(i)          = shape function of node i at the intpt.
       ! dNdxi(i,j)      = derivative wrt j direction of shape fn of node i
 
@@ -166,7 +168,7 @@
       !              |       \
       !              1--------2--> xi (=xi_1)
 
-      if (nNode.eq.3) then        ! 3-noded tri3 linear element
+      if (nNode .eq. 3) then        ! 3-noded tri3 linear element
         ! shape functions
         Nxi(1) = xi
         Nxi(2) = eta
@@ -193,7 +195,7 @@
       !              |       \
       !              1---4----2--> xi (=xi_1)
 
-      else if (nNode.eq.6) then    ! 6-noded quadratic tri6 element
+      else if (nNode .eq. 6) then    ! 6-noded quadratic tri6 element
         ! shape functions
         lam = one - xi - eta
         Nxi(1) = lam*(two*lam - one)
@@ -226,7 +228,7 @@
       !   |           |        origin at center
       !   1-----------2
 
-      else if (nNode.eq.4) then    ! 4-noded bilinear quad4 element
+      else if (nNode .eq. 4) then    ! 4-noded bilinear quad4 element
         ! shape functions
         Nxi(1) = fourth*(one - xi)*(one - eta)
         Nxi(2) = fourth*(one + xi)*(one - eta)
@@ -254,7 +256,7 @@
       !   |           |
       !   1-----5-----2
 
-      else if (nNode.eq.8) then    ! 8-noded serendipity quad8 element
+      else if (nNode .eq. 8) then    ! 8-noded serendipity quad8 element
         ! shape functions
         Nxi(1) = -fourth*(one - xi)*(one - eta)*(one + xi + eta)
         Nxi(2) = -fourth*(one + xi)*(one - eta)*(one - xi + eta)
@@ -322,7 +324,7 @@
       Nxi   = zero
       dNdxi = zero
 
-      if (nNode.eq.4) then      ! 4-noded linear tet4 element
+      if (nNode .eq. 4) then      ! 4-noded linear tet4 element
         ! shape functions
         Nxi(1) = one-xi-eta-zeta
         Nxi(2) = xi
@@ -336,8 +338,8 @@
         dNdxi(3,2) = one
         dNdxi(4,3) = one
 
-      else if (nNode.eq.10) then  ! 10-noded quadratic tet10 element
-    
+      else if (nNode .eq. 10) then  ! 10-noded quadratic tet10 element
+
         ! shape functions
         lam = one-xi-eta-zeta
 
@@ -351,7 +353,7 @@
         Nxi(8) = four*zeta*lam
         Nxi(9) = four*zeta*xi
         Nxi(10) = four*eta*zeta
-        
+
         ! first derivative of shape functions dN/dxi (10x3)
         dNdxi(1,1) = -(four*lam-one)
         dNdxi(1,2) = -(four*lam-one)
@@ -386,7 +388,7 @@
       !   |/          |/         O--------- xi
       !   1-----------2        origin at cube center
 
-      else if(nNode.eq.8) then   ! 8-noded trilinear hex8 element
+      else if(nNode .eq. 8) then   ! 8-noded trilinear hex8 element
 
         ! shape functions
         Nxi(1) = eighth*(one - xi)*(one - eta)*(one - zeta)
@@ -440,7 +442,7 @@
       !
       ! mid-side nodes are not properly illustrated
 
-      else if (nNode.eq.20) then   ! 20-noded serendipity hex20 element
+      else if (nNode .eq. 20) then   ! 20-noded serendipity hex20 element
         ! shape functions
         Nxi(1) = (one-xi)*(one-eta)*(one-zeta)*(-xi-eta-zeta-two)/eight
         Nxi(2) = (one+xi)*(one-eta)*(one-zeta)*(xi-eta-zeta-two)/eight
@@ -570,68 +572,68 @@
       integer, intent(out)  :: list(*)
       integer               :: list3(3), list4(4)
 
-      if (nDim.eq.2) then
+      if (nDim .eq. 2) then
         list3(1:3) = [2,3,1]
         list4(1:4) = [2,3,4,1]
 
-        if (nNode.eq.3) then
+        if (nNode .eq. 3) then
           nFaceNodes = 2
           list(1) = face
           list(2) = list3(face)
-        else if (nNode.eq.4) then
+        else if (nNode .eq. 4) then
           nFaceNodes = 2
           list(1) = face
           list(2) = list4(face)
-        else if (nNode.eq.6) then
+        else if (nNode .eq. 6) then
           nFaceNodes = 3
           list(1) = face
           list(2) = list3(face)
           list(3) = face+3
-        else if (nNode.eq.8) then
+        else if (nNode .eq. 8) then
           nFaceNodes = 4
           list(1) = face
           list(2) = list4(face)
           list(3) = face+4
         end if
 
-      else if (nDim.eq.3) then
+      else if (nDim .eq. 3) then
 
-        if (nNode.eq.4) then
+        if (nNode .eq. 4) then
           nFaceNodes = 3
-          if (face.eq.1) list(1:3) = [1,2,3]
-          if (face.eq.2) list(1:3) = [1,4,2]
-          if (face.eq.3) list(1:3) = [2,4,3]
-          if (face.eq.4) list(1:3) = [3,4,1]
-        else if (nNode .eq.6) then
+          if (face .eq. 1) list(1:3) = [1,2,3]
+          if (face .eq. 2) list(1:3) = [1,4,2]
+          if (face .eq. 3) list(1:3) = [2,4,3]
+          if (face .eq. 4) list(1:3) = [3,4,1]
+        else if (nNode  .eq. 6) then
           nFaceNodes = 3
-          if (face.eq.1) list(1:3) = [1,2,3]
-          if (face.eq.2) list(1:3) = [6,5,4]
-          if (face.eq.3) list(1:4) = [1,2,5,4]
-          if (face.eq.4) list(1:4) = [2,3,6,5]
-          if (face.eq.5) list(1:4) = [4,6,3,1]
+          if (face .eq. 1) list(1:3) = [1,2,3]
+          if (face .eq. 2) list(1:3) = [6,5,4]
+          if (face .eq. 3) list(1:4) = [1,2,5,4]
+          if (face .eq. 4) list(1:4) = [2,3,6,5]
+          if (face .eq. 5) list(1:4) = [4,6,3,1]
           if (face>2) nFaceNodes = 4
-        else if (nNode.eq.10) then
+        else if (nNode .eq. 10) then
           nFaceNodes = 6
-          if (face.eq.1) list(1:6) = [1,2,3,5,6,7]
-          if (face.eq.2) list(1:6) = [1,4,2,8,9,5]
-          if (face.eq.3) list(1:6) = [2,4,3,9,10,6]
-          if (face.eq.4) list(1:6) = [3,4,1,10,8,7]
-        else if (nNode.eq.8) then
+          if (face .eq. 1) list(1:6) = [1,2,3,5,6,7]
+          if (face .eq. 2) list(1:6) = [1,4,2,8,9,5]
+          if (face .eq. 3) list(1:6) = [2,4,3,9,10,6]
+          if (face .eq. 4) list(1:6) = [3,4,1,10,8,7]
+        else if (nNode .eq. 8) then
           nFaceNodes = 4
-          if (face.eq.1) list(1:4) = [1,2,3,4]
-          if (face.eq.2) list(1:4) = [5,8,7,6]
-          if (face.eq.3) list(1:4) = [1,5,6,2]
-          if (face.eq.4) list(1:4) = [2,6,7,3]
-          if (face.eq.5) list(1:4) = [3,7,8,4]
-          if (face.eq.6) list(1:4) = [4,8,5,1]
-        else  if (nNode.eq.20) then
+          if (face .eq. 1) list(1:4) = [1,2,3,4]
+          if (face .eq. 2) list(1:4) = [5,8,7,6]
+          if (face .eq. 3) list(1:4) = [1,5,6,2]
+          if (face .eq. 4) list(1:4) = [2,6,7,3]
+          if (face .eq. 5) list(1:4) = [3,7,8,4]
+          if (face .eq. 6) list(1:4) = [4,8,5,1]
+        else  if (nNode .eq. 20) then
           nFaceNodes = 8
-          if (face.eq.1) list(1:8) = [1,2,3,4,9,10,11,12]
-          if (face.eq.2) list(1:8) = [5,8,7,6,16,15,14,13]
-          if (face.eq.3) list(1:8) = [1,5,6,2,17,13,18,9]
-          if (face.eq.4) list(1:8) = [2,6,7,3,18,14,19,10]
-          if (face.eq.5) list(1:8) = [3,7,8,4,19,15,6,11]
-          if (face.eq.6) list(1:8) = [4,8,5,1,20,16,17,12]
+          if (face .eq. 1) list(1:8) = [1,2,3,4,9,10,11,12]
+          if (face .eq. 2) list(1:8) = [5,8,7,6,16,15,14,13]
+          if (face .eq. 3) list(1:8) = [1,5,6,2,17,13,18,9]
+          if (face .eq. 4) list(1:8) = [2,6,7,3,18,14,19,10]
+          if (face .eq. 5) list(1:8) = [3,7,8,4,19,15,6,11]
+          if (face .eq. 6) list(1:8) = [4,8,5,1,20,16,17,12]
         end if
       end if
 

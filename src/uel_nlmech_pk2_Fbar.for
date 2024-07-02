@@ -474,7 +474,7 @@
 
 
         !!!!!!!!!!!!! TANGENT MATRIX AND RESIDUAL VECTOR !!!!!!!!!!!!!!!
-        call vector2symtensor(stressPK2, stressTensorPK2)
+        call voigtVectorScatter(stressPK2, stressTensorPK2)
 
         ! form the [SIGMA_S] matrix for geometric stiffness
         do i = 1, nDim
@@ -547,8 +547,8 @@
           end do
 
           ! reshape QR and QR0 tensor into matrix form
-          call unsymtensor2matrix(QR0Tensor,QR0mat)
-          call unsymtensor2matrix(QRTensor,QRmat)
+          call unsymmMatrix(QR0Tensor,QR0mat)
+          call unsymmMatrix(QRTensor,QRmat)
 
           ! modify the element tangent matrix
           Kuu   = Kuu + w(intPt) * detJ * tanFac2  *
@@ -590,8 +590,8 @@
           end do
 
           ! reshape QR and QR0 tensor into matrix form
-          call unsymtensor2matrix(QR0Tensor,QR0mat)
-          call unsymtensor2matrix(QRTensor,QRmat)
+          call unsymmMatrix(QR0Tensor,QR0mat)
+          call unsymmMatrix(QRTensor,QRmat)
 
           ! modify the element tangent matrix
           Kuu = Kuu + w(intPt) * detJ * tanFac2  *
@@ -764,58 +764,37 @@
       !!!!!!!!!!!!!!! END OF CONSTITUTIVE CALCULATION !!!!!!!!!!!!!!!!!!
 
 
-      ! transforms the stiffness tensor 3x3x3x3 to a 6x6 matrix
-      call symtangent2matrix(Cmat,VoigtMat)
+      ! reshape the stiffness tensor 3x3x3x3 to a 6x6 matrix
+      call voigtMatrix(Cmat,VoigtMat)
 
-      ! transform the stress tensor (3x3) to Voigt vector form (6x1)
-      call symtensor2vector(strainTensorLagrange, strainVectLagrange)
-      call symtensor2vector(strainTensorEuler, strainVectEuler)
-
-      ! reshape the PK-I stress tensor into a vector (9x1)
-      stressVectPK1   = reshape(stressTensorPK1, shape(stressVectPK1))
-      ! reshape other stress tensors to vector (6x1)
-      call symtensor2vector(stressTensorPK2, stressVectPK2)
-      call symtensor2vector(stressTensorCauchy, stressVectCauchy)
+      ! reshape the strain and stress tensors into vectors
+      ! dimension: (SYMM 6x1) or (UNSYMM 9x1)
+      call voigtVector(strainTensorLagrange, strainVectLagrange)
+      call voigtVector(strainTensorEuler, strainVectEuler)
+      call unsymmVector(stressTensorPK1,stressVectPK1)
+      call voigtVector(stressTensorPK2, stressVectPK2)
+      call voigtVector(stressTensorCauchy, stressVectCauchy)
 
 
       ! reshape the Voigt matrix and tensor based on the analysis
-      if (analysis .eq. '3D') then
-        stressPK2         = stressVectPK2
-        Dmat              = VoigtMat
-
-        ! additional variable for post-processing
-        strainLagrange    = strainVectLagrange
-        strainEuler       = strainVectEuler
-        stressPK1         = stressVectPK1
-        stressCauchy      = stressVectCauchy
-
-      else if (analysis .eq. 'PE')  then
-        stressPK2(1:ndim,1)         = stressVectPK2(1:ndim,1)
-        stressPK2(nStress,1)        = stressVectPK2(nSymm,1)
-
-        Dmat(1:ndim,1:ndim)         = VoigtMat(1:ndim,1:ndim)
-        Dmat(1:ndim,nStress)        = VoigtMat(1:ndim,nSymm)
-        Dmat(nStress,1:ndim)        = VoigtMat(nSymm,1:ndim)
-        Dmat(nStress,nStress)       = VoigtMat(nSymm,nSymm)
-
-        ! additional variable for post-processing
-        strainLagrange(1:ndim,1)    = strainVectLagrange(1:ndim,1)
-        strainLagrange(nStress,1)   = strainVectLagrange(nSymm,1)
-
-        strainEuler(1:ndim,1)       = strainVectEuler(1:ndim,1)
-        strainEuler(nStress,1)      = strainVectEuler(nSymm,1)
-
-        stressPK1(1:2,1)            = stressVectPK1(1:2,1)
-        stressPK1(3:4,1)            = stressVectPK1(4:5,1)
-
-        stressCauchy(1:ndim,1)      = stressVectCauchy(1:ndim,1)
-        stressCauchy(nStress,1)     = stressVectCauchy(nSymm,1)
+      if ((analysis .eq. '3D') .or. (analysis .eq. 'PE')
+     &      .or. (analysis .eq. 'AX')) then
+        call voigtVectorTruncate(stressVectPK2,stressPK2)
+        call voigtMatrixTruncate(VoigtMat,Dmat)
 
       else
-        call msg%ferror(flag=error, src='umatNeohookean',
+        ! plane stress is not available
+        call msg%ferror(flag=error, src='umatNeoHookean',
      &            msg='Wrong analysis.', ch=analysis)
         call xit
       end if
+
+      ! additional variable for post-processing
+      call voigtVectorTruncate(strainVectLagrange,strainLagrange)
+      call voigtVectorTruncate(strainVectEuler,strainEuler)
+      call voigtVectorTruncate(stressVectPK2,stressPK2)
+      call voigtVectorTruncate(stressVectCauchy,stressCauchy)
+
 
       ! save the variables to be post-processed in globalPostVars
       globalPostVars(jelem,intpt,1:nStress) = stressCauchy(1:nStress,1)
@@ -983,58 +962,37 @@
       !!!!!!!!!!!!!!!! END OF CONSTITUTIVE CALCULATION !!!!!!!!!!!!!!!!!
 
 
-      ! transforms the stiffness tensor 3x3x3x3 to a 6x6 matrix
-      call symtangent2matrix(Cmat,VoigtMat)
+       ! reshape the stiffness tensor 3x3x3x3 to a 6x6 matrix
+      call voigtMatrix(Cmat,VoigtMat)
 
-      ! transform the stress tensor (3x3) to Voigt vector form (6x1)
-      call symtensor2vector(strainTensorLagrange, strainVectLagrange)
-      call symtensor2vector(strainTensorEuler, strainVectEuler)
-
-      ! reshape the PK-I stress tensor into a vector (9x1)
-      stressVectPK1   = reshape(stressTensorPK1, shape(stressVectPK1))
-      ! reshape other stress tensors to vector (6x1)
-      call symtensor2vector(stressTensorPK2, stressVectPK2)
-      call symtensor2vector(stressTensorCauchy, stressVectCauchy)
+      ! reshape the strain and stress tensors into vectors
+      ! dimension: (SYMM 6x1) or (UNSYMM 9x1)
+      call voigtVector(strainTensorLagrange, strainVectLagrange)
+      call voigtVector(strainTensorEuler, strainVectEuler)
+      call unsymmVector(stressTensorPK1,stressVectPK1)
+      call voigtVector(stressTensorPK2, stressVectPK2)
+      call voigtVector(stressTensorCauchy, stressVectCauchy)
 
 
       ! reshape the Voigt matrix and tensor based on the analysis
-      if (analysis .eq. '3D') then
-        stressPK2         = stressVectPK2
-        Dmat              = VoigtMat
-
-        ! additional variable for post-processing
-        strainLagrange    = strainVectLagrange
-        strainEuler       = strainVectEuler
-        stressPK1         = stressVectPK1
-        stressCauchy      = stressVectCauchy
-
-      else if (analysis .eq. 'PE')  then
-        stressPK2(1:ndim,1)         = stressVectPK2(1:ndim,1)
-        stressPK2(nStress,1)        = stressVectPK2(nSymm,1)
-
-        Dmat(1:ndim,1:ndim)         = VoigtMat(1:ndim,1:ndim)
-        Dmat(1:ndim,nStress)        = VoigtMat(1:ndim,nSymm)
-        Dmat(nStress,1:ndim)        = VoigtMat(nSymm,1:ndim)
-        Dmat(nStress,nStress)       = VoigtMat(nSymm,nSymm)
-
-        ! additional variable for post-processing
-        strainLagrange(1:ndim,1)    = strainVectLagrange(1:ndim,1)
-        strainLagrange(nStress,1)   = strainVectLagrange(nSymm,1)
-
-        strainEuler(1:ndim,1)       = strainVectEuler(1:ndim,1)
-        strainEuler(nStress,1)      = strainVectEuler(nSymm,1)
-
-        stressPK1(1:2,1)            = stressVectPK1(1:2,1)
-        stressPK1(3:4,1)            = stressVectPK1(4:5,1)
-
-        stressCauchy(1:ndim,1)      = stressVectCauchy(1:ndim,1)
-        stressCauchy(nStress,1)     = stressVectCauchy(nSymm,1)
+      if ((analysis .eq. '3D') .or. (analysis .eq. 'PE')
+     &      .or. (analysis .eq. 'AX')) then
+        call voigtVectorTruncate(stressVectPK2,stressPK2)
+        call voigtMatrixTruncate(VoigtMat,Dmat)
 
       else
+        ! plane stress is not available
         call msg%ferror(flag=error, src='umatArrudaBoyce',
      &            msg='Wrong analysis.', ch=analysis)
         call xit
       end if
+
+      ! additional variable for post-processing
+      call voigtVectorTruncate(strainVectLagrange,strainLagrange)
+      call voigtVectorTruncate(strainVectEuler,strainEuler)
+      call voigtVectorTruncate(stressVectPK2,stressPK2)
+      call voigtVectorTruncate(stressVectCauchy,stressCauchy)
+
 
       ! save the variables to be post-processed in globalPostVars
       globalPostVars(jelem,intpt,1:nStress) = stressCauchy(1:nStress,1)

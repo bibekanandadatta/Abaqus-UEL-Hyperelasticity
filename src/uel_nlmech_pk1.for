@@ -1,7 +1,9 @@
 ! **********************************************************************
 ! ********* ABAQUS/ STANDARD USER ELEMENT SUBROUTINE (UEL) *************
 ! **********************************************************************
-!   large strain displacement element with Neo-Hookean material model
+!!  large strain displacement element with Neo-Hookean material model
+!   linear quad and hex element formulation use F-bar method to avoid
+!   volumetric locking at near-incompressibility limit (de Souza Neto)
 ! **********************************************************************
 !                     BIBEKANANDA DATTA (C) JUNE 2024
 !                 JOHNS HOPKINS UNIVERSITY, BALTIMORE, MD
@@ -505,54 +507,38 @@
 
       !!!!!!!!!!!!!!!! END OF CONSTITUTIVE CALCULATION !!!!!!!!!!!!!!!!!
 
-
-      ! reshape the stress tensor into a vector (9x1)
-      stressVectPK1   = reshape(stressTensorPK1, shape(stressVectPK1))
-
-      ! transform the stress tensor (3x3) to Voigt vector form (6x1)
-      call symtensor2vector(strainTensorLagrange, strainVectLagrange)
-      call symtensor2vector(strainTensorEuler, strainVectEuler)
-      call symtensor2vector(stressTensorPK2, stressVectPK2)
-      call symtensor2vector(stressTensorCauchy, stressVectCauchy)
+      ! reshape the strain and stress tensors into vectors
+      ! dimension: (SYMM 6x1) or (UNSYMM 9x1)
+      call voigtVector(strainTensorLagrange, strainVectLagrange)
+      call voigtVector(strainTensorEuler, strainVectEuler)
+      call unsymmVector(stressTensorPK1,stressVectPK1)
+      call voigtVector(stressTensorPK2, stressVectPK2)
+      call voigtVector(stressTensorCauchy, stressVectCauchy)
 
 
       ! reshape the stress vector according to dimension and/or analysis
       ! this stress vector will be returned to the element subroutine
       if (analysis .eq. '3D') then
-        stressPK1         = stressVectPK1
-        call unsymtensor2matrix(dPdFTensor, Amat)
-
-        ! additional variable for post-processing
-        strainLagrange    = strainVectLagrange
-        strainEuler       = strainVectEuler
-
-        stressPK2         = stressVectPK2
-        stressCauchy      = stressVectCauchy
+        call unsymmMatrix(dPdFTensor, Amat)
+        call unsymmVectorTruncate(stressVectPK1,stressPK1)
 
       else if (analysis .eq. 'PE') then
-        stressPK1(1:2,1)  = stressVectPK1(1:2,1)
-        stressPK1(3:4,1)  = stressVectPK1(4:5,1)
-        call unsymtensor2matrix(dPdFTensor(1:nDim,1:nDim,1:nDim,1:nDim),
+
+        call unsymmMatrix(dPdFTensor(1:nDim,1:nDim,1:nDim,1:nDim),
      &                          Amat)
-
-        ! additional variable for post-processing
-        strainLagrange(1:ndim,1)    = strainVectLagrange(1:ndim,1)
-        strainLagrange(nStress,1)   = strainVectLagrange(nSymm,1)
-
-        strainEuler(1:ndim,1)       = strainVectEuler(1:ndim,1)
-        strainEuler(nStress,1)      = strainVectEuler(nSymm,1)
-
-        stressPK2(1:ndim,1)         = stressVectPK2(1:ndim,1)
-        stressPK2(nStress,1)        = stressVectPK2(nSymm,1)
-
-        stressCauchy(1:ndim,1)      = stressVectCauchy(1:ndim,1)
-        stressCauchy(nStress,1)     = stressVectCauchy(nSymm,1)
+        call unsymmVectorTruncate(stressVectPK1,stressPK1)
 
       else
         call msg%ferror(flag=error, src='umatNeoHookean',
      &            msg='Wrong analysis.', ch=analysis)
         call xit
       end if
+
+      ! additional variable for post-processing (truncates iff needed)
+      call voigtVectorTruncate(strainVectLagrange,strainLagrange)
+      call voigtVectorTruncate(strainVectEuler,strainEuler)
+      call voigtVectorTruncate(stressVectPK2,stressPK2)
+      call voigtVectorTruncate(stressVectCauchy,stressCauchy)
 
 
       ! save the variables to be post-processed in globalPostVars
@@ -707,7 +693,7 @@
       end if
 
       ! call the element subroutine with extended set of input arguments
-      ! NDIM, ANALYSIS, NSTRESS, NINT, NSVARS_INTPT are the additional arguments
+      ! NDIM, ANALYSIS, NSTRESS, NINT are the additional arguments
       call uelNLMech(RHS,AMATRX,SVARS,ENERGY,NDOFEL,NRHS,NSVARS,
      & PROPS,NPROPS,COORDS,MCRD,NNODE,Uall,DUall,Vel,Accn,JTYPE,TIME,
      & DTIME,KSTEP,KINC,JELEM,PARAMS,NDLOAD,JDLTYP,ADLMAG,PREDEF,
