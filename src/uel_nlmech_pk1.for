@@ -1,9 +1,8 @@
 ! **********************************************************************
 ! ********* ABAQUS/ STANDARD USER ELEMENT SUBROUTINE (UEL) *************
 ! **********************************************************************
-!!  large strain displacement element with Neo-Hookean material model
-!   linear quad and hex element formulation use F-bar method to avoid
-!   volumetric locking at near-incompressibility limit (de Souza Neto)
+!    large strain displacement element with Neo-Hookean material model
+!   implementation uses PK-II stress based total Lagrangian formulation
 ! **********************************************************************
 !                     BIBEKANANDA DATTA (C) JUNE 2024
 !                 JOHNS HOPKINS UNIVERSITY, BALTIMORE, MD

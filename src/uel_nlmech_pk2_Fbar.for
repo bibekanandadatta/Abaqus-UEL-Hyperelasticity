@@ -2,6 +2,7 @@
 ! ********* ABAQUS/ STANDARD USER ELEMENT SUBROUTINE (UEL) *************
 ! **********************************************************************
 !  large strain displacement element + Neo-Hookean & Arruda-Boyce model
+!   implementation uses PK-II stress based total Lagrangian formulation
 !   linear quad and hex element formulation use F-bar method to avoid
 !   volumetric locking at near-incompressibility limit (de Souza Neto)
 ! **********************************************************************
@@ -792,7 +793,6 @@
       ! additional variable for post-processing
       call voigtVectorTruncate(strainVectLagrange,strainLagrange)
       call voigtVectorTruncate(strainVectEuler,strainEuler)
-      call voigtVectorTruncate(stressVectPK2,stressPK2)
       call voigtVectorTruncate(stressVectCauchy,stressCauchy)
 
 
@@ -990,7 +990,6 @@
       ! additional variable for post-processing
       call voigtVectorTruncate(strainVectLagrange,strainLagrange)
       call voigtVectorTruncate(strainVectEuler,strainEuler)
-      call voigtVectorTruncate(stressVectPK2,stressPK2)
       call voigtVectorTruncate(stressVectCauchy,stressCauchy)
 
 
