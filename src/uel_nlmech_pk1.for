@@ -1,8 +1,9 @@
 ! **********************************************************************
 ! ********* ABAQUS/ STANDARD USER ELEMENT SUBROUTINE (UEL) *************
 ! **********************************************************************
-!    large strain displacement element with Neo-Hookean material model
-!   implementation uses PK-II stress based total Lagrangian formulation
+!!  large strain displacement element with Neo-Hookean material model
+!   linear quad and hex element formulation use F-bar method to avoid
+!   volumetric locking at near-incompressibility limit (de Souza Neto)
 ! **********************************************************************
 !                     BIBEKANANDA DATTA (C) JUNE 2024
 !                 JOHNS HOPKINS UNIVERSITY, BALTIMORE, MD
@@ -102,6 +103,7 @@
 !     JDLTYP(1:NDLOAD)              Integers n defining distributed load types defined as Un or (if negative) UnNU in input file
 !     ADLMAG(1:NDLOAD)              Distributed load magnitudes
 !     DDLMAG(1:NDLOAD)              Increment in distributed load magnitudes
+!     MDLOAD                        Total number of distributed load or flux for the element
 !     PREDEF(1:2,1:NPREDF,1:NNODE)  Predefined fields.
 !     PREDEF(1,...)                 Value of predefined field
 !     PREDEF(2,...)                 Increment in predefined field
@@ -218,7 +220,8 @@
       real(wp)              :: Na(nDim,nDim), Nmat(nDim,nDOFEL)
       real(wp)              :: Ga(nDim**2,nDim), Gmat(nDim**2,nDOFEL)
 
-      ! material point quantities (variables)
+      ! integration point quantities (variables)
+      real(wp)              :: coord_ip(nDim,1)
       real(wp)              :: F(3,3)
 
       ! output from the material subroutine
@@ -314,6 +317,9 @@
 
         !!!!!!!!!!!!!!!!!!!!!! CONSTITUTIVE MODEL !!!!!!!!!!!!!!!!!!!!!!
 
+        ! calculate the coordinate of integration point
+        coord_ip = matmul(Nmat, reshape(coords, [nDOFEL, 1]))
+
         ! calculate deformation gradient and deformation tensors
         F(1:nDim,1:nDim) = ID + matmul(uNode,dNdX)
 
@@ -323,7 +329,7 @@
         ! call material point subroutine (UMAT) for specific material
         if (matID .eq. 1) then
           call umatNeoHookean(kstep,kinc,time,dtime,nDim,analysis,
-     &            nstress,nNode,jelem,coords,intpt,props,nprops,
+     &            nstress,nNode,jelem,intpt,coord_ip,props,nprops,
      &            jprops,njprops,F,svars,nsvars,fieldVar,dfieldVar,
      &            npredf,stressPK1,Amat,dPdFTensor)
 
@@ -367,7 +373,7 @@
 ! **********************************************************************
 
       subroutine umatNeoHookean(kstep,kinc,time,dtime,nDim,analysis,
-     &            nstress,nNode,jelem,coords,intpt,props,nprops,
+     &            nstress,nNode,jelem,intpt,coord_ip,props,nprops,
      &            jprops,njprops,F,svars,nsvars,fieldVar,dfieldVar,
      &            npredf,stressPK1,Amat,dPdFTensor)
 
@@ -395,7 +401,7 @@
       integer, intent(in)   :: njprops, nsvars, npredf
 
       real(wp), intent(in)  :: time(2), dtime
-      real(wp), intent(in)  :: coords(nDim,nNode)
+      real(wp), intent(in)  :: coord_ip(nDim,1)
       real(wp), intent(in)  :: props(nprops)
       integer,  intent(in)  :: jprops(njprops)
 
@@ -522,7 +528,7 @@
         call unsymmVectorTruncate(stressVectPK1,stressPK1)
 
       else if (analysis .eq. 'PE') then
-
+        
         call unsymmMatrix(dPdFTensor(1:nDim,1:nDim,1:nDim,1:nDim),
      &                          Amat)
         call unsymmVectorTruncate(stressVectPK1,stressPK1)

@@ -2,7 +2,6 @@
 ! ********* ABAQUS/ STANDARD USER ELEMENT SUBROUTINE (UEL) *************
 ! **********************************************************************
 !  large strain displacement element + Neo-Hookean & Arruda-Boyce model
-!   implementation uses PK-II stress based total Lagrangian formulation
 !   linear quad and hex element formulation use F-bar method to avoid
 !   volumetric locking at near-incompressibility limit (de Souza Neto)
 ! **********************************************************************
@@ -104,6 +103,7 @@
 !     JDLTYP(1:NDLOAD)              Integers n defining distributed load types defined as Un or (if negative) UnNU in input file
 !     ADLMAG(1:NDLOAD)              Distributed load magnitudes
 !     DDLMAG(1:NDLOAD)              Increment in distributed load magnitudes
+!     MDLOAD                        Total number of distributed load or flux for the element
 !     PREDEF(1:2,1:NPREDF,1:NNODE)  Predefined fields.
 !     PREDEF(1,...)                 Value of predefined field
 !     PREDEF(2,...)                 Increment in predefined field
@@ -222,7 +222,8 @@
       real(wp)              :: SIGMA_S(nDim**2,nDim**2)
       real(wp)              :: SIGMA_F(nDim*nNode,nDim*nNode)
 
-      ! material point quantities (variables)
+      ! integration point quantities (variables)
+      real(wp)              :: coord_ip(nDim,1)
       real(wp)              :: F(3,3), detF, Fbar(3,3)
       real(wp)              :: FInv(3,3), FInvT(3,3)
       real(wp)              :: strainLagrange(nStress,1)
@@ -411,6 +412,9 @@
 
         !!!!!!!!!!!!!!!!!!!!!! CONSTITUTIVE MODEL !!!!!!!!!!!!!!!!!!!!!!
 
+        ! calculate the coordinate of integration point
+        coord_ip = matmul(Nmat, reshape(coords, [nDOFEL, 1]))
+
         ! calculate deformation gradient and deformation tensors
         F(1:nDim,1:nDim) = ID + matmul(uNode,dNdX)
 
@@ -455,13 +459,13 @@
         ! call material point subroutine (UMAT) for specific material
         if (matID .eq. 1) then
           call umatNeoHookean(kstep,kinc,time,dtime,nDim,analysis,
-     &            nstress,nNode,jelem,coords,intpt,props,nprops,
+     &            nstress,nNode,jelem,intpt,coord_ip,props,nprops,
      &            jprops,njprops,Fbar,svars,nsvars,fieldVar,dfieldVar,
      &            npredf,stressPK2,Dmat,Cmat)
 
         else if (matID .eq. 2) then
           call umatArrudaBoyce(kstep,kinc,time,dtime,nDim,analysis,
-     &            nstress,nNode,jelem,coords,intpt,props,nprops,
+     &            nstress,nNode,jelem,intpt,coord_ip,props,nprops,
      &            jprops,njprops,Fbar,svars,nsvars,fieldVar,dfieldVar,
      &            npredf,stressPK2,Dmat,Cmat)
         else
@@ -619,7 +623,7 @@
 ! **********************************************************************
 
       subroutine umatNeoHookean(kstep,kinc,time,dtime,nDim,analysis,
-     &            nstress,nNode,jelem,coords,intpt,props,nprops,
+     &            nstress,nNode,jelem,intpt,coord_ip,props,nprops,
      &            jprops,njprops,F,svars,nsvars,fieldVar,dfieldVar,
      &            npredf,stressPK2,Dmat,Cmat)
 
@@ -650,7 +654,7 @@
       integer, intent(in)   :: njprops, nsvars, npredf
 
       real(wp), intent(in)  :: time(2), dtime
-      real(wp), intent(in)  :: coords(nDim,nNode)
+      real(wp), intent(in)  :: coord_ip(nDim,1)
       real(wp), intent(in)  :: props(nprops)
       integer,  intent(in)  :: jprops(njprops)
 
@@ -778,7 +782,7 @@
 
 
       ! reshape the Voigt matrix and tensor based on the analysis
-      if ((analysis .eq. '3D') .or. (analysis .eq. 'PE')
+      if ((analysis .eq. '3D') .or. (analysis .eq. 'PE') 
      &      .or. (analysis .eq. 'AX')) then
         call voigtVectorTruncate(stressVectPK2,stressPK2)
         call voigtMatrixTruncate(VoigtMat,Dmat)
@@ -806,7 +810,7 @@
 ! **********************************************************************
 
       subroutine umatArrudaBoyce(kstep,kinc,time,dtime,nDim,analysis,
-     &            nstress,nNode,jelem,coords,intpt,props,nprops,
+     &            nstress,nNode,jelem,intpt,coord_ip,props,nprops,
      &            jprops,njprops,F,svars,nsvars,fieldVar,dfieldVar,
      &            npredf,stressPK2,Dmat,Cmat)
 
@@ -837,7 +841,7 @@
       integer, intent(in)   :: njprops, nsvars, npredf
 
       real(wp), intent(in)  :: time(2), dtime
-      real(wp), intent(in)  :: coords(nDim,nNode)
+      real(wp), intent(in)  :: coord_ip(nDim,1)
       real(wp), intent(in)  :: props(nprops)
       integer,  intent(in)  :: jprops(njprops)
 
@@ -975,7 +979,7 @@
 
 
       ! reshape the Voigt matrix and tensor based on the analysis
-      if ((analysis .eq. '3D') .or. (analysis .eq. 'PE')
+      if ((analysis .eq. '3D') .or. (analysis .eq. 'PE') 
      &      .or. (analysis .eq. 'AX')) then
         call voigtVectorTruncate(stressVectPK2,stressPK2)
         call voigtMatrixTruncate(VoigtMat,Dmat)
@@ -990,8 +994,9 @@
       ! additional variable for post-processing
       call voigtVectorTruncate(strainVectLagrange,strainLagrange)
       call voigtVectorTruncate(strainVectEuler,strainEuler)
+      call voigtVectorTruncate(stressVectPK2,stressPK2)
       call voigtVectorTruncate(stressVectCauchy,stressCauchy)
-
+      
 
       ! save the variables to be post-processed in globalPostVars
       globalPostVars(jelem,intpt,1:nStress) = stressCauchy(1:nStress,1)
