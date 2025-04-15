@@ -2,6 +2,8 @@
 ! ********* ABAQUS/ STANDARD USER ELEMENT SUBROUTINE (UEL) *************
 ! **********************************************************************
 !  large strain displacement element + Neo-Hookean & Arruda-Boyce model
+!   linear quad and hex element formulation use F-bar method to avoid
+!   volumetric locking at near-incompressibility limit (de Souza Neto)
 ! **********************************************************************
 !                     BIBEKANANDA DATTA (C) MAY 2024
 !                 JOHNS HOPKINS UNIVERSITY, BALTIMORE, MD
@@ -27,7 +29,7 @@
 !       symmetric stress and strain tensor following Voigt notation.
 !       This is different than what is followed by Abaqus/ Standard.
 !
-!         sigma11, sigma22, sigma33, sigma23, sigma13, sigma12
+!          sigma11, sigma22, sigma33, sigma23, sigma13, sigma12
 !       strain11, strain22, strain33, strain23, strain13, strain12
 !
 ! **********************************************************************
@@ -43,8 +45,9 @@
 !                        LIST OF ELEMENT PROPERTIES
 !
 !     jprops(1)   = nInt            no of integration points in element
-!     jprops(2)   = matID           constitutive relation for material
-!     jprops(3)   = nPostVars       no of local (int pt) post-processing variables
+!     jprops(2)   = fbarFlag        flag to use F-bar formulation
+!     jprops(3)   = matID           constitutive relation for material
+!     jprops(4)   = nPostVars       no of local (int pt) post-processing variables
 !
 ! **********************************************************************
 !
@@ -101,7 +104,6 @@
 !     JDLTYP(1:NDLOAD)              Integers n defining distributed load types defined as Un or (if negative) UnNU in input file
 !     ADLMAG(1:NDLOAD)              Distributed load magnitudes
 !     DDLMAG(1:NDLOAD)              Increment in distributed load magnitudes
-!     MDLOAD                        Total number of distributed load or flux for the element
 !     PREDEF(1:2,1:NPREDF,1:NNODE)  Predefined fields.
 !     PREDEF(1,...)                 Value of predefined field
 !     PREDEF(2,...)                 Increment in predefined field
@@ -142,7 +144,6 @@
       contains
 
 ! **********************************************************************
-! **********************************************************************
 
       subroutine uelNLMECH(RHS,AMATRX,SVARS,ENERGY,NDOFEL,NRHS,NSVARS,
      & PROPS,NPROPS,COORDS,MCRD,NNODE,Uall,DUall,Vel,Accn,JTYPE,TIME,
@@ -159,8 +160,10 @@
       ! vector and tangent matrix used in the formulation. Currently
       ! available elements are 2D and 3D continuum elements of different
       ! shapes (TRI, QUAD, TET, HEX) and polynomial order (linear and
-      ! qaudratic) with full and reduced integration. No specialzed
-      ! numerical technique was employed to alleviate volumetric locking.
+      ! qaudratic) with full and reduced integration.
+      ! 4-node linear QUAD and 8-node linear HEX elements use F-bar
+      ! technique proposed by de Souza Neto (IJSS, 1996) to alleviate
+      ! volumetric locking near incompressibility limit.
 
       use global_parameters
       use error_logging
@@ -212,16 +215,28 @@
       ! element operator matrices
       real(wp)              :: dXdxi(nDim,nDim), dxidX(nDim,nDim)
       real(wp)              :: dNdX(nNode,nDim), detJ
-      real(wp)              :: Na(nDim,nDim), Nmat(nDim,nDOFEL)
-      real(wp)              :: Ba(nStress,nDim), Bmat(nStress,nDOFEL)
-      real(wp)              :: Ga(nDim**2,nDim), Gmat(nDim**2,nDOFEL)
+
+      ! finite element matrix operators
+      real(wp)              :: Na(nDim,nDim)
+      real(wp)              :: Ba(nStress,nDim)
+      real(wp)              :: Ga(nDim*nDim,nDim)
+      real(wp)              :: Nmat(nDim,nDOFEl)
+      real(wp)              :: NmatT(nDOFEL,nDim)
+      real(wp)              :: Bmat(nStress,nDOFEl)
+      real(wp)              :: BmatT(nDOFEL,nStress)
+      real(wp)              :: Gmat(nDim*nDim,nDim*nNode)
+      real(wp)              :: GmatT(nDim*nNode,nDim*nDim)
+
+      ! additional reshaped matrices for element formulation
       real(wp)              :: stressTensorPK2(nDim,nDim)
       real(wp)              :: SIGMA_S(nDim**2,nDim**2)
       real(wp)              :: SIGMA_F(nDim*nNode,nDim*nNode)
+      real(wp)              :: BNLmat(nStress,nDim*nNode)
+      real(wp)              :: BNLmatT(nDim*nNode,nStress)
 
-      ! integration point quantities (variables)
-      real(wp)              :: coord_ip(nDim,1)
-      real(wp)              :: F(3,3)
+      ! material point quantities (variables)
+      real(wp)              :: F(3,3), detF, Fbar(3,3)
+      real(wp)              :: FInv(3,3), FInvT(3,3)
       real(wp)              :: strainLagrange(nStress,1)
       real(wp)              :: strainEuler(nStress,1)
       real(wp)              :: stressCauchy(nStress,1)
@@ -231,12 +246,28 @@
       real(wp)              :: Cmat(3,3,3,3)
 
 
+      ! additional variables for F-bar method (element and material)
+      logical               :: fbarFlag
+      real(wp)              :: centroid(nDim)
+      real(wp)              :: Nxi0(nNode), dNdxi0(nNode,nDim)
+      real(wp)              :: dXdxi0(nDim,nDim), dxidX0(nDim,nDim)
+      real(wp)              :: dNdX0(nNode,nDim), detJ0
+      real(wp)              :: Ga0(nDim**2,nDim), Gmat0(nDim**2,nDOFEL)
+      real(wp)              :: F0(3,3), detF0
+      real(wp)              :: F0Inv(3,3), F0InvT(3,3)
+      real(wp)              :: QR0Tensor(nDim,nDim,nDim,nDim)
+      real(wp)              :: QRTensor(nDim,nDim,nDim,nDim)
+      real(wp)              :: QR0mat(nDim*nDim,nDim*nDim)
+      real(wp)              :: QRmat(nDim*nDim,nDim*nDim)
+      real(wp)              :: tanFac1, tanFac2, resFac
+
+
       ! additional field variables (at nodes and int pt)
       real(wp)              :: fieldNode(npredf,nNode)
       real(wp)              :: dfieldNode(npredf,nNode)
       real(wp)              :: fieldVar(npredf), dfieldVar(npredf)
 
-      integer               :: i, j, intPt              ! loop counter variables
+      integer               :: i, j, k, l, m, n, p, q, intPt
       integer               :: matID                    ! constitutive mocel
 
       type(element)         :: solidFiniteStrain        ! element type
@@ -245,12 +276,17 @@
       ! element stiffness matrix and residual vector
       real(wp)              :: Kuu(nDOFEL,nDOFEL), Ru(nDOFEL,1)
 
+
       ! set the element parameters
       solidFiniteStrain = element(nDim=nDim,analysis=analysis,
      &                            nNode=nNode,nInt=nInt)
 
       ! initialize the matrices and vectors
+      F0      = zero
       F       = zero
+      Fbar    = zero
+      Ga0     = zero
+      Gmat0   = zero
       Na      = zero
       Ba      = zero
       Ga      = zero
@@ -262,9 +298,10 @@
       Kuu     = zero
       Ru      = zero
 
-      matID   = jprops(2)
+      fbarFlag  = jprops(2)
+      matID     = jprops(3)
 
-     !!!!!!!!!!! END VARIABLE DECLARATION AND INITIALIZATION !!!!!!!!!!!
+      !!!!!!!!!! END VARIABLE DECLARATION AND INITIALIZATION !!!!!!!!!!!
 
       ! reshape the displacement vectors into matrix forms
       uNode  = reshape(UAll,[nDim,nNode])
@@ -277,10 +314,63 @@
       !   dfieldNode(k,1:nNode) = predef(2,k,1:nNode)
       ! end do
 
-     !!!!!!!!!!!!!!!!! ELEMENT RELATED OPERATIONS !!!!!!!!!!!!!!!!!!!!!!
+      !!!!!!!!!!!!!!!!! ELEMENT RELATED OPERATIONS !!!!!!!!!!!!!!!!!!!!!
+
+      call eyeMat(ID)
+
+      ! For fully-integrated linear quad and hex elements, calculate Gmat0.
+      ! These calculations are done to evaluate volumetric deformation
+      ! gradient at centroid which will be used in to define F-bar later.
+      if (fbarFlag .eq. .true.) then
+
+        if ( ((jtype .eq. 3) .and. (nInt .eq. 8))
+     &    .or. ((jtype .eq. 7) .and. (nInt .eq. 4)) ) then
+
+          centroid = zero
+
+          ! evaluate the interpolation functions and derivates at centroid
+          call calcInterpFunc(solidFiniteStrain, centroid, Nxi0, dNdxi0)
+
+          ! calculate element jacobian and global shape func gradient at centroid
+          dXdxi0  = matmul(coords,dNdxi0)       ! calculate the jacobian (dXdxi) at centroid
+          detJ0   = det(dXdxi0)                 ! calculate jacobian determinant at centroid
+
+          if (detJ0 .le. zero) then
+            call msg%ferror( flag=warn, src='uelNLMech',
+     &        msg='Negative element jacobian at centroid.', ia=jelem)
+          end if
+
+          dxidX0 = inv(dXdxi0)                  ! calculate jacobian inverse
+          dNdX0  = matmul(dNdxi0,dxidX0)        ! calculate dNdX at centroid
+
+          do i=1,nNode
+
+            ! form the nodal-level matrix: [Ga0] at the centroid
+            do j = 1, nDim
+              Ga0(nDim*(j-1)+1:nDim*j,1:nDim) = dNdX0(i,j)*ID
+            end do
+
+            ! form the [G0] matrix at the centroid
+            Gmat0(1:nDim**2,nDim*(i-1)+1:nDim*i) = Ga0(1:nDim**2,1:nDim)
+          end do                             ! end of nodal point loop
+
+          F0(1:nDim,1:nDim) = ID + matmul(uNode,dNdX0)
+
+          if (analysis .eq. 'PE') F0(3,3) = one
+
+          detF0   = det(F0)
+          F0Inv   = inv(F0)
+          F0InvT  = transpose(F0Inv)
+
+        else
+          call msg%ferror( flag=warn, src='uelNLMECH',
+     &        msg='F-bar is not available: ', ivec=[jtype, nInt])
+          call xit
+        end if
+
+      end if
 
       ! obtain gauss quadrature points and weights
-      call eyeMat(ID)
       call getGaussQuadrtr(solidFiniteStrain,w,xi)
 
       ! loop through all the integration points (main/ external loop)
@@ -313,18 +403,18 @@
 
           ! form [Ba] matrix: plane stress/ plane strain case
           if (analysis .eq. 'PE') then
-            Ba(1,1)       = dNdx(i,1)
-            Ba(2,2)       = dNdx(i,2)
-            Ba(3,1:nDim)  = [dNdx(i,2), dNdx(i,1)]
+            Ba(1,1)       = dNdX(i,1)
+            Ba(2,2)       = dNdX(i,2)
+            Ba(3,1:nDim)  = [dNdX(i,2), dNdX(i,1)]
 
           ! form [Ba] matrix: 3D case
           else if (analysis .eq. '3D') then
-            Ba(1,1)       = dNdx(i,1)
-            Ba(2,2)       = dNdx(i,2)
-            Ba(3,3)       = dNdx(i,3)
-            Ba(4,1:nDim)  = [  zero,      dNdx(i,3),  dNdx(i,2)]
-            Ba(5,1:nDim)  = [dNdx(i,3),     zero,     dNdx(i,1)]
-            Ba(6,1:nDim)  = [dNdx(i,2),   dNdx(i,1),    zero   ]
+            Ba(1,1)       = dNdX(i,1)
+            Ba(2,2)       = dNdX(i,2)
+            Ba(3,3)       = dNdX(i,3)
+            Ba(4,1:nDim)  = [  zero,      dNdX(i,3),  dNdX(i,2)]
+            Ba(5,1:nDim)  = [dNdX(i,3),     zero,     dNdX(i,1)]
+            Ba(6,1:nDim)  = [dNdX(i,2),   dNdX(i,1),    zero   ]
 
           else
             call msg%ferror( flag=error, src='uelNLMech',
@@ -338,18 +428,63 @@
           Gmat(1:nDim**2,nDim*(i-1)+1:nDim*i) = Ga(1:nDim**2,1:nDim)
         end do                             ! end of nodal point loop
 
-      !!!!!!!!!!!!!! COMPLETE ELEMENT RELATED OPERATIONS !!!!!!!!!!!!!!!
+
+        ! transpose the vector field matrix operators
+        NmatT       = transpose(Nmat)
+        BmatT       = transpose(Bmat)
+        GmatT       = transpose(Gmat)
+
+        !!!!!!!!!!!!!! COMPLETE ELEMENT RELATED OPERATIONS !!!!!!!!!!!!!
 
 
-      !!!!!!!!!!!!!!!!!!!!!!! CONSTITUTIVE MODEL !!!!!!!!!!!!!!!!!!!!!!!
+        !!!!!!!!!!!!!!!!!!!!!! CONSTITUTIVE MODEL !!!!!!!!!!!!!!!!!!!!!!
 
-      ! calculate the coordinate of integration point
-      coord_ip = matmul(Nmat, reshape(coords, [nDOFEL, 1]))
+        ! calculate deformation gradient and deformation tensors
+        F(1:nDim,1:nDim) = ID + matmul(uNode,dNdX)
 
-      ! calculate deformation gradient and deformation tensors
-      F(1:nDim,1:nDim) = ID + matmul(uNode,dNdX)
+        if (analysis .eq. 'PE')  F(3,3) = one
 
-      if (analysis .eq. 'PE')  F(3,3) = one
+        ! calculate material point jacobian (volume change)
+        detF    = det(F)
+        FInv    = inv(F)
+        FInvT   = transpose(FInv)
+
+        !! definition of modified deformation gradient, F-bar
+        if (fbarFlag .eq. .true.) then
+          if ( (jtype .eq. 3) .and. (nInt .eq. 8) ) then
+            ! plane strain linear quad element
+            Fbar    = (detF0/detF)**(third) * F
+            resFac  = (detF0/detF)**(-two/three)
+            tanFac1 = (detF0/detF)**(-one/three)
+            tanFac2 = (detF0/detF)**(-two/three)
+
+          else if ( (jtype .eq. 7) .and. (nInt .eq. 4) ) then
+            ! three-dimensional linear hex element
+            Fbar(1:nDim,1:nDim) = (detF0/detF)**(half)*F(1:nDim,1:nDim)
+            Fbar(3,3)           = one
+            resFac              = (detF0/detF)**(-half)
+            tanFac1             = one
+            tanFac2             = (detF0/detF)**(-half)
+
+          else
+            ! standard F for all other available elements
+            Fbar    = F
+            resFac  = one
+            tanFac1 = one
+            tanFac2 = one
+
+            call msg%ferror( flag=warn, src='uelNLMECH',
+     &          msg='F-bar is not available: ', ivec=[jtype, nInt])
+            call xit
+          end if
+        else
+          ! set F-bar = F if fbarFlag is .false. for all element
+          Fbar    = F
+          resFac  = one
+          tanFac1 = one
+          tanFac2 = one
+        end if
+
 
     !     ! interpolate the field variables at the integration point
     !     ! (CAUTION: this not yet tested or used)
@@ -360,61 +495,157 @@
     !  &                    reshape( dfieldNode(k,1:nNode), [nNode] ) )
     !     end do
 
-      ! call material point subroutine (UMAT) for specific material
-      if (matID .eq. 1) then
-        call umatNeoHookean(kstep,kinc,time,dtime,nDim,analysis,
-     &            nstress,nNode,jelem,intpt,coord_ip,props,nprops,
-     &            jprops,njprops,F,svars,nsvars,fieldVar,dfieldVar,
+        ! call material point subroutine (UMAT) for specific material
+        if (matID .eq. 1) then
+          call umatNeoHookean(kstep,kinc,time,dtime,nDim,analysis,
+     &            nstress,nNode,jelem,coords,intpt,props,nprops,
+     &            jprops,njprops,Fbar,svars,nsvars,fieldVar,dfieldVar,
      &            npredf,stressPK2,Dmat,Cmat)
 
-      else if (matID .eq. 2) then
-        call umatArrudaBoyce(kstep,kinc,time,dtime,nDim,analysis,
-     &            nstress,nNode,jelem,intpt,coord_ip,props,nprops,
-     &            jprops,njprops,F,svars,nsvars,fieldVar,dfieldVar,
+        else if (matID .eq. 2) then
+          call umatArrudaBoyce(kstep,kinc,time,dtime,nDim,analysis,
+     &            nstress,nNode,jelem,coords,intpt,props,nprops,
+     &            jprops,njprops,Fbar,svars,nsvars,fieldVar,dfieldVar,
      &            npredf,stressPK2,Dmat,Cmat)
-      else
-        call msg%ferror( flag=error, src='uelNLMech',
+        else
+          call msg%ferror( flag=error, src='uelNLMech',
      &                    msg='Wrong material ID.', ia=matID )
-        call xit
-      end if
-
-      !!!!!!!!!!!!!!!!!!!! END CONSTITUTIVE MODEL !!!!!!!!!!!!!!!!!!!!
+          call xit
+        end if
 
 
-        
-      !!!!!!!!!!!!! TANGENT MATRIX AND RESIDUAL VECTOR !!!!!!!!!!!!!!!
-      call voigtVectorScatter(stressPK2, stressTensorPK2)
+        !!!!!!!!!!!!!!!!!!!! END CONSTITUTIVE MODEL !!!!!!!!!!!!!!!!!!!!
 
-      ! form the [SIGMA_S] matrix for geometric stiffness
-      do i = 1, nDim
-        do j = 1, nDim
-            SIGMA_S(nDim*(i-1)+1:nDim*i,nDim*(j-1)+1:nDim*j)
+
+
+        !!!!!!!!!!!!! FORM ADDITIONAL ELEMENT OPERATORS !!!!!!!!!!!!!!!!
+
+        ! form the [SIGMA_S] matrix for geometric stiffness
+        call voigtVectorScatter(stressPK2, stressTensorPK2)
+
+        do i = 1, nDim
+          do j = 1, nDim
+              SIGMA_S(nDim*(i-1)+1:nDim*i,nDim*(j-1)+1:nDim*j)
      &                    = stressTensorPK2(i,j)*ID
+          end do
         end do
-      end do
 
-      ! form [SIGMA_F] matrix for material stiffness
-      do i = 1, nNode
-        do j = 1, nNode
-            if (i .eq. j) then                    ! banded diagonal
-                SIGMA_F(nDim*(i-1)+1:nDim*i,nDim*(j-1)+1:nDim*j)
-     &                              = F(1:nDim,1:nDim)
-            end if
+        ! form [SIGMA_F] matrix for material stiffness
+        do i = 1, nNode
+          do j = 1, nNode
+              if (i .eq. j) then                    ! banded diagonal
+                  SIGMA_F(nDim*(i-1)+1:nDim*i,nDim*(j-1)+1:nDim*j)
+     &                              = Fbar(1:nDim,1:nDim)
+              end if
+          end do
         end do
-      end do
+
+        BNLmat  = matmul(Bmat,transpose(SIGMA_F))
+        BNLmatT = transpose(BNLmat)
+
+        !!!!!!!!!! END FORMING ADDITIONAL ELEMENT OPERATORS !!!!!!!!!!!!
+
 
         ! form the stiffness matrix and residual vector
-      Kuu = Kuu + w(intpt) * detJ *
-     &      (
-     &        matmul( transpose(matmul(Bmat,SIGMA_F)),
-     &        matmul (Dmat, matmul(Bmat,SIGMA_F)) )
-     &        + matmul( transpose(Gmat), matmul(SIGMA_S,Gmat))
-     &      )
+        ! tanFac1 and resFac1 will perform modification on the tangent
+        ! and residual depending on the type of element being used
 
-      Ru  = Ru - w(intpt) * detJ *
+
+        !!!!!!!!!!!!!! TANGENT MATRIX AND RESIDUAL VECTOR !!!!!!!!!!!!!!
+        Ru  = Ru - w(intpt) * detJ * resFac *
      &      matmul( transpose(matmul(Bmat,SIGMA_F)), stressPK2 )
 
-      !!!!!!!!!!!!!! TANGENT MATRIX AND RESIDUAL VECTOR !!!!!!!!!!!!!!!!
+
+        Kuu = Kuu + w(intpt) * detJ * tanFac1 *
+     &      (
+     &        matmul( matmul( GmatT, SIGMA_S ), Gmat )
+     &        + matmul( BNLmatT, matmul(Dmat,BNLmat) )
+     &      )
+
+
+        ! tangent modification for F-bar
+        if (fbarFlag .eq. .true.) then
+
+          ! form fourth-order QR0 and QR tensor
+          QR0Tensor = zero
+          QRTensor  = zero
+
+        ! perform F-bar modification on linear hex element
+          if ((jtype .eq. 3) .and. (nInt .eq. 8)) then
+            do i = 1,nDim
+              do j = 1,nDim
+                do k = 1,nDim
+                  do l = 1,nDim
+                    do m = 1,nDim
+                      do n = 1,nDim
+                        do p = 1,nDim
+                          do q = 1,nDim
+
+                            QR0Tensor(i,j,k,l) = QR0Tensor(i,j,k,l)
+     &                        + third * F0InvT(k,l) *
+     &                          (
+     &                            Fbar(i,p) * Cmat(p,j,m,n)
+     &                            * Fbar(q,m) * Fbar(q,n)
+     &                            - Fbar(i,q) * stressTensorPK2(q,j)
+     &                          )
+
+                            QRTensor(i,j,k,l) = QRTensor(i,j,k,l)
+     &                        + third * FInvT(k,l) *
+     &                          (
+     &                            Fbar(i,p) * Cmat(p,j,m,n)
+     &                            * Fbar(q,m) * Fbar(q,n)
+     &                            - Fbar(i,q) * stressTensorPK2(q,j)
+     &                          )
+                          end do
+                        end do
+                      end do
+                    end do
+                  end do
+                end do
+              end do
+            end do
+
+          ! do F-bar modification on linear quad element
+          else if ( (jtype .eq. 7) .and. (nInt .eq. 4) ) then
+            do i = 1,nDim
+              do j = 1,nDim
+                do k = 1,nDim
+                  do l = 1,nDim
+                    do m = 1,nDim
+                      do n = 1,nDim
+                        do p = 1,nDim
+                          do q = 1,nDim
+                            QR0Tensor(i,j,k,l) = QR0Tensor(i,j,k,l)
+     &                        + half * Fbar(i,p) * Cmat(p,j,q,n)
+     &                        * Fbar(m,n) * Fbar(m,q) * F0InvT(k,l)
+
+                            QRTensor(i,j,k,l) = QRTensor(i,j,k,l)
+     &                        + half * Fbar(i,p) * Cmat(p,j,q,n)
+     &                        * Fbar(m,n) * Fbar(m,q) * FInvT(k,l)
+                          end do
+                        end do
+                      end do
+                    end do
+                  end do
+                end do
+              end do
+            end do
+
+          end if
+
+          ! reshape QR and QR0 tensor into matrix form
+          call unsymmMatrix(QR0Tensor,QR0mat)
+          call unsymmMatrix(QRTensor,QRmat)
+
+          ! modify the element tangent matrix
+          Kuu = Kuu + w(intPt) * detJ * tanFac2  *
+     &              (
+     &              matmul(transpose(Gmat), matmul(QR0mat,Gmat0))
+     &              - matmul(transpose(Gmat), matmul(QRmat,Gmat))
+     &              )
+        end if
+
+      !!!!!!!!!!!!! END TANGENT MATRIX AND RESIDUAL VECTOR !!!!!!!!!!!!!
 
       end do                           ! end of integration point loop
 
@@ -430,7 +661,7 @@
 ! **********************************************************************
 
       subroutine umatNeoHookean(kstep,kinc,time,dtime,nDim,analysis,
-     &            nstress,nNode,jelem,intpt,coord_ip,props,nprops,
+     &            nstress,nNode,jelem,coords,intpt,props,nprops,
      &            jprops,njprops,F,svars,nsvars,fieldVar,dfieldVar,
      &            npredf,stressPK2,Dmat,Cmat)
 
@@ -461,7 +692,7 @@
       integer, intent(in)   :: njprops, nsvars, npredf
 
       real(wp), intent(in)  :: time(2), dtime
-      real(wp), intent(in)  :: coord_ip(nDim,1)
+      real(wp), intent(in)  :: coords(nDim,nNode)
       real(wp), intent(in)  :: props(nprops)
       integer,  intent(in)  :: jprops(njprops)
 
@@ -469,7 +700,7 @@
       real(wp), intent(in)  :: fieldVar(npredf)
       real(wp), intent(in)  :: dfieldVar(npredf)
 
-      ! output from the subroutine
+      ! output arguments from the subroutine
       real(wp), intent(out) :: stressPK2(nStress,1)
       real(wp), intent(out) :: Dmat(nStress,nStress)
       real(wp), intent(out) :: Cmat(3,3,3,3)
@@ -485,7 +716,6 @@
       real(wp)              :: detF
       real(wp)              :: C(3,3), Cinv(3,3), trC, detC
       real(wp)              :: B(3,3), Binv(3,3), detB
-      real(wp)              :: lam_c, lam_r, beta_c, dBeta_c
 
       ! intermediate variables for stress tensors and material tangent output
       real(wp)              :: stressTensorPK2(3,3)
@@ -512,7 +742,6 @@
 
       integer               :: i, j, k, l     ! loop counters
       type(logger)          :: msg            ! error message logger
-
 
       ! initialize matrial stiffness tensors
       Cmat      = zero
@@ -556,10 +785,8 @@
 
       ! calculate the stress tensors
       stressTensorPK2     = Gshear*(ID3-Cinv) + Kappa*log(detF)*Cinv
-
       stressTensorCauchy  = (one/detF)
      &                    * ( Gshear*(B-ID3) + Kappa*log(detF)*ID3 )
-
       stressTensorPK1     = matmul(F,stressTensorPK2)
 
 
@@ -577,6 +804,8 @@
         end do
       end do
 
+      !!!!!!!!!!!!!!! END OF CONSTITUTIVE CALCULATION !!!!!!!!!!!!!!!!!!
+
 
       ! reshape the stiffness tensor 3x3x3x3 to a 6x6 matrix
       call voigtMatrix(Cmat,VoigtMat)
@@ -591,7 +820,7 @@
 
 
       ! reshape the Voigt matrix and tensor based on the analysis
-      if ((analysis .eq. '3D') .or. (analysis .eq. 'PE') 
+      if ((analysis .eq. '3D') .or. (analysis .eq. 'PE')
      &      .or. (analysis .eq. 'AX')) then
         call voigtVectorTruncate(stressVectPK2,stressPK2)
         call voigtMatrixTruncate(VoigtMat,Dmat)
@@ -606,8 +835,8 @@
       ! additional variable for post-processing
       call voigtVectorTruncate(strainVectLagrange,strainLagrange)
       call voigtVectorTruncate(strainVectEuler,strainEuler)
-      call voigtVectorTruncate(stressVectPK2,stressPK2)
       call voigtVectorTruncate(stressVectCauchy,stressCauchy)
+
 
       ! save the variables to be post-processed in globalPostVars
       globalPostVars(jelem,intpt,1:nStress) = stressCauchy(1:nStress,1)
@@ -619,7 +848,7 @@
 ! **********************************************************************
 
       subroutine umatArrudaBoyce(kstep,kinc,time,dtime,nDim,analysis,
-     &            nstress,nNode,jelem,intpt,coord_ip,props,nprops,
+     &            nstress,nNode,jelem,coords,intpt,props,nprops,
      &            jprops,njprops,F,svars,nsvars,fieldVar,dfieldVar,
      &            npredf,stressPK2,Dmat,Cmat)
 
@@ -650,7 +879,7 @@
       integer, intent(in)   :: njprops, nsvars, npredf
 
       real(wp), intent(in)  :: time(2), dtime
-      real(wp), intent(in)  :: coord_ip(nDim,1)
+      real(wp), intent(in)  :: coords(nDim,nNode)
       real(wp), intent(in)  :: props(nprops)
       integer,  intent(in)  :: jprops(njprops)
 
@@ -702,7 +931,6 @@
       integer               :: i, j, k, l     ! loop counters
       type(logger)          :: msg            ! error message logger
 
-
       ! initialize matrial stiffness tensors
       Cmat    = zero
       Dmat    = zero
@@ -741,6 +969,7 @@
       dBeta_c   = DInvLangevin(lam_r)
 
 
+
       ! calculate strain tensors
       strainTensorLagrange  = half*(C-ID3)
       strainTensorEuler     = half*(ID3-Binv)
@@ -765,7 +994,7 @@
      &            + Gshear/(nine*lam_c**two)
      &            * ( dBeta_c- lam_r*beta_c ) * ID3(i,j)*ID3(k,l)
      &            + Kappa * Cinv(i,j)*Cinv(k,l)
-     &            + ( (Gshear*lam_L)/three  - Kappa*log(detF) )
+     &            + ( (Gshear*lam_L)/three - Kappa*log(detF) )
      &            * ( Cinv(i,k)*Cinv(j,l) + Cinv(i,l)*Cinv(j,k) )
             end do
           end do
@@ -775,7 +1004,7 @@
       !!!!!!!!!!!!!!!! END OF CONSTITUTIVE CALCULATION !!!!!!!!!!!!!!!!!
 
 
-      ! reshape the stiffness tensor 3x3x3x3 to a 6x6 matrix
+       ! reshape the stiffness tensor 3x3x3x3 to a 6x6 matrix
       call voigtMatrix(Cmat,VoigtMat)
 
       ! reshape the strain and stress tensors into vectors
@@ -788,7 +1017,7 @@
 
 
       ! reshape the Voigt matrix and tensor based on the analysis
-      if ((analysis .eq. '3D') .or. (analysis .eq. 'PE') 
+      if ((analysis .eq. '3D') .or. (analysis .eq. 'PE')
      &      .or. (analysis .eq. 'AX')) then
         call voigtVectorTruncate(stressVectPK2,stressPK2)
         call voigtMatrixTruncate(VoigtMat,Dmat)
@@ -803,7 +1032,9 @@
       ! additional variable for post-processing
       call voigtVectorTruncate(strainVectLagrange,strainLagrange)
       call voigtVectorTruncate(strainVectEuler,strainEuler)
+      call voigtVectorTruncate(stressVectPK2,stressPK2)
       call voigtVectorTruncate(stressVectCauchy,stressCauchy)
+
 
       ! save the variables to be post-processed in globalPostVars
       globalPostVars(jelem,intpt,1:nStress) = stressCauchy(1:nStress,1)
@@ -917,6 +1148,7 @@
       logical             :: nlgeom
 
 
+      logical, parameter  :: dbgMode = .false.
       integer             :: lenJobName,lenOutDir
       character(len=256)  :: outDir
       character(len=256)  :: jobName
@@ -930,12 +1162,14 @@
       rhs(:,nrhs)   = zero
 
 
-      ! open a debug file for the current job
-      call getJobName(jobName,lenJobName)
-      call getOutDir(outDir,lenOutDir)
-      errFile = trim(outDir)//'\aaERR_'//trim(jobName)//'.dat'
-      dbgFile = trim(outDir)//'\aaDBG_'//trim(jobName)//'.dat'
-      call msg%fopen( errfile=errFile, dbgfile=dbgFile )
+      ! open logs files for the current job from Abaqus run
+      if (dbgMode .eq. .false.) then
+        call getJobName(jobName,lenJobName)
+        call getOutDir(outDir,lenOutDir)
+        errFile = trim(outDir)//'\aaERR_'//trim(jobName)//'.dat'
+        dbgFile = trim(outDir)//'\aaDBG_'//trim(jobName)//'.dat'
+        call msg%fopen( errfile=errFile, dbgfile=dbgFile )
+      end if
 
 
       ! change the LFLAGS criteria as needed (check abaqus UEL manual)
@@ -967,6 +1201,7 @@
         nDim      = 3
         analysis  = '3D'            ! three-dimensional analysis
         nStress   = 6
+
       else if ((jtype .ge. 5).and.(jtype .le. 8)) then
         nDim      = 2
         analysis  = 'PE'            ! plane strain analysis
@@ -979,8 +1214,8 @@
 
 
       nInt      = jprops(1)
-      matID     = jprops(2)
-      nPostVars = jprops(3)
+      matID     = jprops(3)
+      nPostVars = jprops(4)
 
 
       ! array containing variables for post-processing
