@@ -28,17 +28,18 @@
 
         module subroutine calcInterpFunc(elem,xiCoord,Nxi,dNdxi)
           use global_parameters, only: wp
-          implicit none
+          implicit none 
           type(element), intent(in)   :: elem
           real(wp), intent(in)        :: xiCoord(:)
           real(wp), intent(out)       :: Nxi(:), dNdxi(:,:)
         end subroutine calcInterpFunc
 
-        module subroutine faceNodes(nDim,nNode,face,nFaceNodes,list)
+        module subroutine faceNodes(elem,face,nFaceNodes,list)
           implicit none
-          integer, intent(in)         :: nDim, nNode, face
-          integer, intent(out)        :: list(*)
+          type(element), intent(in)   :: elem
+          integer, intent(in)         :: face
           integer, intent(out)        :: nFaceNodes
+          integer, intent(out)        :: list(*)
         end subroutine faceNodes
 
       end interface
@@ -49,12 +50,12 @@
 ! ****************** INTERPOLATION FUNCTION SUBMODULE ******************
 ! **********************************************************************
 !  available elements:    (a) 1D bar/truss element (2 and 3 nodes)
-!                         (b) 2D tri elements (3 and 6 nodes)
+!                         (b) 2D tri elements (3 and 6 nodes) 
 !                         (c) 2D quad elements (4 and 8 nodes)
 !                         (d) 3D tet elements (4 and 10 nodes)
 !                         (e) 3D hex elements (8 and 20 nodes)
 ! **********************************************************************
-
+      
       submodule (lagrange_element) interpolation
 
       contains
@@ -64,7 +65,7 @@
 
         use global_parameters, only: wp
 
-        implicit none
+        implicit none 
 
         type(element), intent(in)   :: elem
         real(wp), intent(in)        :: xiCoord(:)
@@ -72,7 +73,7 @@
 
         if (elem%nDim  .eq.  1) then
           call interpFunc1(elem%nNode, xiCoord, Nxi, dNdxi)
-        else if (elem%nDim  .eq.  2) then
+        else if (elem%nDim  .eq.  2) then 
           call interpFunc2(elem%nNode, xiCoord, Nxi, dNdxi)
         else if (elem%nDim  .eq.  3) then
           call interpFunc3(elem%nNode, xiCoord, Nxi, dNdxi)
@@ -83,9 +84,9 @@
 ! **********************************************************************
 
       subroutine interpFunc1(nNode,xiCoord,Nxi,dNdxi)
-      ! this subroutine calculates shape function of 1D elements
+      ! this subroutine calculates shape function of 1D elements 
       ! available 1D elements are: 2 and 3 node bar/truss
-
+        
       ! Nxi(i)          = shape function of node i at the intpt.
       ! dNdxi(i,j)      = derivative wrt j direction of shape fn of node i
 
@@ -93,7 +94,7 @@
       use error_logging
 
       implicit none
-
+      
       integer, intent(in)         :: nNode
       real(wp), intent(in)        :: xiCoord(:)
       real(wp), intent(out)       :: Nxi(:), dNdxi(:,:)
@@ -134,9 +135,9 @@
 ! **********************************************************************
 
       subroutine interpFunc2(nNode,xiCoord,Nxi,dNdxi)
-      ! this subroutine calculates shape function of 2D elements
+      ! this subroutine calculates shape function of 2D elements 
       ! available 2D elements are: 3 node tri, 6 node tri, 4 node quad, 8 node quad
-
+        
       ! Nxi(i)          = shape function of node i at the intpt.
       ! dNdxi(i,j)      = derivative wrt j direction of shape fn of node i
 
@@ -339,7 +340,7 @@
         dNdxi(4,3) = one
 
       else if (nNode .eq. 10) then  ! 10-noded quadratic tet10 element
-
+    
         ! shape functions
         lam = one-xi-eta-zeta
 
@@ -353,7 +354,7 @@
         Nxi(8) = four*zeta*lam
         Nxi(9) = four*zeta*xi
         Nxi(10) = four*eta*zeta
-
+        
         ! first derivative of shape functions dN/dxi (10x3)
         dNdxi(1,1) = -(four*lam-one)
         dNdxi(1,2) = -(four*lam-one)
@@ -557,87 +558,6 @@
       end if
 
       end subroutine interpFunc3
-
-! **********************************************************************
-
-      module subroutine faceNodes(nDim,nNode,face,nFaceNodes,list)
-      ! this subroutine RETURNs the list of nodes on an
-      ! element face for standard 2D and 3D Lagrangian elements
-      ! this subroutine is useful for applying traction-type BC
-
-      implicit none
-
-      integer, intent(in)   :: nDim, nNode, face
-      integer, intent(out)  :: nFaceNodes
-      integer, intent(out)  :: list(*)
-      integer               :: list3(3), list4(4)
-
-      if (nDim .eq. 2) then
-        list3(1:3) = [2,3,1]
-        list4(1:4) = [2,3,4,1]
-
-        if (nNode .eq. 3) then
-          nFaceNodes = 2
-          list(1) = face
-          list(2) = list3(face)
-        else if (nNode .eq. 4) then
-          nFaceNodes = 2
-          list(1) = face
-          list(2) = list4(face)
-        else if (nNode .eq. 6) then
-          nFaceNodes = 3
-          list(1) = face
-          list(2) = list3(face)
-          list(3) = face+3
-        else if (nNode .eq. 8) then
-          nFaceNodes = 4
-          list(1) = face
-          list(2) = list4(face)
-          list(3) = face+4
-        end if
-
-      else if (nDim .eq. 3) then
-
-        if (nNode .eq. 4) then
-          nFaceNodes = 3
-          if (face .eq. 1) list(1:3) = [1,2,3]
-          if (face .eq. 2) list(1:3) = [1,4,2]
-          if (face .eq. 3) list(1:3) = [2,4,3]
-          if (face .eq. 4) list(1:3) = [3,4,1]
-        else if (nNode  .eq. 6) then
-          nFaceNodes = 3
-          if (face .eq. 1) list(1:3) = [1,2,3]
-          if (face .eq. 2) list(1:3) = [6,5,4]
-          if (face .eq. 3) list(1:4) = [1,2,5,4]
-          if (face .eq. 4) list(1:4) = [2,3,6,5]
-          if (face .eq. 5) list(1:4) = [4,6,3,1]
-          if (face>2) nFaceNodes = 4
-        else if (nNode .eq. 10) then
-          nFaceNodes = 6
-          if (face .eq. 1) list(1:6) = [1,2,3,5,6,7]
-          if (face .eq. 2) list(1:6) = [1,4,2,8,9,5]
-          if (face .eq. 3) list(1:6) = [2,4,3,9,10,6]
-          if (face .eq. 4) list(1:6) = [3,4,1,10,8,7]
-        else if (nNode .eq. 8) then
-          nFaceNodes = 4
-          if (face .eq. 1) list(1:4) = [1,2,3,4]
-          if (face .eq. 2) list(1:4) = [5,8,7,6]
-          if (face .eq. 3) list(1:4) = [1,5,6,2]
-          if (face .eq. 4) list(1:4) = [2,6,7,3]
-          if (face .eq. 5) list(1:4) = [3,7,8,4]
-          if (face .eq. 6) list(1:4) = [4,8,5,1]
-        else  if (nNode .eq. 20) then
-          nFaceNodes = 8
-          if (face .eq. 1) list(1:8) = [1,2,3,4,9,10,11,12]
-          if (face .eq. 2) list(1:8) = [5,8,7,6,16,15,14,13]
-          if (face .eq. 3) list(1:8) = [1,5,6,2,17,13,18,9]
-          if (face .eq. 4) list(1:8) = [2,6,7,3,18,14,19,10]
-          if (face .eq. 5) list(1:8) = [3,7,8,4,19,15,6,11]
-          if (face .eq. 6) list(1:8) = [4,8,5,1,20,16,17,12]
-        end if
-      end if
-
-      end subroutine faceNodes
 
       end submodule interpolation
 
