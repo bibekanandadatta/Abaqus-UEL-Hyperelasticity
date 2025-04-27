@@ -12,7 +12,7 @@
 7,           0.,           1.,           0.
 8,           0.,           0.,           0.
 **************************************************
-*User Element,Type=U3,Nodes=8,Coordinates=3,Properties=3,Iproperties=3,Unsymm
+*User Element,Type=U3,Nodes=8,Coordinates=3,Properties=3,Iproperties=4,Unsymm
 1,2,3
 *Element, type=U3
 1, 5, 6, 8, 7, 1, 2, 4, 3
@@ -47,9 +47,9 @@
  1,
 **************************************************
 *uel property,elset=all
-** Gshear, kbulk, lam_L, nInt, matID, localPostVars
+** Gshear, kbulk, lam_L, nInt, fbar, matID, nPostVars
 ** matID = 2 for Arruda-Boyce
-100.E3, 10000E3, 5., 8, 2, 12
+100.E3, 10000E3, 5., 8, 0, 2, 12
 **************************************************
 ** same element connectivity as the user element
 ** uses built-in abaqus element to overlay results
