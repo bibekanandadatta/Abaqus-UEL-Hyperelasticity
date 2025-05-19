@@ -731,7 +731,7 @@
       ! vector form (6x1 or 9x1) of stress and strain tensors
       real(wp)              :: strainVectLagrange(nSymm,1)
       real(wp)              :: strainVectEuler(nSymm,1)
-      real(wp)              :: stressVectPK1(nUnsymmm,1)
+      real(wp)              :: stressVectPK1(nUnSymm,1)
       real(wp)              :: stressVectCauchy(nSymm,1)
 
       ! final vector form of stress and strain tensors based on analysis
@@ -919,7 +919,7 @@
       ! vector form (6x1 or 9x1) of stress and strain tensors
       real(wp)              :: strainVectLagrange(nSymm,1)
       real(wp)              :: strainVectEuler(nSymm,1)
-      real(wp)              :: stressVectPK1(nUnsymmm,1)
+      real(wp)              :: stressVectPK1(nUnSymm,1)
       real(wp)              :: stressVectCauchy(nSymm,1)
 
       ! final vector form of stress and strain tensors based on analysis

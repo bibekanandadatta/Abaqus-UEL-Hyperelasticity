@@ -8,8 +8,8 @@
 
       module solid_mechanics
 
-      !! no of symmetric and unSymmmetric stress tensor components (3D)
-      integer, parameter    :: nSymm = 6, nUnsymmm = 9
+      ! no of symmetric and unSymmetric stress tensor components (3D)
+      integer, parameter    :: nSymm = 6, nUnsymm = 9
 
       contains
 
@@ -17,9 +17,10 @@
 
       subroutine unsymmMatrix(tensor,matrix)
       ! This subroutine reshapes a general the fourth order tensor to a
-      ! rank-2 matrix form. For example, this operation is necessary to
-      ! reshape 4th-order first elasticity tensor dP/dF (derivative of
+      ! rank-2 matrix form. For example, this operation is necessary to 
+      ! reshape 4th-order first elasticity tensor dP/dF (derivative of 
       ! PK-I stress wrt deformation gradient) to a matrix form.
+      ! use this for 3D and 2D plane strain/stress cases (not axisymmetry)
 
         use global_parameters, only: wp, zero
 
@@ -53,6 +54,7 @@
       ! This subroutine reshapes a general 2nd order tensor (unsymmetric)
       ! to a column-ordered vector form. For example, this can be used
       ! to reshape PK-I stress tensor to a vector form.
+      ! use this for 3D and 2D plane strain/stress cases (not axisymmetry)
 
         use global_parameters, only: wp, zero
 
@@ -71,15 +73,16 @@
 ! **********************************************************************
 
       subroutine unsymmVectorTruncate(vect3D,vect2D)
-      ! This subroutine reshapes a 9x1 unsymmetric vector (deformation gradient
+      ! This subroutine reshapes a 9x1 unsymmetric vector (deformation gradient 
       ! or PK-I stress) to a 4x1 or 5x1 vector based on the type of analysis
+      ! output order: P11, P21, P12, P22, P33
 
         use global_parameters, only: wp, zero
 
         implicit none
 
-        real(wp), intent(in)    :: vect3D(nUnsymmm,1)
-        real(wp), intent(out)    :: vect2D(:,:)
+        real(wp), intent(in)    :: vect3D(nUnsymm,1)
+        real(wp), intent(out)   :: vect2D(:,:)
         integer                 :: nStress
 
         nStress     = size(vect2D,1)
@@ -122,9 +125,9 @@
       end subroutine vector2tensor
 
 ! **********************************************************************
-
+      
       subroutine voigtMatrix(tensor,voigtMat)
-      ! this subroutine maps a symmetric fourth order material/spatial
+      ! this subroutine maps a symmetric fourth order material/spatial 
       ! tangent tensor (3x3x3x3) to a 2nd order stiffness matrix (6x6) using
       ! voigt notation: 11> 1, 22> 2, 33> 3, 23/32> 4, 13/31> 5, 12/21> 6
 
@@ -159,8 +162,8 @@
 ! **********************************************************************
 
       subroutine voigtMatrixTruncate(voigtMat,Dmat)
-      ! This subroutine truncates a 6 x 6 Voigt matrix to 3 x 3 (plane
-      ! strain and plane stress) or 4 x 4 (axisymmetry) D-matrix for
+      ! This subroutine truncates a 6 x 6 Voigt matrix to 3 x 3 (plane 
+      ! strain and plane stress) or 4 x 4 (axisymmetry) D-matrix for 
       ! finite element operation based on the type of analysis.
 
         use global_parameters, only: wp, zero
@@ -174,10 +177,10 @@
 
         nsize       = size(voigtMat,1)
         nStress     = size(Dmat,1)
-
+        
 
         ! truncating a full voigt matrix (6x6) for 2D analysis
-        if (nsize .eq. 6) then
+        if (nsize .eq. 6) then 
           if (nStress .eq. 6) then              ! 3D analysis
             Dmat            = voigtMat
 
@@ -213,7 +216,7 @@
       ! For example, it can reshape, Lagrange strain, Euler strain, PK-II
       ! stress, Cauchy stress tensors to vector form using the Voigt notation.
       ! voigt notation: 11> 1, 22> 2, 33> 3, 23/32> 4, 13/31> 5, 12/21> 6
-
+      
       ! for 2D (plane)  : tensor(2,2) >> vector(3,1)
       ! for 3D          : tensor(3,3) >> vector(6,1)
 
@@ -251,12 +254,20 @@
       ! voigt notation: 11> 1, 22> 2, 33> 3, 23/32> 4, 13/31> 5, 12/21> 6.
 
         use global_parameters, only: wp, zero
+        use error_logging
 
         implicit none
 
         real(wp), intent(in)    :: vect2D(:,:)
-        real(wp), intent(out)   :: vect3D(nSymm,1)
+        real(wp), intent(out)   :: vect3D(:,:)
         integer                 :: nStress
+        type(logger)            :: msg
+
+        if (size(vect3D(:,1)) .ne. nSymm) then
+          call msg%ferror(flag=error, src='voigtVectorTruncate',
+     &         msg='Size of the output argument should be 6x1 vector.')
+          return 
+        end if
 
         nStress = size(vect2D,1)
         vect3D  = zero
@@ -285,8 +296,8 @@
       ! vector to a matrix form for any consequent operation.
       ! voigt notation: 11> 1, 22> 2, 33> 3, 23/32> 4, 13/31> 5, 12/21> 6
 
-      ! for 2D (plane)  : vector(3,1) >> tensor(2,2)
-      ! for 3D          : vector(6,1) >> tensor(3,3)
+      ! for 2D (plane)  : vector(3x1) >> tensor(2x2)
+      ! for 3D          : vector(6x1) >> tensor(3x3)
 
         use global_parameters, only: wp
 
@@ -300,7 +311,7 @@
         nStress = size(vector,1)
 
         ! direct / axial stresses
-        do i = 1, nDim
+        do i = 1, nDim              
           tensor(i,i) = vector(i,1)
         end do
 
@@ -333,12 +344,20 @@
       ! voigt notation: 11> 1, 22> 2, 33> 3, 23/32> 4, 13/31> 5, 12/21> 6
 
         use global_parameters, only: wp, zero
+        use error_logging
 
         implicit none
 
-        real(wp), intent(in)    :: vect3D(nSymm,1)
+        real(wp), intent(in)    :: vect3D(:,:)
         real(wp), intent(out)   :: vect2D(:,:)
         integer                 :: nStress
+        type(logger)            :: msg
+
+        if (size(vect3D(:,1)) .ne. nSymm) then
+          call msg%ferror(flag=error, src='voigtVectorTruncate',
+     &         msg='Size of the input argument should be 6x1 vector.')
+          return 
+        end if
 
         nStress   = size(vect2D,1)
         vect2D    = zero

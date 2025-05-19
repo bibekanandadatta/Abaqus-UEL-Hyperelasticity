@@ -656,7 +656,7 @@
 
       ! intermediate variables for stress tensors
       real(wp)              :: stressTensorPK1(3,3)
-      real(wp)              :: stressVectPK1(nUnsymmm,1)
+      real(wp)              :: stressVectPK1(nUnSymm,1)
 
       ! output variables (3x3 stress and strain tensors)
       real(wp)              :: strainTensorLagrange(3,3)
