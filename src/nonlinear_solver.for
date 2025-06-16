@@ -13,18 +13,18 @@
       ! solver options for newton-raphson algorithm
       ! last two attributes are not applicable to single variable solver
       type, public  :: options
-        integer           :: maxIter    = 100
-        real(wp)          :: tolfx      = 1.0e-12_wp
-        real(wp)          :: tolx       = 1.0e-8_wp
-        character(len=8)  :: fdScheme   = 'Forward'       ! other: 'Backward' or 'Central'
+        integer           :: maxIter    = 1000
+        real(wp)          :: tolfx      = 1.0e-10_wp      
+        real(wp)          :: tolx       = 1.0e-10_wp      
+        character(len=8)  :: fdScheme   = 'Central'       ! other: 'Forward', 'Backward', 'Central'
         real(wp)          :: fdStep     = sqrt(eps)
-        character(len=16) :: algo       = 'Newton'        ! other: 'Linesearch`
+        character(len=16) :: algo       = 'Linesearch'    ! options: 'Newton', 'Linesearch'
         real(wp)          :: minAlpha   = 0.1_wp
-        real(wp)          :: maxAlpha   = 1.0_wp          ! start w/ NR solver
+        real(wp)          :: maxAlpha   = 1.0_wp          ! starts w/ NR solver
         real(wp)          :: c          = 0.5_wp
         real(wp)          :: tau        = 0.5_wp
         character(len=8)  :: lib        = 'LAPACK'        ! highly recommended
-        character(len=8)  :: method     = 'QR'            ! alternative: 'LU'
+        character(len=8)  :: method     = 'LU'            ! options: 'LU', 'QR'
       end type options
 
       ! as of now first two criteria are in use for convergence or exit
@@ -78,7 +78,7 @@
 
 ! **********************************************************************
 
-      subroutine newton(func, xOld, x, jac, vars, opts)
+      subroutine newton(func, xOld, x, jac, vars, opts, sflag)
       ! standard Newton-Raphson solver for a single nonlinear equation
 
         use global_parameters, only: wp
@@ -93,6 +93,7 @@
         logical, intent(in), optional           :: jac
         real(wp), intent(in), optional          :: vars(:)
         type(options), intent(in), optional     :: opts
+        logical, intent(out), optional          :: sflag
         type(options)                           :: params
         real(wp)                                :: fx, dfx, dx
         real(wp)                                :: fx0
@@ -124,15 +125,16 @@
             end if
           else
             call msg%ferror(flag=error, src='newton',
-     &          msg='Illegal argument.')
+     &              msg='Illegal argument.')
             return
           end if
 
           if (iter .eq. 1) fx0 = fx
 
           if ( ( abs(fx)/abs(fx0) .le. params%tolfx )
-     &        .or. ( abs(fx) .le. params%tolfx )
+     &        .or. ( abs(fx) .le. params%tolfx ) 
      &        .or. ( abs(dx) .le. params%tolx) ) then
+            sflag = .true.
             return
           else
             dx  = - fx/dfx
@@ -141,15 +143,16 @@
 
         end do
 
-        call msg%ferror(flag=error, src='newton',
+        call msg%ferror(flag=warn, src='newton',
      &          msg='Execeeded maximum iterations.')
+        sflag = .false.
 
       end subroutine newton
 
 ! **********************************************************************
 
       subroutine newton_hybrid(func, xOld, x, xMin, xMax,
-     &                         jac, vars, opts)
+     &                         jac, vars, opts, sflag)
       ! Implements a hybrid bisection-Newton-Raphson approach
       ! follows the exit criterion of 'fail-safe Newton-Raphson' algorithm
       ! from Numerical Recipes by Press et al. (second volume)
@@ -166,6 +169,7 @@
         logical, intent(in), optional           :: jac
         real(wp), intent(in), optional          :: vars(:)
         type(options), intent(in), optional     :: opts
+        logical, intent(out), optional          :: sflag
         type(options)                           :: params
         real(wp)                                :: fx, dfx
         real(wp)                                :: xl, xh, temp
@@ -244,7 +248,10 @@
             dx = half*(xh-xl)
             x = xl + dx
 
-            if (xl .eq. x) return
+            if (xl .eq. x) then 
+              sflag = .true.
+              return
+            end if
 
           else
             dxOld = dx
@@ -252,7 +259,11 @@
             temp = x
             x = x + dx
 
-            if (temp .eq. x) return
+            if (temp .eq. x) then
+              sflag = .true.
+              return
+            end if
+
           end if
 
           ! evaluate the function and its derivative
@@ -280,8 +291,9 @@
 
 
           if ( ( abs(fx)/abs(fx0) .le. params%tolfx )
-     &        .or. ( abs(fx) .le. params%tolfx )
+     &        .or. ( abs(fx) .le. params%tolfx ) 
      &        .or. ( abs(dx) .le. params%tolx) ) then
+            sflag = .true.
             return
           end if
 
@@ -293,14 +305,15 @@
 
         end do
 
-        call msg%ferror(flag=error, src='newton_hybrid',
+        call msg%ferror(flag=warn, src='newton_hybrid',
      &          msg='Execeeded maximum iterations.')
+        sflag = .false.
 
       end subroutine newton_hybrid
 
 ! **********************************************************************
 
-      subroutine fsolve(func, xOld, x, jac, vars, opts)
+      subroutine fsolve(func, xOld, x, jac, vars, opts, sflag)
       ! Newton-Raphson solver for a system of nonlinear equations
       ! A backtracking 'Linesearch' option can be used for solution
 
@@ -316,6 +329,7 @@
         logical, optional                       :: jac
         real(wp), intent(in), optional          :: vars(:)
         type(options), intent(in), optional     :: opts
+        logical, intent(out), optional          :: sflag
         type(options)                           :: params
         real(wp)                                :: fvec(size(x))
         real(wp)                                :: rhs(size(x))
@@ -325,6 +339,8 @@
         real(wp)                                :: fnorm
         integer                                 :: iter
         type(logger)                            :: msg
+
+        integer                                 :: n
 
         if ( present(opts) ) params = opts
         x = xOld
@@ -358,6 +374,7 @@
 
           if ( ( norm2(fvec)/norm2(fvec0) .le. params%tolfx )
      &        .or. ( norm2(fvec) .le. params%tolfx ) ) then
+            sflag = .true.
             return
           end if
 
@@ -367,13 +384,13 @@
      &          (trim(params%method) .eq. 'LU') ) then
             call linSolve(fjac, rhs, dx)
           else if (  (trim(params%lib) .eq. 'LAPACK') .and.
-     &           (trim(params%method) .eq. 'LU') ) then
+     &            (trim(params%method) .eq. 'LU') ) then
             call linSolve(fjac, rhs, dx, params%lib)
           else if (  (trim(params%lib) .eq. 'LAPACK') .and.
      &            (trim(params%method)) .eq. 'QR' )  then
             call linSolve(fjac, rhs, dx, params%lib, params%method)
           else
-            call msg%ferror(flag=error, src='fsolve',
+            call msg%ferror(flag=error, src='fsolve', 
      &            msg='Illegal arguments for library and method.')
             return
           end if
@@ -392,8 +409,10 @@
 
         end do
 
-        call msg%ferror(flag=error, src='fsolve',
+        call msg%ferror(flag=warn, src='fsolve',
      &          msg='Execeeded maximum iterations.')
+        sflag = .false.
+
 
       end subroutine fsolve
 
@@ -511,7 +530,7 @@
 
           x_h = x_h + h
           call func(x_h, fx_h1, vars=vars)
-          x_h = x
+          x_h = x 
           x_h = x_h - h
           call func(x_h, fx_h2, vars=vars)
           dfx = (fx_h1 - fx_h2)/(two*h)

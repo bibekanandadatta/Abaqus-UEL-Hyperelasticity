@@ -112,14 +112,14 @@
           use global_parameters, only: wp
           implicit none
           real(wp), intent(in)        :: A(:,:)
-          logical                     :: sqr
+          logical                     :: sqr 
         end function isSquare
 
         module function isSymmetric(A) result(sym)
           use global_parameters, only: wp
           implicit none
           real(wp), intent(in)          :: A(:,:)
-          logical                       :: sym
+          logical                       :: sym  
         end function isSymmetric
 
          module function skew(A) result(skewA)
@@ -223,15 +223,15 @@
           real(wp), intent(in)        :: A(:,:)
           real(wp)                    :: detA
         end function det_std
-
+          
         module function det_lapack(A,lib) result(detA)
           use global_parameters, only: wp
-          implicit none
+          implicit none 
           real(wp), intent(in)        :: A(:,:)
           character(len=*), intent(in):: lib
           real(wp)                    :: detA
         end function det_lapack
-
+        
       end interface det
 
 ! **********************************************************************
@@ -258,7 +258,7 @@
           implicit none
           real(wp), intent(in)          :: A(:,:)
           real(wp)                      :: Ainv(size(A,1),size(A,2))
-        end function inv_std
+        end function inv_std 
 
         module function inv_lapack(A,lib) result(Ainv)
           use global_parameters, only: wp
@@ -268,7 +268,7 @@
           real(wp)                      :: Ainv(size(A,1),size(A,2))
         end function inv_lapack
 
-      end interface inv
+      end interface inv 
 
 ! **********************************************************************
       interface inverse
@@ -356,7 +356,7 @@
 
         module function cond(A,norm) result(con)
           use global_parameters, only: wp
-          implicit none
+          implicit none 
           real(wp), intent(in)            :: A(:,:)
           character(len=1), intent(in)    :: norm
           real(wp)                        :: con
@@ -402,7 +402,7 @@
           use global_parameters, only: wp
           implicit none
           real(wp), intent(in)        :: A(:,:)
-          real(wp)                    :: sqrtA(size(A,1),size(A,2))
+          real(wp)                    :: sqrtA(size(A,1),size(A,2))  
         end function sqrtm
 
         module subroutine sqrtMat(A,B)
@@ -429,7 +429,7 @@
       contains
 
 ! **********************************************************************
-
+      
       module function cross_product(a,b) result(c)
 
         use global_parameters, only: wp
@@ -498,7 +498,7 @@
 ! **********************************************************************
 
       module function diag_v(vec) result(mat)
-      ! sets the diagonal of a square matrix
+      ! sets the diagonal of a square matrix 
 
       use global_parameters, only: wp
       implicit none
@@ -608,7 +608,7 @@
       end subroutine eyeMat
 
 ! **********************************************************************
-
+      
       module function isEqualMat(A,B) result(comp)
 
         use global_parameters, only: wp
@@ -656,7 +656,7 @@
       end function isEqualVec
 
 ! **********************************************************************
-
+      
       module function isSkew(A) result(skw)
 
         use global_parameters, only: wp
@@ -668,7 +668,7 @@
 
         if ( all( abs(A+transpose(A)) .lt. epsilon(A) ) ) then
           skw = .true.
-        else
+        else 
           skw = .false.
         end if
 
@@ -681,24 +681,24 @@
         use global_parameters, only: wp
 
         implicit none
-
+        
         real(wp), intent(in)        :: A(:,:)
-        logical                     :: sqr
+        logical                     :: sqr 
         integer                     :: m, n
 
         m = size(A,1)
         n = size(A,2)
 
-        if (m .eq. n) then
+        if (m .eq. n) then 
           sqr = .true.
-        else
+        else 
           sqr = .false.
-        end if
+        end if 
 
       end function isSquare
 
 ! **********************************************************************
-
+      
       module function isSymmetric(A) result(sym)
 
         use global_parameters, only: wp
@@ -710,7 +710,7 @@
 
         if ( all( abs(A-transpose(A)) .lt. epsilon(A) ) ) then
           sym = .true.
-        else
+        else 
           sym = .false.
         end if
 
@@ -1028,11 +1028,6 @@
 
         end if
 
-        if (detA .le. zero) then
-          call msg%ferror(flag=warn, src='detMat_std',
-     &          msg='Negative determinant.', ra=detA)
-        end if
-
       end subroutine detMat_std
 
 ! **********************************************************************
@@ -1048,7 +1043,7 @@
 
         call inverseMat_std(A,Ainv)
 
-      end function inv_std
+      end function inv_std 
 
 ! **********************************************************************
 
@@ -1231,7 +1226,7 @@
 
         use global_parameters, only: wp
 
-        implicit none
+        implicit none 
 
         real(wp), intent(in)            :: A(:,:)
         character(len=1), intent(in)    :: norm
@@ -1240,7 +1235,7 @@
         call condition(A,con,norm)
 
       end function cond
-
+      
 ! **********************************************************************
 
       module subroutine condition(A,cond,norm)
@@ -1311,7 +1306,7 @@
 
         use global_parameters, only: wp
 
-        implicit none
+        implicit none 
 
         real(wp), intent(in)        :: A(:,:)
         character(len=*), intent(in):: lib
@@ -1368,11 +1363,6 @@
           detA = detA * mat(i,i)
           if ( ipiv(i) .ne. i ) detA = - detA
         end do
-
-        if (detA .le. zero) then
-          call msg%ferror(flag=warn, src='detMat_lapack',
-     &          msg='Negative determinant.', ra=detA)
-        end if
 
       end subroutine detMat_lapack
 
@@ -1772,7 +1762,7 @@
         real(wp)                                :: x(size(b))
         integer                                 :: m, n
         type(logger)                            :: msg
-
+        
         real(wp)            :: mat(size(A,1),size(A,2)), vec(size(b))
 
         m = size(A,1)
@@ -1791,7 +1781,7 @@
           call linSolve(mat,vec,x)
         else if ( present(lib) .and. (.not. present(method)) ) then
           call linSolve(mat,vec,x,lib)
-        else if ( present(lib) .and. (method .eq. 'QR') ) then
+        else if ( present(lib) .and. (method .eq. 'QR') ) then 
           call linSolve(mat,vec,x,lib,method)
         else
           call msg%ferror(error, src='solve', msg='Illegal argument.')
