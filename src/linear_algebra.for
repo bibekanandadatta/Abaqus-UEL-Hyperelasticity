@@ -20,21 +20,21 @@
       interface
 
         module function cross_product(a,b) result(c)
-          use global_parameters, only: wp
+          use global_parameters
           implicit none
           real(wp), intent(in)        :: a(3), b(3)
           real(wp)                    :: c(3)
         end function cross_product
 
         module subroutine crossProduct(a,b,c)
-          use global_parameters, only: wp
+          use global_parameters
           implicit none
           real(wp), intent(in)       :: a(3), b(3)
           real(wp), intent(out)      :: c(3)
         end subroutine crossProduct
 
         module subroutine diagonal(A,v,ask)
-          use global_parameters, only: wp
+          use global_parameters
           use error_logging
           implicit none
           real(wp), intent(inout)       :: A(:,:)
@@ -47,7 +47,7 @@
       interface diag
 
         module function diag_m(mat) result(vec)
-          use global_parameters, only: wp
+          use global_parameters
           use error_logging
           implicit none
           real(wp), intent(in)        :: mat(:,:)
@@ -55,7 +55,7 @@
         end function diag_m
 
         module function diag_v(vec) result(mat)
-          use global_parameters, only: wp
+          use global_parameters
           implicit none
           real(wp), intent(in)        :: vec(:)
           real(wp), allocatable       :: mat(:,:)
@@ -66,14 +66,14 @@
       interface
 
         module function eye(m, n) result(ID)
-          use global_parameters, only: wp, zero, one
+          use global_parameters
           integer, intent(in)           :: m
           integer, intent(in), optional :: n
           real(wp), allocatable         :: ID(:,:)
         end function eye
 
         module subroutine eyeMat(A)
-          use global_parameters, only: wp, zero, one
+          use global_parameters
           implicit none
           real(wp), intent(out)       :: A(:,:)
           integer                     :: i
@@ -84,14 +84,14 @@
       interface isEqual
 
         module function isEqualMat(A,B) result(comp)
-          use global_parameters, only: wp
+          use global_parameters
           implicit none
           real(wp), intent(in)      :: A(:,:), B(:,:)
           logical                   :: comp
         end function isEqualMat
 
         module function isEqualVec(a,b) result(comp)
-          use global_parameters, only: wp
+          use global_parameters
           implicit none
           real(wp), intent(in)      :: a(:), b(:)
           logical                   :: comp
@@ -102,28 +102,28 @@
       interface
 
         module function isSkew(A) result(skw)
-          use global_parameters, only: wp
+          use global_parameters
           implicit none
           real(wp), intent(in)          :: A(:,:)
           logical                       :: skw
         end function isSkew
 
         module function isSquare(A) result(sqr)
-          use global_parameters, only: wp
+          use global_parameters
           implicit none
           real(wp), intent(in)        :: A(:,:)
-          logical                     :: sqr 
+          logical                     :: sqr
         end function isSquare
 
         module function isSymmetric(A) result(sym)
-          use global_parameters, only: wp
+          use global_parameters
           implicit none
           real(wp), intent(in)          :: A(:,:)
-          logical                       :: sym  
+          logical                       :: sym
         end function isSymmetric
 
          module function skew(A) result(skewA)
-          use global_parameters, only: wp, half
+          use global_parameters
           use error_logging
           implicit none
           real(wp), intent(in)        :: A(:,:)
@@ -131,7 +131,7 @@
         end function skew
 
         module subroutine skewMat(A,skewA)
-          use global_parameters, only: wp, half
+          use global_parameters
           use error_logging
           implicit none
           real(wp), intent(in)        :: A(:,:)
@@ -139,7 +139,7 @@
         end subroutine skewMat
 
         module function sym(A) result(symA)
-          use global_parameters, only: wp, half
+          use global_parameters
           use error_logging
           implicit none
           real(wp), intent(in)        :: A(:,:)
@@ -147,7 +147,7 @@
         end function sym
 
         module subroutine symMat(A,symA)
-          use global_parameters, only: wp, half
+          use global_parameters
           use error_logging
           implicit none
           real(wp), intent(in)        :: A(:,:)
@@ -155,7 +155,7 @@
         end subroutine symMat
 
         module function trace(A) result(trA)
-          use global_parameters, only: wp, zero
+          use global_parameters
           use error_logging
           implicit none
           real(wp), intent(in)        :: A(:,:)
@@ -163,7 +163,7 @@
         end function trace
 
         module subroutine traceMat(A,trA)
-          use global_parameters, only: wp, zero
+          use global_parameters
           use error_logging
           implicit none
           real(wp), intent(in)        :: A(:,:)
@@ -171,7 +171,7 @@
         end subroutine traceMat
 
         module function triL(A) result(L)
-          use global_parameters, only: wp, zero
+          use global_parameters
           use error_logging
           implicit none
           real(wp), intent(in)        :: A(:,:)
@@ -179,7 +179,7 @@
         end function triL
 
         module function triU(A) result(U)
-          use global_parameters, only: wp, zero
+          use global_parameters
           use error_logging
           implicit none
           real(wp), intent(in)        :: A(:,:)
@@ -195,7 +195,7 @@
       interface detMat
 
         module subroutine detMat_std(A,detA)
-          use global_parameters, only: wp, zero, one
+          use global_parameters
           use error_logging
           implicit none
           real(wp), intent(in)        :: A(:,:)
@@ -203,7 +203,7 @@
         end subroutine detMat_std
 
        module subroutine detMat_lapack(A,detA,lib)
-          use global_parameters, only: wp, zero, one
+          use global_parameters
           use error_logging
           implicit none
           real(wp), intent(in)        :: A(:,:)
@@ -218,20 +218,20 @@
       interface det
 
         module function det_std(A) result(detA)
-          use global_parameters, only: wp
+          use global_parameters
           implicit none
           real(wp), intent(in)        :: A(:,:)
           real(wp)                    :: detA
         end function det_std
-          
+
         module function det_lapack(A,lib) result(detA)
-          use global_parameters, only: wp
-          implicit none 
+          use global_parameters
+          implicit none
           real(wp), intent(in)        :: A(:,:)
           character(len=*), intent(in):: lib
           real(wp)                    :: detA
         end function det_lapack
-        
+
       end interface det
 
 ! **********************************************************************
@@ -239,7 +239,7 @@
       interface eigen
 
         module subroutine eigen_lapack_sym(A,eVal,eVec,lib)
-          use global_parameters, only: wp, zero, one
+          use global_parameters
           use error_logging
           implicit none
           real(wp), intent(in)          :: A(:,:)
@@ -254,27 +254,27 @@
       interface inv
 
         module function inv_std(A) result(Ainv)
-          use global_parameters, only: wp
+          use global_parameters
           implicit none
           real(wp), intent(in)          :: A(:,:)
           real(wp)                      :: Ainv(size(A,1),size(A,2))
-        end function inv_std 
+        end function inv_std
 
         module function inv_lapack(A,lib) result(Ainv)
-          use global_parameters, only: wp
+          use global_parameters
           implicit none
           real(wp), intent(in)          :: A(:,:)
           character(len=*), intent(in)  :: lib
           real(wp)                      :: Ainv(size(A,1),size(A,2))
         end function inv_lapack
 
-      end interface inv 
+      end interface inv
 
 ! **********************************************************************
       interface inverse
 
         module subroutine inverseMat_std(A,Ainv)
-          use global_parameters, only: wp, zero, one
+          use global_parameters
           use error_logging
           implicit none
           real(wp), intent(in)        :: A(:,:)
@@ -282,7 +282,7 @@
         end subroutine inverseMat_std
 
         module subroutine inverseMat_lapack(A,Ainv,lib)
-          use global_parameters, only: wp
+          use global_parameters
           implicit none
           real(wp), intent(in)          :: A(:,:)
           character(len=*), intent(in)  :: lib
@@ -295,16 +295,16 @@
 
       interface linSolve
 
-        module subroutine linSolve_std_LU(A,b,x)
-          use global_parameters, only: wp, zero
+        module subroutine linSolve_std_inv(A,b,x)
+          use global_parameters
           use error_logging
           implicit none
           real(wp), intent(inout)       :: A(:,:), b(:)
           real(wp), intent(out)         :: x(:)
-        end subroutine linSolve_std_LU
+        end subroutine linSolve_std_inv
 
         module subroutine linSolve_lapack_LU(A,b,x,lib)
-          use global_parameters, only: wp
+          use global_parameters
           use error_logging
           implicit none
           real(wp), intent(inout)         :: A(:,:), b(:)
@@ -313,7 +313,7 @@
         end subroutine linSolve_lapack_LU
 
         module subroutine linSolve_lapack_QR(A,b,x,lib,method)
-          use global_parameters, only: wp
+          use global_parameters
           use error_logging
           implicit none
           real(wp), intent(inout)         :: A(:,:), b(:)
@@ -328,7 +328,7 @@
       interface LUfact
 
         module subroutine luDecompose_std(A,L,U)
-          use global_parameters, only: wp, zero, one
+          use global_parameters
           use error_logging
           implicit none
           real(wp), intent(in)        :: A(:,:)
@@ -336,7 +336,7 @@
         end subroutine luDecompose_std
 
         module subroutine luDecompose_lapack(A,P,L,U,lib)
-          use global_parameters, only: wp, zero, one
+          use global_parameters
           use error_logging
           implicit none
           real(wp), intent(in)        :: A(:,:)
@@ -355,15 +355,15 @@
       interface
 
         module function cond(A,norm) result(con)
-          use global_parameters, only: wp
-          implicit none 
+          use global_parameters
+          implicit none
           real(wp), intent(in)            :: A(:,:)
           character(len=1), intent(in)    :: norm
           real(wp)                        :: con
         end function cond
 
         module subroutine condition(A,cond,norm)
-          use global_parameters, only: wp, one
+          use global_parameters
           use error_logging
           implicit none
           real(wp), intent(in)            :: A(:,:)
@@ -371,8 +371,38 @@
           character(len=1), intent(in) :: norm
         end subroutine condition
 
+        module function expm(A) result(expA)
+          use global_parameters
+          implicit none
+          real(wp), intent(in)        :: A(:,:)
+          real(wp)                    :: expA(size(A,1),size(A,2))
+        end function expm
+
+        module subroutine expMat(A,B)
+          use global_parameters
+          use error_logging
+          implicit none
+          real(wp), intent(inout)     :: A(:,:)
+          real(wp), intent(out)       :: B(:,:)
+        end subroutine expMat
+
+        module function logm(A) result(logA)
+          use global_parameters
+          implicit none
+          real(wp), intent(in)        :: A(:,:)
+          real(wp)                    :: logA(size(A,1),size(A,2))
+        end function logm
+
+        module subroutine logMat(A,B)
+          use global_parameters
+          use error_logging
+          implicit none
+          real(wp), intent(inout)     :: A(:,:)
+          real(wp), intent(out)       :: B(:,:)
+        end subroutine logMat
+
         module function norm(A,normType) result(anorm)
-          use global_parameters, only: wp
+          use global_parameters
           implicit none
           real(wp), intent(in)            :: A(:,:)
           character(len=1), intent(in)    :: normType
@@ -380,7 +410,7 @@
         end function norm
 
         module subroutine polarDecompose(A,V,U,R)
-          use global_parameters, only: wp, zero
+          use global_parameters
           use error_logging
           implicit none
           real(wp), intent (in)     :: A(:,:)
@@ -388,7 +418,7 @@
         end subroutine polarDecompose
 
         module function solve(A,b,lib,method) result(x)
-          use global_parameters, only: wp
+          use global_parameters
           use error_logging
           implicit none
           real(wp), intent(in)                    :: A(:,:)
@@ -399,14 +429,14 @@
         end function solve
 
         module function sqrtm(A) result(sqrtA)
-          use global_parameters, only: wp
+          use global_parameters
           implicit none
           real(wp), intent(in)        :: A(:,:)
-          real(wp)                    :: sqrtA(size(A,1),size(A,2))  
+          real(wp)                    :: sqrtA(size(A,1),size(A,2))
         end function sqrtm
 
         module subroutine sqrtMat(A,B)
-          use global_parameters, only: wp, zero
+          use global_parameters
           use error_logging
           implicit none
           real(wp), intent(inout)       :: A(:,:)
@@ -429,10 +459,10 @@
       contains
 
 ! **********************************************************************
-      
+
       module function cross_product(a,b) result(c)
 
-        use global_parameters, only: wp
+        use global_parameters
 
         implicit none
 
@@ -451,7 +481,7 @@
       ! this subroutine computes the cross product of two vectors
       ! the input/ output arguments are 1D array
 
-        use global_parameters, only: wp
+        use global_parameters
 
         implicit none
 
@@ -469,25 +499,26 @@
       module function diag_m(mat) result(vec)
       ! returns the diagonal of a square matrix
 
-        use global_parameters, only: wp
+        use global_parameters
         use error_logging
 
         implicit none
         real(wp), intent(in)        :: mat(:,:)
         real(wp), allocatable       :: vec(:)
         integer                     :: m, n, i
-        type(logger)                :: msg
 
-        m = size(mat,1)
-        n = size(mat,2)
+
+        m   = size(mat,1)
+        n   = size(mat,2)
 
         if(m .ne. n) then
           call msg%ferror(flag=error,src='diag_m',
-     &          msg ='Matrix is not square.', ivec=[m, n])
+     &          msg ='Matrix is not square: ', ivec=[m, n])
           return
         end if
 
         allocate(vec(m))
+        vec = zero
 
         do i = 1, m
           vec(i) = mat(i,i)
@@ -498,9 +529,9 @@
 ! **********************************************************************
 
       module function diag_v(vec) result(mat)
-      ! sets the diagonal of a square matrix 
+      ! sets the diagonal of a square matrix
 
-      use global_parameters, only: wp
+      use global_parameters
       implicit none
 
       real(wp), intent(in)        :: vec(:)
@@ -510,8 +541,9 @@
       dim = size(vec)
       allocate( mat(dim,dim) )
 
+      mat         = zero
       do i = 1, dim
-        mat(i,i) = vec(i)
+        mat(i,i)  = vec(i)
       end do
 
       end function diag_v
@@ -521,7 +553,7 @@
       module subroutine diagonal(A,v,ask)
       ! this subroutine returns the diagonal of a square martrix
 
-        use global_parameters, only: wp
+        use global_parameters
         use error_logging
 
         implicit none
@@ -530,14 +562,14 @@
         real(wp), intent(inout)       :: v(:)
         character(len=*), intent(in)  :: ask
         integer                       :: m, n, i
-        type(logger)                  :: msg
+
 
         m = size(A,1)
         n = size(A,2)
 
         if (m .ne. n) then
           call msg%ferror(flag=error,src='diagonal',
-     &          msg ='Matrix is not square.', ivec=[m, n])
+     &          msg ='Matrix is not square: ', ivec=[m, n])
           return
         end if
 
@@ -546,14 +578,14 @@
             v(i) = A(i,i)
           end do
 
-        else if ( trim(ask) .eq. 'put' ) then
+        else if ( trim(ask) .eq. 'set' ) then
           do i = 1, m
             A(i,i) = v(i)
           end do
 
         else
           call msg%ferror(flag=error, src='diagonal',
-     &            msg='Illegal argument.', ch=trim(ask))
+     &            msg='Illegal argument: ', ch=trim(ask))
           return
         end if
 
@@ -563,7 +595,7 @@
 
       module function eye(m, n) result(ID)
 
-        use global_parameters, only: wp, zero, one
+        use global_parameters
 
         integer, intent(in)           :: m
         integer, intent(in), optional :: n
@@ -590,7 +622,7 @@
       module subroutine eyeMat(A)
       ! returns an identity matrix of dimension n x n
 
-        use global_parameters, only: wp, zero, one
+        use global_parameters
 
         implicit none
 
@@ -608,10 +640,10 @@
       end subroutine eyeMat
 
 ! **********************************************************************
-      
+
       module function isEqualMat(A,B) result(comp)
 
-        use global_parameters, only: wp
+        use global_parameters
 
         implicit none
 
@@ -624,7 +656,7 @@
         m2  = size(B,1)
         n2  = size(B,2)
 
-        if ( (m1 .ne. m2) .and. (n1 .ne. n2) ) then
+        if ( (m1 .ne. m2) .or. (n1 .ne. n2) ) then
           comp = .false.
         else
           comp = all( abs(A-B) .lt. epsilon(A) )
@@ -636,7 +668,7 @@
 
       module function isEqualVec(a,b) result(comp)
 
-        use global_parameters, only: wp
+        use global_parameters
 
         implicit none
 
@@ -656,10 +688,10 @@
       end function isEqualVec
 
 ! **********************************************************************
-      
+
       module function isSkew(A) result(skw)
 
-        use global_parameters, only: wp
+        use global_parameters
 
         implicit none
 
@@ -668,7 +700,7 @@
 
         if ( all( abs(A+transpose(A)) .lt. epsilon(A) ) ) then
           skw = .true.
-        else 
+        else
           skw = .false.
         end if
 
@@ -678,30 +710,30 @@
 
       module function isSquare(A) result(sqr)
 
-        use global_parameters, only: wp
+        use global_parameters
 
         implicit none
-        
+
         real(wp), intent(in)        :: A(:,:)
-        logical                     :: sqr 
+        logical                     :: sqr
         integer                     :: m, n
 
         m = size(A,1)
         n = size(A,2)
 
-        if (m .eq. n) then 
+        if (m .eq. n) then
           sqr = .true.
-        else 
+        else
           sqr = .false.
-        end if 
+        end if
 
       end function isSquare
 
 ! **********************************************************************
-      
+
       module function isSymmetric(A) result(sym)
 
-        use global_parameters, only: wp
+        use global_parameters
 
         implicit none
 
@@ -710,7 +742,7 @@
 
         if ( all( abs(A-transpose(A)) .lt. epsilon(A) ) ) then
           sym = .true.
-        else 
+        else
           sym = .false.
         end if
 
@@ -721,7 +753,7 @@
       module function skew(A) result(skewA)
       ! calculates the skew part of a square matrix
 
-        use global_parameters, only: wp, half
+        use global_parameters
         use error_logging
 
         implicit none
@@ -729,14 +761,15 @@
         real(wp), intent(in)        :: A(:,:)
         real(wp)                    :: skewA(size(A,1),size(A,1))
         integer                     :: m, n
-        type(logger)                :: msg
 
-        m  = size(A,1)
-        n  = size(A,2)
+
+        m       = size(A,1)
+        n       = size(A,2)
+        skewA   = zero
 
         if ( m .ne. n ) then
           call msg%ferror(flag=error,src='skew',
-     &          msg ='Matrix is not square.', ivec=[m, n])
+     &          msg ='Matrix is not square: ', ivec=[m, n])
           return
         else
           skewA = half * ( A - transpose(A) )
@@ -749,7 +782,7 @@
       module subroutine skewMat(A,skewA)
       ! calculates the skew part of a square matrix
 
-        use global_parameters, only: wp, half
+        use global_parameters
         use error_logging
 
         implicit none
@@ -757,16 +790,18 @@
         real(wp), intent(in)        :: A(:,:)
         real(wp), intent(out)       :: skewA(:,:)
         integer                     :: m1, n1, m2, n2, i
-        type(logger)                :: msg
 
-        m1  = size(A,1)
-        n1  = size(A,2)
-        m2  = size(skewA,1)
-        n2  = size(skewA,2)
 
-        if ( (m1 .ne. m2) .and. (n1 .ne. n2) ) then
-          call msg%ferror(flag=error,src='diag_m',
-     &          msg ='Matrix is not square.', ivec=[m1, n1, m2, n2])
+        m1    = size(A,1)
+        n1    = size(A,2)
+        m2    = size(skewA,1)
+        n2    = size(skewA,2)
+
+        skewA = zero
+
+        if ( (m1 .ne. m2) .or. (n1 .ne. n2) ) then
+          call msg%ferror(flag=error,src='skewMat',
+     &          msg ='Matrix is not square: ', ivec=[m1, n1, m2, n2])
           return
         else
           skewA = half * (A - transpose(A))
@@ -778,7 +813,7 @@
 
       module function sym(A) result(symA)
 
-        use global_parameters, only: wp, half
+        use global_parameters
         use error_logging
 
         implicit none
@@ -786,14 +821,15 @@
         real(wp), intent(in)        :: A(:,:)
         real(wp)                    :: symA(size(A,1),size(A,2))
         integer                     :: m, n
-        type(logger)                :: msg
 
-        m  = size(A,1)
-        n  = size(A,2)
+
+        m     = size(A,1)
+        n     = size(A,2)
+        symA  = zero
 
         if ( m .ne. n ) then
           call msg%ferror(flag=error,src='sym',
-     &          msg ='Matrix is not square.', ivec=[m, n])
+     &          msg ='Matrix is not square: ', ivec=[m, n])
           return
         else
           symA = half * (A + transpose(A))
@@ -806,7 +842,7 @@
       module subroutine symMat(A,symA)
       ! calculates the symmetric part of a square matix
 
-        use global_parameters, only: wp, half
+        use global_parameters
         use error_logging
 
         implicit none
@@ -814,16 +850,17 @@
         real(wp), intent(in)        :: A(:,:)
         real(wp), intent(out)       :: symA(:,:)
         integer                     :: m1, n1, m2, n2, i
-        type(logger)                :: msg
 
-        m1  = size(A,1)
-        n1  = size(A,2)
-        m2  = size(symA,1)
-        n2  = size(symA,2)
 
-        if ( (m1 .ne. m2) .and. (n1 .ne. n2) ) then
+        m1    = size(A,1)
+        n1    = size(A,2)
+        m2    = size(symA,1)
+        n2    = size(symA,2)
+        symA  = zero
+
+        if ( (m1 .ne. m2) .or. (n1 .ne. n2) ) then
           call msg%ferror(flag=error,src='symMat',
-     &          msg ='Matrix is not square.', ivec=[m1, n1, m2, n2])
+     &          msg ='Matrix is not square: ', ivec=[m1, n1, m2, n2])
           return
         else
           symA = half * (A + transpose(A))
@@ -835,7 +872,7 @@
 
       module function trace(A) result(trA)
 
-        use global_parameters, only: wp, zero
+        use global_parameters
         use error_logging
 
         implicit none
@@ -843,14 +880,15 @@
         real(wp), intent(in)        :: A(:,:)
         real(wp)                    :: trA
         integer                     :: i, m, n
-        type(logger)                :: msg
 
-        m = size(A,1)
-        n = size(A,2)
+
+        m   = size(A,1)
+        n   = size(A,2)
+        trA = zero
 
         if (m .ne. n) then
           call msg%ferror(flag=error,src='trace',
-     &          msg ='Matrix is not square.', ivec=[m, n])
+     &          msg ='Matrix is not square: ', ivec=[m, n])
           return
         end if
 
@@ -865,7 +903,7 @@
 
       module subroutine traceMat(A,trA)
 
-        use global_parameters, only: wp, zero
+        use global_parameters
         use error_logging
 
         implicit none
@@ -873,14 +911,15 @@
         real(wp), intent(in)        :: A(:,:)
         real(wp), intent(out)       :: trA
         integer                     :: i, m, n
-        type(logger)                :: msg
 
-        m = size(A,1)
-        n = size(A,2)
+
+        m   = size(A,1)
+        n   = size(A,2)
+        trA = zero
 
         if (m .ne. n) then
           call msg%ferror(flag=error,src='traceMat',
-     &          msg ='Matrix is not square.', ivec=[m, n])
+     &          msg ='Matrix is not square: ', ivec=[m, n])
           return
         end if
 
@@ -896,7 +935,7 @@
       module function triL(A) result (L)
       ! this subroutine returns the lower triangular part of a square matrix
 
-        use global_parameters, only: wp, zero
+        use global_parameters
         use error_logging
 
         implicit none
@@ -904,18 +943,18 @@
         real(wp), intent(in)        :: A(:,:)
         real(wp)                    :: L(size(A,1),size(A,2))
         integer                     :: i, m, n
-        type(logger)                :: msg
 
-        m = size(A,1)
-        n = size(A,2)
+
+        m     = size(A,1)
+        n     = size(A,2)
+        L     = zero
 
         if (m .ne. n) then
           call msg%ferror(flag=error,src='triL',
-     &          msg ='Matrix is not square.', ivec=[m , n])
+     &          msg ='Matrix is not square: ', ivec=[m , n])
           return
         end if
 
-        L = zero
         do i = 1, m
           L(i:m,i) = A(i:m,i)
         end do
@@ -927,7 +966,7 @@
       module function triU(A) result(U)
       ! this subroutine returns the upper triangular part of a square matrix
 
-        use global_parameters, only: wp, zero
+        use global_parameters
         use error_logging
 
         implicit none
@@ -935,18 +974,18 @@
         real(wp), intent(in)        :: A(:,:)
         real(wp)                    :: U(size(A,1),size(A,2))
         integer                     :: i, m, n
-        type(logger)                :: msg
 
-        m = size(A,1)
-        n = size(A,2)
+
+        m     = size(A,1)
+        n     = size(A,2)
+        U     = zero
 
         if (m .ne. n) then
          call msg%ferror(flag=error,src='triU',
-     &          msg ='Matrix is not square.', ivec=[m , n])
+     &          msg ='Matrix is not square: ', ivec=[m , n])
           return
         end if
 
-        U = zero
         do i = 1, m
           U(1:i,i) = A(1:i,i)
         end do
@@ -954,6 +993,7 @@
       end function triU
 
       end submodule utilities
+
 
 ! **********************************************************************
 ! **********************************************************************
@@ -969,7 +1009,7 @@
 
       module function det_std(A) result(detA)
 
-        use global_parameters, only: wp
+        use global_parameters
 
         implicit none
 
@@ -985,7 +1025,7 @@
       module subroutine detMat_std(A,detA)
       ! this subroutine calculates the determinant of a square matrix [A]
 
-        use global_parameters, only: wp, zero, one
+        use global_parameters
         use error_logging
 
         implicit none
@@ -995,14 +1035,15 @@
         real(wp)                    :: L(size(A,1),size(A,2))
         real(wp)                    :: U(size(A,1),size(A,2))
         integer                     :: m, n, i
-        type(logger)                :: msg
 
-        m = size(A,1)
-        n = size(A,2)
+
+        m     = size(A,1)
+        n     = size(A,2)
+        detA  = one
 
         if (m .ne. n) then
           call msg%ferror(flag=error,src='detMat_std',
-     &          msg ='Matrix is not square.', ivec=[m , n])
+     &          msg ='Matrix is not square: ', ivec=[m , n])
           return
         end if
 
@@ -1034,7 +1075,7 @@
 
       module function inv_std(A) result(Ainv)
 
-        use global_parameters, only: wp
+        use global_parameters
 
         implicit none
 
@@ -1043,14 +1084,14 @@
 
         call inverseMat_std(A,Ainv)
 
-      end function inv_std 
+      end function inv_std
 
 ! **********************************************************************
 
       module subroutine inverseMat_std(A,Ainv)
       ! this subroutine returns Ainv and detA for a square matrix A
 
-      use global_parameters, only: wp, zero, one
+      use global_parameters
       use error_logging
 
       implicit none
@@ -1063,22 +1104,28 @@
       real(wp)                    :: b(size(A,1)), d(size(A,1))
       real(wp)                    :: x(size(A,1))
       integer                     :: m1, n1, m2, n2, i, j, k
-      type(logger)                :: msg
 
 
-      m1 = size(A,1)
-      n1 = size(A,2)
-      m2 = size(Ainv,1)
-      n2 = size(Ainv,2)
-      Ainv = zero
 
-      if ( (m1 .ne. n1) .and. (m2 .ne. n2) ) then
+      m1    = size(A,1)
+      n1    = size(A,2)
+      m2    = size(Ainv,1)
+      n2    = size(Ainv,2)
+      Ainv  = zero
+
+      if ( (m1 .ne. n1) .or. (m2 .ne. n2) ) then
         call msg%ferror(flag=error,src='inverseMat_std',
-     &          msg ='Matrix is not square.', ivec=[m1 , n1, m2, n2])
+     &          msg ='Matrix is not square: ', ivec=[m1 , n1, m2, n2])
         return
       end if
 
       call detMat(A,detA)
+
+      if (abs(detA) .le. tolX) then
+        call msg%ferror(flag=error,src='inverseMat_std',
+     &      msg='Singular/near-singular matrix: ', ra=detA)
+        return
+      end if
 
       rdetA = one/detA
 
@@ -1106,22 +1153,24 @@
         call LUfact(A,L,U)
 
         do k = 1,m1
-          b(k)=one
-          d(1) = b(1)
+          b       = zero
+          b(k)    = one
+          d(1)    = b(1)
           do i = 2, m1
-            d(i) = b(i)
-            d(i) = d(i) - dot_product(L(i,1:i-1),d(1:i-1))
+            d(i)  = b(i)
+            d(i)  = d(i) - dot_product(L(i,1:i-1),d(1:i-1))
           end do
 
-          x(m1)=d(m1)/U(m1,m1)
+          x(m1)   = d(m1)/U(m1,m1)
+
           do i = m1-1,1,-1
-            x(i) = d(i)
-            x(i) = x(i)-dot_product(U(i,i+1:m1),x(i+1:m1))
-            x(i) = x(i)/U(i,i)
+            x(i)  = d(i)
+            x(i)  = x(i)-dot_product(U(i,i+1:m1),x(i+1:m1))
+            x(i)  = x(i)/U(i,i)
           end do
 
-          Ainv(1:m1,k) = x(1:m1)
-          b(k) = zero
+          Ainv(1:m1,k)  = x(1:m1)
+          b(k)          = zero
         end do
 
       end if
@@ -1130,10 +1179,10 @@
 
 ! **********************************************************************
 
-      module subroutine linSolve_std_LU(A,b,x)
+      module subroutine linSolve_std_inv(A,b,x)
       ! this subroutine solves for linear system using LU decomposition
 
-        use global_parameters, only: wp, zero
+        use global_parameters
         use error_logging
 
         implicit none
@@ -1142,22 +1191,23 @@
         real(wp), intent(out)         :: x(:)
         real(wp)                      :: Ainv(size(A,1),size(A,2))
         integer                       :: m, n
-        type(logger)                  :: msg
 
-        m = size(A,1)
-        n = size(A,2)
+
+        m   = size(A,1)
+        n   = size(A,2)
+        x   = zero
 
         if ( m .ne. n) then
-          call msg%ferror(flag=error,src='linSolve_std_LU',
-     &          msg ='Matrix is not square.', ivec=[m , n])
+          call msg%ferror(flag=error,src='linSolve_std_inv',
+     &          msg ='Matrix is not square: ', ivec=[m , n])
           return
         end if
 
         call inverse(A,Ainv)
 
-        x = matmul(Ainv,b)
+        x   = matmul(Ainv,b)
 
-      end subroutine linSolve_std_LU
+      end subroutine linSolve_std_inv
 
 ! **********************************************************************
 
@@ -1165,7 +1215,7 @@
       ! this subroutine computes the inverse of an arbitrary
       ! square matrix of size nxn using LU decomposition
 
-        use global_parameters, only: wp, zero, one
+        use global_parameters
         use error_logging
         implicit none
 
@@ -1174,31 +1224,38 @@
         real(wp)                    :: coeff, detA
         integer                     :: m1, n1, m2, n2, m3, n3
         integer                     :: i, j
-        type(logger)                :: msg
 
-        m1 = size(A,1)
-        n1 = size(A,2)
-        m2 = size(L,1)
-        n2 = size(L,2)
-        m3 = size(U,1)
-        n3 = size(U,2)
+
+        m1  = size(A,1)
+        n1  = size(A,2)
+        m2  = size(L,1)
+        n2  = size(L,2)
+        m3  = size(U,1)
+        n3  = size(U,2)
+
+        L   = zero
+        U   = A
 
         if (m1 .ne. n1) then
           call msg%ferror(flag=error,src='luDecompose_std',
-     &          msg ='Matrix is not square.', ivec=[m1 , n1])
+     &          msg ='Matrix is not square: ', ivec=[m1 , n1])
           return
         end if
 
         !! TODO: add dimensional checking for the requested output arguments
 
-        L = zero
-        U = A
-
         do j = 1, m1-1
           do i = j+1, m1
-            coeff = U(i,j)/U(j,j)
-            L(i,j) = coeff
-            U(i,j+1:m1) = U(i,j+1:m1) - coeff*U(j,j+1:m1)
+            if (abs(U(j,j)) .le. tolX) then
+              call msg%ferror( flag=error,src='luDecompose_std',
+     &        msg ='Near zero pivot: ', ia=j, ra=U(j,j) )
+              return
+            else
+              coeff       = U(i,j)/U(j,j)
+              L(i,j)      = coeff
+              U(i,j+1:m1) = U(i,j+1:m1) - coeff*U(j,j+1:m1)
+              U(i,j)      = zero
+            end if
           end do
         end do
 
@@ -1224,9 +1281,9 @@
 
       module function cond(A,norm) result(con)
 
-        use global_parameters, only: wp
+        use global_parameters
 
-        implicit none 
+        implicit none
 
         real(wp), intent(in)            :: A(:,:)
         character(len=1), intent(in)    :: norm
@@ -1235,14 +1292,14 @@
         call condition(A,con,norm)
 
       end function cond
-      
+
 ! **********************************************************************
 
       module subroutine condition(A,cond,norm)
       ! this subroutine calculates condiiton of a matrix based on
       ! '1' or 'I' norm. there is no subroutine in LAPACK for 2-norm
 
-        use global_parameters, only: wp, one
+        use global_parameters
         use error_logging
 
         implicit none
@@ -1250,7 +1307,7 @@
         real(wp), intent(in)            :: A(:,:)
         real(wp), intent(out)           :: cond
         character(len=1), intent(in)    :: norm
-        integer                         :: m, n, lda, info
+        integer                         :: m, n, lda, chk
         integer                         :: ipiv(min(size(A,1),
      &                                              size(A,2)))
         integer                         :: iwork(size(A,2))
@@ -1258,26 +1315,32 @@
         real(wp)                        :: anorm, rcond, dlange
         real(wp)                        :: mat(size(A,1),size(A,2))
         real(wp), parameter             :: tol = 1.0e-6_wp
-        type(logger)                    :: msg
 
-        m = size(A,1)
-        n = size(A,2)
-        lda = m
-        mat = A
+        m     = size(A,1)
+        n     = size(A,2)
+        lda   = m
+        mat   = A
+        cond  = zero
+
+        if (m .ne. n) then
+        call msg%ferror(flag=error, src='condition',
+     &        msg='Matrix is not square: ', ivec=[m, n])
+          return
+        end if
 
         ! norm of A
         anorm = dlange(norm, m, n, mat, lda, work)
 
         ! LU factorization of A
-        call dgetrf(m, n, mat, lda, ipiv, info)
+        call dgetrf(m, n, mat, lda, ipiv, chk)
 
-        if (info .eq. 0) then
+        if (chk .eq. 0) then
           call dgecon(norm, n, mat, lda, anorm, rcond, work,
-     &                iwork, info)
+     &                iwork, chk)
 
-          if (info .lt. 0) then
+          if (chk .lt. 0) then
             call msg%ferror(flag=error, src='condition',
-     &            msg='Illegal argument in DGECON.', ia=info)
+     &            msg='Illegal argument in DGECON.', ia=chk)
             return
           end if
 
@@ -1288,13 +1351,13 @@
      &            msg='Ill-conditioned matrix', ra=cond)
           end if
 
-        else if(info .gt. 0) then
+        else if(chk .gt. 0) then
           call msg%ferror(flag=error, src='condition',
-     &            msg='Singular upper triangular matrix.', ia=info)
+     &            msg='Singular upper triangular matrix.', ia=chk)
 
         else
           call msg%ferror(flag=error, src='condition',
-     &            msg='Illegal argument in DGETRF.', ia=info)
+     &            msg='Illegal argument in DGETRF.', ia=chk)
           return
         end if
 
@@ -1304,9 +1367,9 @@
 
       module function det_lapack(A,lib) result(detA)
 
-        use global_parameters, only: wp
+        use global_parameters
 
-        implicit none 
+        implicit none
 
         real(wp), intent(in)        :: A(:,:)
         character(len=*), intent(in):: lib
@@ -1321,7 +1384,7 @@
       module subroutine detMat_lapack(A,detA,lib)
       ! calculates determinant of matrix using LAPACK's DGETRF
 
-        use global_parameters, only: wp, one, zero
+        use global_parameters
         use error_logging
         implicit none
 
@@ -1329,9 +1392,15 @@
         character(len=*), intent(in):: lib
         real(wp), intent(out)       :: detA
         integer                     :: ipiv(min(size(A,1),size(A,2)))
-        integer                     :: m, n, lda, i, info
+        integer                     :: m, n, lda, i, chk
         real(wp)                    :: mat( size(A,1),size(A,2) )
-        type(logger)                :: msg
+
+
+        m     = size(A,1)
+        n     = size(A,2)
+        lda   = m
+        mat   = A
+        detA  = one
 
         if ( trim(lib) .ne. 'LAPACK' ) then
           call msg%ferror(flag=error, src='detMat_lapack',
@@ -1339,21 +1408,22 @@
           return
         end if
 
-        m = size(A,1)
-        n = size(A,2)
-        lda = m
-        mat = A
-
-        call dgetrf(m, n, mat, lda, ipiv, info)
-
-        if(info .gt. 0) then
+        if ( m .ne. n) then
           call msg%ferror(flag=error, src='detMat_lapack',
-     &            msg='Singular upper triangular matrix.', ia=info)
+     &          msg ='Matrix is not square: ', ivec=[m, n])
+          return
+        end if
+
+        call dgetrf(m, n, mat, lda, ipiv, chk)
+
+        if(chk .gt. 0) then
+          call msg%ferror(flag=error, src='detMat_lapack',
+     &            msg='Singular upper triangular matrix.', ia=chk)
           return
 
-        else if (info .lt. 0) then
+        else if (chk .lt. 0) then
          call msg%ferror(flag=error, src='detMat_lapack',
-     &            msg='Illegal argument in DGETRF.', ia=info)
+     &            msg='Illegal argument in DGETRF.', ia=chk)
           return
         end if
 
@@ -1361,7 +1431,9 @@
         detA = one
         do i = 1, n
           detA = detA * mat(i,i)
-          if ( ipiv(i) .ne. i ) detA = - detA
+          if ( ipiv(i) .ne. i ) then
+            detA = - detA
+          end if
         end do
 
       end subroutine detMat_lapack
@@ -1372,62 +1444,125 @@
       ! this subroutine calculates the eigen value and vectors
       ! of a symmetric matrix using DGEEV subroutine from LAPACK
 
-        use global_parameters, only: wp, zero
+        use global_parameters
         use error_logging
 
         implicit none
         real(wp), intent(in)          :: A(:,:)
         real(wp), intent(out)         :: eVal(:), eVec(:,:)
         character(len=*), intent(in)  :: lib
-        integer                       :: info, lda, lwork, i, j
-        integer                       :: dummy(1)
-        integer, allocatable          :: work(:)
+        integer                       :: chk, lda, lwork, i, j
+        real(wp)                      :: dummy(1)
+        real(wp), allocatable         :: work(:)
         integer, parameter            :: nb = 64
         integer                       :: n
-        type(logger)                  :: msg
 
 
-        if ( trim(lib) .ne. 'LAPACK' ) then
-          call msg%ferror(flag=error, src='detMat_lapack',
-     &           msg='Wrong keyword for library.', ch=lib)
-          return
-        end if
-
-        n   = size(A,1)
-        lda = n
+        n     = size(A,1)
+        lda   = n
+        eVec  = zero
+        eVal  = zero
 
         !! TODO:  add dimensional checking for eVal and eVec
         !! TODO:  add checking for symmetry of the matrix
 
-        !form upper triangular matrix from the input
-        eVec = triU(A)
+        if ( trim(lib) .ne. 'LAPACK' ) then
+          call msg%ferror(flag=error, src='eigen_lapack_sym',
+     &           msg='Wrong keyword for library.', ch=lib)
+          return
+        end if
+
+        ! enforce symmetry since dsyev only can handle symmetric matrix
+        eVec = half * (A + transpose(A))
 
         ! first call to dsyev to query workspace
         lwork = -1
         call dsyev('Vectors', 'Upper', n, eVec, lda, eVal,
-     &              dummy, lwork, info)
+     &              dummy, lwork, chk)
 
         ! call to dsyev to solve for eigen problem
         lwork = max((nb+2)*n, int(dummy(1)))
         allocate( work(lwork) )
         call dsyev('Vectors', 'Upper', n, eVec, lda, eVal,
-     &              work, lwork, info)
+     &              work, lwork, chk)
 
-        if (info .lt. 0) then
+        if (chk .lt. 0) then
           call msg%ferror(flag=error, src='eigen_lapack_sym',
-     &          msg='Illegal argument DSYEV.', ia=info)
-        else if(info .gt. 0) then
+     &          msg='Illegal argument DSYEV.', ia=chk)
+        else if(chk .gt. 0) then
           call msg%ferror(flag=error,src='eigen_lapack_sym',
-     &          msg='Did not cnvergence.', ia=info)
+     &          msg='Did not cnvergence.', ia=chk)
         end if
 
       end subroutine eigen_lapack_sym
 
 ! **********************************************************************
 
+      module function expm(A) result(expA)
+
+        use global_parameters
+
+        implicit none
+
+        real(wp), intent(in)        :: A(:,:)
+        real(wp)                    :: expA(size(A,1),size(A,2))
+        real(wp)                    :: mat(size(A,1),size(A,2))
+
+        mat = A
+        call expMat(mat,expA)
+
+      end function expm
+
+! **********************************************************************
+
+      module subroutine expMat(A,B)
+      ! this subroutines computes exponential of a symmetric matrix
+
+        use global_parameters
+        use error_logging
+
+        implicit none
+
+        real(wp), intent(inout)       :: A(:,:)
+        real(wp), intent(out)         :: B(:,:)
+        real(wp)                      :: D(size(A,1),size(A,2))
+        real(wp)                      :: eVal(size(A,1))
+        real(wp)                      :: eVec(size(A,1),size(A,2))
+        character(len=*), parameter   :: lib = 'LAPACK'
+        integer                       :: m1, n1, m2, n2, i
+
+
+        m1      = size(A,1)
+        n1      = size(A,2)
+        m2      = size(B,1)
+        n2      = size(B,2)
+
+        D       = zero
+        eVal    = zero
+        eVec    = zero
+
+        if ( (m1 .ne. n1) .or. (m2 .ne. n2) ) then
+          call  msg%ferror(flag=error, src='expMat',
+     &          msg='Matrix is not square: ', ivec=[m1, n1, m2, n2])
+          return
+        end if
+
+        call eigen(A,eVal,eVec,lib)
+
+        D = zero
+        do i = 1,m1
+          D(i,i) = exp( eVal(i) )
+        end do
+
+        B = matmul( eVec, matmul( D, transpose(eVec) ) )
+
+      end subroutine expMat
+
+! ***********************************************************************
+
       module function inv_lapack(A,lib) result(Ainv)
 
-        use global_parameters, only: wp
+        use global_parameters
 
         implicit none
 
@@ -1445,7 +1580,7 @@
       ! this subroutine calculates inverse of a square matrix
       ! it uses DGETRF and DGETRI subroutines from LAPACK
 
-        use global_parameters, only: wp
+        use global_parameters
         use error_logging
 
         implicit none
@@ -1454,10 +1589,17 @@
         character(len=*), intent(in)  :: lib
         real(wp), intent(out)         :: Ainv(:,:)
         integer                       :: ipiv(min(size(A,1),size(A,2)))
-        integer                       :: m, n, lda, lwork, info
+        integer                       :: m, n, lda, lwork, chk
         integer, parameter            :: nb = 64
         real(wp), allocatable         :: work(:)
-        type(logger)                  :: msg
+
+
+
+        m     = size(A,1)
+        n     = size(A,2)
+        lda   = m
+        lwork = nb*n
+        Ainv  = A             ! preventing A from being overwritten
 
         if (trim(lib) .ne. 'LAPACK') then
           call msg%ferror(flag=error, src='inverseMat_lapack',
@@ -1465,39 +1607,39 @@
           return
         end if
 
-
-        m = size(A,1)
-        n = size(A,2)
-        lda = m
-        lwork = nb*n
         allocate( work(lwork) )
-        Ainv  = A             ! preventing A from being overwritten
+
+        if ( m .ne. n) then
+          call msg%ferror(flag=error, src='inverseMat_lapack',
+     &          msg ='Matrix is not square: ', ivec=[m, n])
+          return
+        end if
 
         ! LAPACK subroutine: returns pivot indices from LU decomposition
-        call dgetrf(m, n ,Ainv, lda, ipiv, info)
+        call dgetrf(m, n ,Ainv, lda, ipiv, chk)
 
-        if(info .gt. 0) then
+        if(chk .gt. 0) then
           call msg%ferror(flag=error, src='inverseMat_lapack: dgetrf',
-     &            msg='Singular upper triangular matrix.', ia=info)
+     &            msg='Singular upper triangular matrix.', ia=chk)
           return
 
-        else if (info .lt. 0) then
+        else if (chk .lt. 0) then
           call msg%ferror(flag=error, src='inverseMat_lapack: dgetrf',
-     &            msg='Illegal argument in DGETRI.', ia=info)
+     &            msg='Illegal argument in DGETRI.', ia=chk)
           return
         end if
 
         ! LAPACK subroutine: calculates inverse from LU
-        call dgetri(n, Ainv, lda, ipiv, work, m, info)
+        call dgetri(n, Ainv, lda, ipiv, work, m, chk)
 
-        if(info .gt. 0) then
+        if(chk .gt. 0) then
           call msg%ferror(flag=error, src='inverseMat_lapack: dgetri',
-     &            msg='Singular upper triangular matrix.', ia=info)
+     &            msg='Singular upper triangular matrix.', ia=chk)
           return
 
-        else if (info .lt. 0) then
+        else if (chk .lt. 0) then
           call msg%ferror(flag=error, src='inverseMat_lapack: dgetri',
-     &            msg='Illegal argument in DGETRI.', ia=info)
+     &            msg='Illegal argument in DGETRI.', ia=chk)
           return
         end if
 
@@ -1508,7 +1650,7 @@
       module subroutine linSolve_lapack_LU(A,b,x,lib)
       ! this subroutine solves for linear system using LAPACK subroutine
 
-        use global_parameters, only: wp
+        use global_parameters
         use error_logging
 
         implicit none
@@ -1518,10 +1660,9 @@
         real(wp), intent(out)           :: x(:)
         integer                         :: ipiv(size(A,2))
         integer                         :: m, n, lda, ldb
-        integer                         :: info
+        integer                         :: chk
         real(wp)                        :: mat(size(A,1),size(A,2))
         integer, parameter              :: nrhs = 1
-        type(logger)                    :: msg
 
         if (trim(lib) .ne. 'LAPACK') then
           call msg%ferror(flag=error, src='linSolve_lapack_LU',
@@ -1529,14 +1670,15 @@
           return
         end if
 
-        m = size(A,1)
-        n = size(A,2)
+        m     = size(A,1)
+        n     = size(A,2)
         lda   = m
         ldb   = size(b)     ! no of rows of the rhs vector
+        x     = zero
 
         if ( m .ne. n) then
           call msg%ferror(flag=error, src='linSolve_lapack_LU',
-     &          msg ='Matrix is not square.', ivec=[m, n])
+     &          msg ='Matrix is not square: ', ivec=[m, n])
           return
         end if
 
@@ -1547,17 +1689,17 @@
         end if
 
         ! DGESV solves the linear system and returns in b
-        mat = A     ! copying to avoid overwriting
-        x = b       ! copying to avoid overwriting
-        call dgesv(n, nrhs, mat, lda, ipiv, x, ldb, info)
+        mat   = A         ! copying to avoid overwriting
+        x     = b         ! copying to avoid overwriting
+        call dgesv(n, nrhs, mat, lda, ipiv, x, ldb, chk)
 
-        if (info .lt. 0) then
+        if (chk .lt. 0) then
           call msg%ferror(flag=error, src='linSolve_lapack_LU: dgesv',
-     &            msg='Illegal argument in DGESV.', ia=info)
+     &            msg='Illegal argument in DGESV.', ia=chk)
           return
-        else if(info .gt. 0) then
+        else if(chk .gt. 0) then
           call msg%ferror(flag=error, src='linSolve_lapack_LU: dgesv',
-     &            msg='Singular upper triangular matrix.', ia=info)
+     &            msg='Singular upper triangular matrix.', ia=chk)
           return
         end if
 
@@ -1569,7 +1711,7 @@
       ! this subroutine solves for linear system using LAPACK subroutine
       ! optional method is QR approach
 
-        use global_parameters, only: wp
+        use global_parameters
         use error_logging
 
         implicit none
@@ -1577,49 +1719,144 @@
         real(wp), intent(inout)         :: A(:,:), b(:)
         character(len=*), intent(in)    :: lib, method
         real(wp), intent(out)           :: x(:)
-        integer                         :: m, n, lda, ldb, lwork, info
-        integer, allocatable            :: work(:)
+        integer                         :: m, n, lda, ldb, lwork, chk
+        real(wp), allocatable           :: work(:)
         real(wp)                        :: mat(size(A,1),size(A,2))
         integer, parameter              :: nb = 64, nrhs = 1
-        type(logger)                    :: msg
+
+        m   = size(A,1)
+        n   = size(A,2)
+        x   = zero
 
         if ( trim(lib) .ne. 'LAPACK' ) then
           call msg%ferror(flag=error, src='linSolve_lapack_QR',
-     &           msg='Wrong keyword for library.', ch=lib)
+     &           msg='Wrong keyword for library.', ch=trim(lib))
           return
         end if
 
-        !!!! TODO: add dimensional check for the arguments
-
-        if ( trim(method) .eq. 'QR') then
-          ! use DGELS from LAPACK to solve A*x = b using QR factorization
-          m = size(A,1)         ! no of rows of the matrix
-          n = size(A,2)
-          lda = m
-          ldb = size(b)           ! no of rows of the rhs vector
-          lwork = n + nb*m
-
-          allocate( work(lwork) )
-
-          mat = A     ! swaping to prevent over-writing
-          x = b       ! same reason swap
-          call dgels('No transpose', m, n, nrhs, mat, lda, x, ldb,
-     &                work, lwork, info)
-
-        else
+        if ( trim(method) .ne. 'QR' ) then
           call msg%ferror(flag=error, src='linSolve_lapack_QR',
-     &           msg='Wrong keyword for method.', ch=method)
+     &           msg='Wrong keyword for method.', ch=trim(method))
           return
         end if
+
+        lda   = m
+        ldb   = size(b)
+
+        ! DGELS requires LDB >= max(1, max(m,n)) for NRHS=1
+        if ( ldb .lt. max(m,n) ) then
+          call msg%ferror(flag=error, src='linSolve_lapack_QR',
+     &      msg='RHS vector too small for DGELS (need >= max(m,n)).',
+     &      ivec=[m, n, ldb])
+          return
+        end if
+
+        lwork = n + nb*m
+        if (lwork .lt. 1) lwork = 1
+        allocate( work(lwork) )
+
+        mat = A     ! copy to prevent overwriting
+        x   = b     ! DGELS overwrites RHS with solution + residual chk
+
+        call dgels('N', m, n, nrhs, mat, lda, x, ldb, work, lwork, chk)
+
+        if (chk .lt. 0) then
+          call msg%ferror(flag=error, src='linSolve_lapack_QR: dgels',
+     &            msg='Illegal argument in DGELS.', ia=chk)
+          return
+
+        else if (chk .gt. 0) then
+
+          call msg%ferror(flag=error, src='linSolve_lapack_QR: dgels',
+     &            msg='DGELS failed to compute a solution.', ia=chk)
+          return
+
+        end if
+
+        deallocate(work)
 
       end subroutine linSolve_lapack_QR
+
+! **********************************************************************
+
+       module function logm(A) result(logA)
+
+        use global_parameters
+
+        implicit none
+
+        real(wp), intent(in)        :: A(:,:)
+        real(wp)                    :: logA(size(A,1),size(A,2))
+        real(wp)                    :: mat(size(A,1),size(A,2))
+
+        mat = A
+        call logMat(mat,logA)
+
+      end function logm
+
+! **********************************************************************
+
+      module subroutine logMat(A,B)
+      ! this subroutines computes logarithm of a symmetric matrix
+      ! NOTE: requires positive definite (or at least positive eigenvalues)
+
+        use global_parameters
+        use error_logging
+
+        implicit none
+
+        real(wp), intent(inout)       :: A(:,:)
+        real(wp), intent(out)         :: B(:,:)
+        real(wp)                      :: D(size(A,1),size(A,2))
+        real(wp)                      :: eVal(size(A,1))
+        real(wp)                      :: eVec(size(A,1),size(A,2))
+        character(len=*), parameter   :: lib = 'LAPACK'
+        integer                       :: m1, n1, m2, n2, i
+
+        real(wp), parameter           :: tol = 1.0e-14_wp
+
+        m1      = size(A,1)
+        n1      = size(A,2)
+        m2      = size(B,1)
+        n2      = size(B,2)
+
+        D       = zero
+        eVal    = zero
+        eVec    = zero
+
+        if ( (m1 .ne. n1) .or. (m2 .ne. n2) ) then
+          call  msg%ferror(flag=error, src='logMat',
+     &          msg='Matrix is not square: ', ivec=[m1, n1, m2, n2])
+          return
+        end if
+
+        call eigen(A,eVal,eVec,lib)
+
+        ! log requires positive eigenvalues
+        do i = 1, m1
+          if ( eVal(i) .le. tol ) then
+            call msg%ferror(flag=error, src='logMat',
+     &            msg='Non-positive eigenvalue encountered: ',
+     &            ia=i, ra=eVal(i))
+            return
+          end if
+        end do
+
+        D = zero
+        do i = 1,m1
+          D(i,i) = log( eVal(i) )
+        end do
+
+        B = matmul( eVec, matmul( D, transpose(eVec) ) )
+
+      end subroutine logMat
 
 ! **********************************************************************
 
       module subroutine luDecompose_lapack(A,P,L,U,lib)
       ! calculates A = P * L* U using LAPACK routines DGETRF
 
-        use global_parameters, only: wp, zero, one
+        use global_parameters
         use error_logging
 
         implicit none
@@ -1630,9 +1867,9 @@
         real(wp), intent(out)       :: L(size(A,1),size(A,1))
         real(wp), intent(out)       :: U(size(A,1),size(A,2))
         integer                     :: ipiv(min(size(A,1),size(A,2)))
-        integer                     :: m, n, lda, info, i
+        integer                     :: m, n, lda, chk, i
         real(wp)                    :: row(size(A,1))
-        type(logger)                :: msg
+
 
         if ( trim(lib) .ne. 'LAPACK' ) then
           call msg%ferror(flag=error, src='luDecompose_lapack',
@@ -1641,21 +1878,24 @@
         end if
 
 
-        m = size(A,1)
-        n = size(A,2)
-        lda = m
-        L = A
+        m     = size(A,1)
+        n     = size(A,2)
+        lda   = m
+        L     = A
 
-        call dgetrf( m, n, L, lda, ipiv, info )
+        P     = zero
+        U     = zero
 
-        if(info .gt. 0) then
+        call dgetrf( m, n, L, lda, ipiv, chk )
+
+        if(chk .gt. 0) then
           call msg%ferror(flag=error, src='luDecompose_lapack: dgetrf',
-     &            msg='Singular upper triangular matrix.', ia=info)
+     &            msg='Singular upper triangular matrix.', ia=chk)
           return
 
-        else if (info .lt. 0) then
+        else if (chk .lt. 0) then
           call msg%ferror(flag=error, src='luDecompose_lapack: dgetrf',
-     &            msg='Illegal argument in DGETRF.', ia=info)
+     &            msg='Illegal argument in DGETRF.', ia=chk)
           return
         end if
 
@@ -1672,8 +1912,8 @@
         !... Assuming that P = P[ipiv(n),n] * ... * P[ipiv(1),1]
         !... where P[i,j] is a permutation matrix for i- and j-th rows.
         do i = 1, m
-          row = P(i,:)
-          P(i,:) = P(ipiv(i), :)
+          row           = P(i,:)
+          P(i,:)        = P(ipiv(i), :)
           P(ipiv(i), :) = row
         end do
 
@@ -1685,7 +1925,7 @@
       ! this subroutine compute left and right polar decompositions
       ! of matrix A (used for deformation gradient)
 
-        use global_parameters, only: wp, zero
+        use global_parameters
         use error_logging
 
         implicit none
@@ -1695,19 +1935,21 @@
         real(wp)                  :: Vinv(size(V,1),size(V,2))
         real(wp)                  :: detV
         integer                   :: m, n
-        type(logger)              :: msg
 
-        m = size(A,1)
-        n = size(A,2)
+        m     = size(A,1)
+        n     = size(A,2)
+        V     = zero
+        U     = zero
+        R     = zero
+        Vinv  = zero
 
         if (m .ne. n) then
           call msg%ferror(flag=error, src='polarDecompose',
-     &          msg='Matrix is not square.', ivec=[m, n])
+     &          msg='Matrix is not square: ', ivec=[m, n])
           return
         end if
 
         !! TODO: add dimensional checking for the output arguments
-        Vinv = zero
 
         !  Decompose A into A=RU=VR  where U,V are symmetric and R is orthogonal
         R = matmul(A,transpose(A))        ! R is just temporary variable here
@@ -1722,14 +1964,14 @@
 
       module function norm(A,normType) result(anorm)
 
-        use global_parameters, only: wp
+        use global_parameters
 
         implicit none
 
         real(wp), intent(in)            :: A(:,:)
         character(len=1), intent(in)    :: normType
         real(wp)                        :: anorm
-        integer                         :: m, n, lda, info
+        integer                         :: m, n, lda, chk
         integer                         :: ipiv(min(size(A,1),
      &                                              size(A,2)))
         real(wp)                        :: work(4*size(A,1))
@@ -1750,7 +1992,7 @@
 
       module function solve(A,b,lib,method) result(x)
 
-        use global_parameters, only: wp
+        use global_parameters
         use error_logging
 
         implicit none
@@ -1761,31 +2003,40 @@
         character(len=*), intent(in), optional  :: method
         real(wp)                                :: x(size(b))
         integer                                 :: m, n
-        type(logger)                            :: msg
-        
+
         real(wp)            :: mat(size(A,1),size(A,2)), vec(size(b))
 
-        m = size(A,1)
-        n = size(A,2)
+        m     = size(A,1)
+        n     = size(A,2)
+
+        mat   = A
+        vec   = b
+        x     = zero
 
         if ( m .ne. n ) then
           call msg%ferror(flag=error, src='solve',
-     &          msg='Matrix is not square.', ivec=[m, n])
+     &          msg='Matrix is not square: ', ivec=[m, n])
           return
         end if
 
-        mat = A
-        vec = b
 
-        if ( (.not. present(lib)) .and. (.not. present(method)) ) then
-          call linSolve(mat,vec,x)
-        else if ( present(lib) .and. (.not. present(method)) ) then
-          call linSolve(mat,vec,x,lib)
-        else if ( present(lib) .and. (method .eq. 'QR') ) then 
-          call linSolve(mat,vec,x,lib,method)
+        if (.not. present(lib)) then
+          call linSolve(mat, vec, x)
         else
-          call msg%ferror(error, src='solve', msg='Illegal argument.')
-          return
+          if (.not. present(method)) then
+            call linSolve(mat, vec, x, lib)
+          else
+            select case (trim(method))
+            case ('LU')
+              call linSolve(mat, vec, x, lib)
+            case ('QR')
+              call linSolve(mat, vec, x, lib, method)
+            case default
+              call msg%ferror(error, src='solve', msg='Unknown method:',
+     &                        ch=trim(method))
+              return
+            end select
+          end if
         end if
 
       end function solve
@@ -1794,7 +2045,7 @@
 
       module function sqrtm(A) result(sqrtA)
 
-        use global_parameters, only: wp
+        use global_parameters
 
         implicit none
 
@@ -1812,7 +2063,7 @@
       module subroutine sqrtMat(A,B)
       ! this subroutines computes square root of a symmetric matrix
 
-        use global_parameters, only: wp, zero
+        use global_parameters
         use error_logging
 
         implicit none
@@ -1824,22 +2075,22 @@
         real(wp)                      :: eVec(size(A,1),size(A,2))
         character(len=*), parameter   :: lib = 'LAPACK'
         integer                       :: m1, n1, m2, n2, i
-        type(logger)                  :: msg
 
-        m1 = size(A,1)
-        n1 = size(A,2)
-        m2 = size(B,1)
-        n2 = size(B,2)
 
-        if ( (m1 .ne. n1) .and. (m2 .ne. n2) ) then
+        m1    = size(A,1)
+        n1    = size(A,2)
+        m2    = size(B,1)
+        n2    = size(B,2)
+
+        D     = zero
+        eVal  = zero
+        eVec  = zero
+
+        if ( (m1 .ne. n1) .or. (m2 .ne. n2) ) then
           call  msg%ferror(flag=error, src='sqrtMat',
-     &          msg='Matrix is not square.', ivec=[m1, n1, m2, n2])
+     &          msg='Matrix is not square: ', ivec=[m1, n1, m2, n2])
           return
         end if
-
-        D = zero
-        eVal = zero
-        eVec = zero
 
         call eigen(A,eVal,eVec,lib)
 

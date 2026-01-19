@@ -28,7 +28,7 @@
 
         module subroutine calcInterpFunc(elem,xiCoord,Nxi,dNdxi)
           use global_parameters, only: wp
-          implicit none 
+          implicit none
           type(element), intent(in)   :: elem
           real(wp), intent(in)        :: xiCoord(:)
           real(wp), intent(out)       :: Nxi(:), dNdxi(:,:)
@@ -50,12 +50,12 @@
 ! ****************** INTERPOLATION FUNCTION SUBMODULE ******************
 ! **********************************************************************
 !  available elements:    (a) 1D bar/truss element (2 and 3 nodes)
-!                         (b) 2D tri elements (3 and 6 nodes) 
+!                         (b) 2D tri elements (3 and 6 nodes)
 !                         (c) 2D quad elements (4 and 8 nodes)
 !                         (d) 3D tet elements (4 and 10 nodes)
 !                         (e) 3D hex elements (8 and 20 nodes)
 ! **********************************************************************
-      
+
       submodule (lagrange_element) interpolation
 
       contains
@@ -65,7 +65,7 @@
 
         use global_parameters, only: wp
 
-        implicit none 
+        implicit none
 
         type(element), intent(in)   :: elem
         real(wp), intent(in)        :: xiCoord(:)
@@ -73,7 +73,7 @@
 
         if (elem%nDim  .eq.  1) then
           call interpFunc1(elem%nNode, xiCoord, Nxi, dNdxi)
-        else if (elem%nDim  .eq.  2) then 
+        else if (elem%nDim  .eq.  2) then
           call interpFunc2(elem%nNode, xiCoord, Nxi, dNdxi)
         else if (elem%nDim  .eq.  3) then
           call interpFunc3(elem%nNode, xiCoord, Nxi, dNdxi)
@@ -84,9 +84,9 @@
 ! **********************************************************************
 
       subroutine interpFunc1(nNode,xiCoord,Nxi,dNdxi)
-      ! this subroutine calculates shape function of 1D elements 
+      ! this subroutine calculates shape function of 1D elements
       ! available 1D elements are: 2 and 3 node bar/truss
-        
+
       ! Nxi(i)          = shape function of node i at the intpt.
       ! dNdxi(i,j)      = derivative wrt j direction of shape fn of node i
 
@@ -94,12 +94,11 @@
       use error_logging
 
       implicit none
-      
+
       integer, intent(in)         :: nNode
       real(wp), intent(in)        :: xiCoord(:)
       real(wp), intent(out)       :: Nxi(:), dNdxi(:,:)
       real(wp)                    :: xi
-      type(logger)                :: msg
 
       ! location in the master element
       xi    = xiCoord(1)
@@ -135,9 +134,9 @@
 ! **********************************************************************
 
       subroutine interpFunc2(nNode,xiCoord,Nxi,dNdxi)
-      ! this subroutine calculates shape function of 2D elements 
+      ! this subroutine calculates shape function of 2D elements
       ! available 2D elements are: 3 node tri, 6 node tri, 4 node quad, 8 node quad
-        
+
       ! Nxi(i)          = shape function of node i at the intpt.
       ! dNdxi(i,j)      = derivative wrt j direction of shape fn of node i
 
@@ -150,7 +149,6 @@
       real(wp), intent(in)        :: xiCoord(:)
       real(wp), intent(out)       :: Nxi(:), dNdxi(:,:)
       real(wp)                    :: xi, eta, lam
-      type(logger)                :: msg
 
       ! location in the master element
       xi    = xiCoord(1)
@@ -312,7 +310,6 @@
       real(wp), intent(in)        :: xiCoord(:)
       real(wp), intent(out)       :: Nxi(:), dNdxi(:,:)
       real(wp)                    :: xi, eta, zeta, lam
-      type(logger)                :: msg
 
       ! Nxi(i)          = shape function of node i at the intpt.
       ! dNdxi(i,j)      = derivative wrt j direction of shape fn of node i
@@ -340,7 +337,7 @@
         dNdxi(4,3) = one
 
       else if (nNode .eq. 10) then  ! 10-noded quadratic tet10 element
-    
+
         ! shape functions
         lam = one-xi-eta-zeta
 
@@ -354,7 +351,7 @@
         Nxi(8) = four*zeta*lam
         Nxi(9) = four*zeta*xi
         Nxi(10) = four*eta*zeta
-        
+
         ! first derivative of shape functions dN/dxi (10x3)
         dNdxi(1,1) = -(four*lam-one)
         dNdxi(1,2) = -(four*lam-one)

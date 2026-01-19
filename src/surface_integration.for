@@ -8,13 +8,13 @@
 !     Author: Bibekananda Datta (C) APRIL 2025. All Rights Reserved.
 !  This module and dependencies are shared under 3-clause BSD license
 ! **********************************************************************
-!   Codes in this module were primarily repurposed or refactored from 
+!   Codes in this module were primarily repurposed or refactored from
 !   Chester et al. IJSS (2015) and Prof. Allan Bower's EN234 course
-!   these subroutines haven't been tested completely and exist here 
+!   these subroutines haven't been tested completely and exist here
 !   for future implementation of flux or traction boundary conditions
 ! **********************************************************************
 
-      module surface_integration 
+      module surface_integration
 
       private   :: gaussQuadrtrSurf2, gaussQuadrtrSurf3
       private   :: computeSurf2, computeSurf3
@@ -23,7 +23,7 @@
       public    :: computeSurfArea
 
       contains
-      
+
       subroutine getSurfGaussQuadrtr(face,w,xiSurf)
 
         use global_parameters,  only: wp
@@ -57,8 +57,8 @@
 
 
       use global_parameters, only: wp
-      
-      implicit none 
+
+      implicit none
 
       integer, intent(in)   :: face
       real(wp), intent(in)  :: xiIntS(:), coords(:,:)
@@ -68,14 +68,14 @@
         call computeSurf2(xiIntS(1), xiIntS(2), face, coords, NxiS, dA)
 
       else if (size(xiIntS) .eq. 3) then
-        call computeSurf3(xiIntS(1), xiIntS(2), xiIntS(3), 
+        call computeSurf3(xiIntS(1), xiIntS(2), xiIntS(3),
      &                    face, coords, NxiS, dA)
-      end if 
+      end if
 
 
       end subroutine computeSurfArea
 
-! **********************************************************************      
+! **********************************************************************
       subroutine gaussQuadrtrSurf2(face,w,xLocal,yLocal)
 
       ! This subroutine will get the integration point locations
@@ -86,7 +86,7 @@
       !  yLocal(nIntPt): y coordinates for the integration pts
       !  w(nIntPt):    corresponding integration weights
 
-        
+
       use global_parameters
       use error_logging
 
@@ -94,13 +94,12 @@
 
       integer, intent(in)   :: face
       real(wp), intent(out) :: xLocal(2), yLocal(2), w(2)
-      type(logger)          :: msg
 
       ! Gauss weights
       !
       w(1) = one
       w(2) = one
-      
+
       ! Gauss pt locations in master element
       if(face .eq. 1) then
         xLocal(1) = -sqrt(one/three)
@@ -149,7 +148,6 @@
 
       integer, intent(in)   :: face
       real(wp), intent(out) :: xLocal(4), yLocal(4), zLocal(4), w(4)
-      type(logger)          :: msg
 
       ! Gauss weights
       w(1) = one
@@ -251,7 +249,7 @@
 
       ! This subroutine computes the shape functions, derivatives
       !  of shape functions, and the length ds, so that one can
-      !  do the numerical integration on the boundary for fluxes 
+      !  do the numerical integration on the boundary for fluxes
       !  on the 4-node quadrilateral elements
 
       use global_parameters
@@ -264,13 +262,12 @@
       real(wp), intent(out)   :: ds,sh(4)
       real(wp)                :: dshxi(4,2),dXdXi,dXdEta,dYdXi
       real(wp)                :: dYdEta, normal(2,1)
-      type(logger)            :: msg
 
       sh(1) = fourth*(one - xLocal)*(one - yLocal)
       sh(2) = fourth*(one + xLocal)*(one - yLocal)
       sh(3) = fourth*(one + xLocal)*(one + yLocal)
       sh(4) = fourth*(one - xLocal)*(one + yLocal)
-      
+
       dshxi(1,1) = -fourth*(one - yLocal)
       dshxi(1,2) = -fourth*(one - xLocal)
       dshxi(2,1) = fourth*(one - yLocal)
@@ -329,7 +326,7 @@
 
       ! This subroutine computes the shape functions, derivatives
       !  of shape functions, and the area dA, so that one can
-      !  do the numerical integration on the boundary for fluxes 
+      !  do the numerical integration on the boundary for fluxes
       !  on the 8-node brick elements
 
       use global_parameters
@@ -346,7 +343,6 @@
       real(wp)              :: dYdZeta, dZdXi, dZdZeta, dZdEta
       real(wp)              :: normal(3,1)
       integer               :: stat, i, j, k
-      type(logger)          :: msg
 
       ! The shape functions
       !
@@ -487,7 +483,7 @@
       ! this subroutine is useful for applying traction-type BC
 
       use lagrange_element
-      
+
       implicit none
 
       type(element), intent(in)   :: elem

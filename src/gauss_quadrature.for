@@ -53,7 +53,6 @@
 
       integer, intent(in)     :: nNode, nInt
       real(wp), intent(out)   :: w(:), xi(:,:)
-      type(logger)            :: msg
 
       w = zero
       xi = zero
@@ -107,7 +106,6 @@
       integer, intent(in)     :: nNode, nInt
       real(wp), intent(out)   :: w(:), xi(:,:)
       real(wp)                :: x1D(4), w1D(4)
-      type(logger)            :: msg
 
       w  = zero
       xi = zero
@@ -268,7 +266,6 @@
       real(wp), intent(out)   :: w(:), xi(:,:)
       real(wp)                :: x1D(4), w1D(4)
       integer                 :: i, j, k, n
-      type(logger)            :: msg
 
       w  = zero
       xi = zero

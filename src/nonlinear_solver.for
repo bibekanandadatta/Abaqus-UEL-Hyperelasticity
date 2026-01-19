@@ -14,8 +14,8 @@
       ! last two attributes are not applicable to single variable solver
       type, public  :: options
         integer           :: maxIter    = 1000
-        real(wp)          :: tolfx      = 1.0e-10_wp      
-        real(wp)          :: tolx       = 1.0e-10_wp      
+        real(wp)          :: tolfx      = 1.0e-10_wp
+        real(wp)          :: tolx       = 1.0e-10_wp
         character(len=8)  :: fdScheme   = 'Central'       ! other: 'Forward', 'Backward', 'Central'
         real(wp)          :: fdStep     = sqrt(eps)
         character(len=16) :: algo       = 'Linesearch'    ! options: 'Newton', 'Linesearch'
@@ -98,7 +98,6 @@
         real(wp)                                :: fx, dfx, dx
         real(wp)                                :: fx0
         integer                                 :: iter
-        type(logger)                            :: msg
 
         if ( present(opts) ) params = opts
 
@@ -132,7 +131,7 @@
           if (iter .eq. 1) fx0 = fx
 
           if ( ( abs(fx)/abs(fx0) .le. params%tolfx )
-     &        .or. ( abs(fx) .le. params%tolfx ) 
+     &        .or. ( abs(fx) .le. params%tolfx )
      &        .or. ( abs(dx) .le. params%tolx) ) then
             sflag = .true.
             return
@@ -177,7 +176,6 @@
         real(wp)                                :: fx0
         real(wp)                                :: dx, dxOld
         integer                                 :: iter
-        type(logger)                            :: msg
 
         if ( present(opts) ) params = opts
 
@@ -248,7 +246,7 @@
             dx = half*(xh-xl)
             x = xl + dx
 
-            if (xl .eq. x) then 
+            if (xl .eq. x) then
               sflag = .true.
               return
             end if
@@ -291,7 +289,7 @@
 
 
           if ( ( abs(fx)/abs(fx0) .le. params%tolfx )
-     &        .or. ( abs(fx) .le. params%tolfx ) 
+     &        .or. ( abs(fx) .le. params%tolfx )
      &        .or. ( abs(dx) .le. params%tolx) ) then
             sflag = .true.
             return
@@ -338,8 +336,6 @@
         real(wp)                                :: fvec0(size(x))
         real(wp)                                :: fnorm
         integer                                 :: iter
-        type(logger)                            :: msg
-
         integer                                 :: n
 
         if ( present(opts) ) params = opts
@@ -390,7 +386,7 @@
      &            (trim(params%method)) .eq. 'QR' )  then
             call linSolve(fjac, rhs, dx, params%lib, params%method)
           else
-            call msg%ferror(flag=error, src='fsolve', 
+            call msg%ferror(flag=error, src='fsolve',
      &            msg='Illegal arguments for library and method.')
             return
           end if
@@ -502,7 +498,6 @@
         real(wp)                                :: x_h, fx_h
         real(wp)                                :: fx_h1, fx_h2
         integer                                 :: i
-        type(logger)                            :: msg
 
         if ( present(opts) ) params = opts
 
@@ -530,7 +525,7 @@
 
           x_h = x_h + h
           call func(x_h, fx_h1, vars=vars)
-          x_h = x 
+          x_h = x
           x_h = x_h - h
           call func(x_h, fx_h2, vars=vars)
           dfx = (fx_h1 - fx_h2)/(two*h)
@@ -566,7 +561,6 @@
         real(wp)                                :: fvec_h1(size(x))
         real(wp)                                :: fvec_h2(size(x))
         integer                                 :: i
-        type(logger)                            :: msg
 
         if ( present(opts) ) params = opts
 
