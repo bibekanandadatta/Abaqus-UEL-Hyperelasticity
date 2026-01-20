@@ -41,7 +41,6 @@
 
       end subroutine initialize
 
-
 ! **********************************************************************
 
       subroutine fopen(self, errfile)
