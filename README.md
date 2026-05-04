@@ -67,6 +67,7 @@ All the source codes are located in the `src` subdirectory and the Abaqus test c
 Since the implemented user elements have the same topology as the built-in Abaqus elements, users can build a primary model in Abaqus/CAE and then export the input (`.inp`) file. Once the input file is available, as described in the Abaqus documentation, the following information needs to be modified.
 
 
+
 ### Properties
 
 Depending on the material model, the user needs to specify two or three properties for the material as listed below.
